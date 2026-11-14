@@ -1,0 +1,15 @@
+page	claim	ids	verdict	evidence	change
+src/pages/howto/saas.mdx	AI 爬虫不登录，也不执行 JavaScript	03-S1	PARTIAL	research/03-technical.md:11,32 和 02-platforms.md:18（2024 Vercel 数据只说主流 AI 爬虫不执行 JS，Gemini 和 AppleBot 会渲染；没说登录）	AI 爬虫不登录。GPTBot、ClaudeBot 这类主流 AI 爬虫也不执行 JavaScript
+src/pages/howto/saas.mdx	微软建议各处表述保持一致	06-S25	PARTIAL	research/06-ai-workflows-myths.md:66；原文 blogs.bing.com/webmaster/February-2026/Introducing-AI-Performance-in-Bing-Webmaster-Tools-Public-Preview 只写 Align text, images, and video（跨格式，不是跨网站）	微软建议文字、图片、视频对同一个产品的说法保持一致
+src/pages/howto/saas.mdx	小红书封禁全部 AI 托管代发的账号	04-S48	PARTIAL	research/04-content-offsite.md:190（偶尔用 AI 托管是警告或限流；主页笔记全由 AI 托管代发才封禁）	小红书会封禁主页笔记全由 AI 托管代发的账号
+src/pages/howto/saas.mdx	点击都落进了「直接访问」	02-S4	PARTIAL	research/02-platforms.md:69（ChatGPT 每天少约 3.1 万次访问，直接访问多约 2.6 万次，不是全部）	这些点击大多被算进了「直接访问」
+src/pages/howto/chrome-extension.mdx	只放真实评价，编造评价可能违反商店政策	03-S52	UNSUPPORTED	原文 developer.chrome.com/docs/webstore/best_listing 没提假评价；换成 research/15-mentions-extra.md:12 的 15-S2（FTC 禁止虚构评论）	只放真实评价。美国 FTC 禁止虚构评论（ids 改为 15-S2）
+src/pages/howto/chrome-extension.mdx	微软的建议里明确写了跨平台表述要一致	06-S25	UNSUPPORTED	原文 blogs.bing.com/webmaster/February-2026/Introducing-AI-Performance-in-Bing-Webmaster-Tools-Public-Preview 只写文字、图片、视频对同一实体一致，没有跨平台	微软只建议文字、图片、视频对同一产品的说法一致。三处一致是本手册由此推出的做法。
+src/pages/howto/chrome-extension.mdx	另一项分析里，AI 引用了这类自夸榜单。69% 的情况下，它推荐的却是别人	06-S53	PARTIAL	research/06-ai-workflows-myths.md:19,612（只测 Google AI Overviews；69% 是没推荐发榜单的品牌）	另一项分析里，Google AI Overviews 引用了这类自夸榜单。69% 的情况下，它没推荐发榜单的品牌
+src/pages/howto/chrome-extension.mdx	AI 引用的大头是第三方页面	04-S7	PARTIAL	research/04-content-offsite.md:11,30（只看 ChatGPT 前 1,000 高引页；同稿 S26 显示 AIO 59.8% 来自品牌自有域名）	ChatGPT 最常引用的 1,000 个页面里，67% 是 Wikipedia、机构主页、词典这类你碰不到的页面
+src/pages/howto/chrome-extension.mdx	AI 托管代发的账号会被封	04-S48	PARTIAL	research/04-content-offsite.md:190（封禁的是主页笔记全由 AI 托管代发的账号）	主页笔记全由 AI 托管代发的账号会被封
+src/pages/howto/chrome-extension.mdx	AI 联网时读的是原始 HTML。只放在图片或 JavaScript 里的文字，它读不到	03-S1	PARTIAL	research/03-technical.md:11,32（S1 是 2024 年爬虫数据；用户实时抓取里 Copilot、Grok、DeepSeek 会执行 JS；没说图片）	GPTBot、ClaudeBot 这类 AI 爬虫读的是原始 HTML。只靠 JavaScript 显示的文字，它们读不到
+src/pages/guide/5-mentions.mdx	Ahrefs 看了 ChatGPT 引用最多的 1,000 个页面，67% 属于这类营销碰不到的页面	04-S7	PARTIAL	research/04-content-offsite.md:30（67% 是 Wikipedia、机构页、词典等；新闻媒体和教育页被算作够得着的，和页面上「大媒体、学校网站」不符）	67% 是 Wikipedia、机构主页、词典这类营销碰不到的页面
+src/pages/guide/5-mentions.mdx	带上来源，说明哪句话错了	04-S32	PARTIAL	research/04-content-offsite.md:152；原文 en.wikipedia.org/wiki/Wikipedia:Conflict_of_interest 要求在讨论页用 edit COI 模板，说明要改什么、为什么改	写清要改什么、为什么改
+src/pages/guide/5-mentions.mdx	一个产品一个版本只发一次，人在场回复	04-S36	PARTIAL	research/04-content-offsite.md:145（Show HN 规则要求本人在场；「一个版本发一次」是调研稿 369 行的建议，不在规则里）	一个产品一个版本只发一次，这是本书的建议。Show HN 要求你本人在场回复
+总计（4 页 141 句）	SUPPORTED 128	PARTIAL 11	UNSUPPORTED 2	CANNOT_CHECK 0	改了 13 句
