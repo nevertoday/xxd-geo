@@ -24,3 +24,7 @@ ts	phase	decision	why	evidence	result
 2026-11-14T15:16:39Z	write	问题集和第 5 步的提示词改为从 prompts.js 渲染，不在页面里另存一份	两份文本迟早会对不上，一处来源就不会	src/pages/howto/prompt-set.mdx, src/pages/guide/5-mentions.mdx	done
 2026-11-14T15:20:59Z	verify	抽查 75 句：67 对、7 部分对、1 引错；8 句已改	核查帮手对照调研稿逐句判断	docs/claim-check-{1,2,3}.tsv, edab643	8 fixed
 2026-11-14T15:20:59Z	verify	发现提取脚本漏了出处标在句号后的写法（790→975 句），修好后对全部 975 句做全量核查，7 个帮手按页面分组、在各自副本里核对并当场改	11% 的问题率推到全站约 80 句；出处可信是卖点，值得全量做	scripts/extract-claims.mjs, docs/verify-contract.md, ../GEO-wt/v1..v7	open
+2026-11-14T15:28:52Z	verify	全量核查完成：975 句里 907 对、61 说过头、7 出处不对，68 句都已改；案例页一个无出处的提示框另改	核查帮手对照调研稿逐句判断，我抽看了第 7 组和第 1 组的改动，和调研稿一致	docs/verify-v1..v7.tsv, merges a0c2bbc..9f5eee7, d88dbc8	68+1 fixed, build green
+2026-11-14T15:28:52Z	verify	数据文件（tactics、wiki、faq、platforms）里的文字没有逐句核	时间和额度留给正文；数据文件只由构建查了出处 id 是否存在	MAINTAINING.md 核查一节	open
+2026-11-14T15:28:52Z	cleanup	删掉 17 个工作副本和分支，先确认每个分支都已并入 main	工作副本只是隔离用的，合并后没有用处	git worktree list	done
+2026-11-14T15:28:52Z	publish	没有推送 GitHub、没有部署 Cloudflare、没有改 pstack 仓库	这些是对外动作，要用户点头	'-	waiting on user
