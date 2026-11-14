@@ -120,7 +120,7 @@ key 要 8 到 128 位，只能有字母、数字和短横线 <Src ids="03-S48" /
 
 路径：域名下的 **Caching** → **Configuration**，打开 **Crawler Hints**，所有套餐都能用 <Src ids="03-S25" />。
 
-它在缓存 MISS 时，自动把网址推给 IndexNow <Src ids="03-S25" />。状态码 4xx 及以上的响应不会上报 <Src ids="03-S25" />。
+它在缓存 MISS 时，自动把网址推给 IndexNow <Src ids="03-S25" />。状态码大于 4xx 的响应不会上报 <Src ids="03-S25" />。
 
 <Callout type="warn">
 Crawler Hints 靠缓存 MISS 触发。部署在 Workers 静态资源上的站，它是否生效还没查清。保险起见，两样都做：打开它，也跑上面的脚本。
