@@ -127,10 +127,10 @@ Crawlers 里能看到 OAI-SearchBot、Claude-SearchBot、PerplexityBot 这类名
 <Copy id="stats-run" title="运行" code={`python3 ai_bot_stats.py access.log`} />
 
 <Callout type="ok">
-第一段是一张表：类别、爬虫名、次数、状态码分布，比如 `200×31 404×4`。最后一行提示它把 IP 写进了 `bot_ips.txt`。本站用一份假日志跑过，输出就是这个样子 <Src ids="21-S7" />。
+第一段是一张表：类别、爬虫名、次数、状态码分布，比如 `200×31 404×4`。最后一行提示它把 IP 写进了 `bot_ips.txt`。本站用一份假日志跑过，输出就是这个样子 <Src ids="21-S8" />。
 </Callout>
 
-分组名单来自各家官方文档 <Src ids="02-S1 02-S25 02-S33 02-S37 02-S39 02-S40 02-S16" />。脚本只认 combined 格式。日志格式不同，把 `LINE` 那个正则改一下，或者交给 AI 改。
+分组名单大多来自各家官方文档 <Src ids="02-S1 02-S25 02-S33 02-S37 02-S39 02-S40 02-S16 02-S38 02-S46" />。Bytespider、CCBot、GeminiiOS 不在这些文档里。脚本只认 combined 格式。日志格式不同，把 `LINE` 那个正则改一下，或者交给 AI 改。
 
 ## 看结果时盯这三件事
 
