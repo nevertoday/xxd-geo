@@ -57,7 +57,7 @@
 
 ## 站里有什么
 
-- **[新手入门](https://geo.xiaoxiaodong.ai/start/1-why/)**：3 课，一条路走到底 · GEO 是什么 → 10 分钟看 AI 怎么说你 → 第一周做五件事
+- **[新手入门](https://geo.xiaoxiaodong.ai/start/1-why/)**：3 课，一条路走到底 · GEO 是什么 → 20 分钟看 AI 怎么说你 → 第一周做五件事
 - **[完整教程](https://geo.xiaoxiaodong.ai/guide/0-how-ai-answers/)**：9 步，按 AI 找答案的顺序 · 爬得到 → 搜得到 → 读得懂 → 愿意引用 → 别人提到你 → 国内平台 → 量出效果 → 用 AI 做下去
 - **[How-to](https://geo.xiaoxiaodong.ai/howto/)**：按产品类型、技术配方（robots.txt、JSON-LD、Astro、IndexNow、Cloudflare）、测量和实验，一篇只讲一件事
 - **[证据表](https://geo.xiaoxiaodong.ai/evidence/)**：每个做法该不该做，证据有多硬
