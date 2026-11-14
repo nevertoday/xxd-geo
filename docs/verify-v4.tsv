@@ -1,0 +1,11 @@
+page	claim	ids	verdict	evidence	change
+src/pages/start/2-check.mdx	Product Hunt 那项研究里，按名字问认得 99.4%，按品类问只剩 3.32%	01-s16	PARTIAL	research/01-foundations.md:320 两个数都是 ChatGPT（gpt-4o-mini）的，Perplexity 是 94.3% 和 8.29%；页面没写平台	Product Hunt 那项研究里，ChatGPT 按名字问认得 99.4%，按品类问只剩 3.32%
+src/pages/start/2-check.mdx	200 也不保证真爬虫能进，Cloudflare 这类服务还会核对真爬虫的 IP	01-s40（页面写 03-S8）	PARTIAL	research/01-foundations.md:387、research/03-technical.md:112-114 只说伪造 UA 测不出真爬虫的 IP 是否被放行、放行规则要按 UA 加 IP 写；没说 Cloudflare 会自己核对 IP	200 也不保证真爬虫能进。这个脚本测不出真爬虫的 IP 会不会被放行
+src/pages/howto/prompt-set.mdx	按名字问时，AI 认出产品的比例是 99.4%（与「换成不提名字的发现型问题，只剩 3.32%」同引 01-S16）	01-s16	PARTIAL	research/01-foundations.md:320 99.4% 和 3.32% 是 ChatGPT 的数，Perplexity 是 94.3% 和 8.29%	按名字问时，ChatGPT 认出产品的比例是 99.4%。
+src/pages/howto/prompt-set.mdx	自己跑脚本，成本只是 API 费用	05-s45	PARTIAL	05-S45 是 Peec 定价页，只撑前一句「商业工具很贵」；自建成本见 research/05-measurement-tools.md:755-756（OpenAI、Anthropic 搜索按次加 token 计费）	05-S45 挪到「商业工具这时会很贵」后面；本句改引 05-S35 05-S36
+src/pages/howto/mini-program.mdx	外部 AI 读不到小程序里面，也读不到公众号	07-s42 07-s7	PARTIAL	research/07-china.md:173 只说 mp.weixin.qq.com 的 robots.txt 对所有爬虫 Disallow、元宝搜索 API 不含公众号；小程序内部能不能被外部 AI 读到，两条出处都没说	公众号的 robots.txt 不让任何爬虫抓文章 [07-S42]。腾讯对外的元宝搜索 API 也不含公众号 [07-S7]。外部 AI 能不能读到小程序里面，没找到官方说明。
+src/pages/guide/8-with-ai.mdx	112 个 Product Hunt 产品里，按名字问的识别率 99.4%，换成发现型问题只剩 3.32%	01-s16（页面写 06-S47）	PARTIAL	research/06-ai-workflows-myths.md:16、research/01-foundations.md:320 两个数都是 ChatGPT 的	112 个 Product Hunt 产品里，ChatGPT 按名字问的识别率 99.4%，换成发现型问题只剩 3.32%
+src/pages/guide/8-with-ai.mdx	有报道称 Reddit 在封自动回帖的账号	04-s22	PARTIAL	research/04-content-offsite.md:141、212、566 报道是 404 Media 2024-04-23 的，页面写成了现在进行时	2024 年有报道称，Reddit 封了一批自动回帖的账号。
+src/pages/guide/8-with-ai.mdx	混合写作的页面照样被引用：Ahrefs 统计了 50 万个 AI Overviews 引用链接，87.8% 是人和 AI 混合写的	06-s35	PARTIAL	research/06-ai-workflows-myths.md:132 范围是 AI Overviews 引用的前三条链接（50 万个可检测 URL），页面漏了「前三条」	Ahrefs 统计了 AI Overviews 前三位的 50 万个引用链接，87.8% 是人和 AI 混合写的
+src/pages/guide/8-with-ai.mdx	实时检索的 AI 本来也不读 JSON-LD 里藏的信息，只读可见文字	06-s32	PARTIAL	research/06-ai-workflows-myths.md:576、713（出处表 S32） 是 searchVIU 的小规模实验（C 级）：五个系统实时检索都没读到只在 JSON-LD 里的价格；页面推成了所有实时检索的 AI	searchVIU 做过一个小实验。五个 AI 实时检索时，都没读到只写在 JSON-LD 里的价格。
+TOTAL（5 页 140 句）	SUPPORTED 131；PARTIAL 9；UNSUPPORTED 0；CANNOT_CHECK 0				
