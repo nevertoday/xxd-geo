@@ -1,0 +1,20 @@
+---
+// 每页末尾一行：这一页没看懂、照做不成、或者结论和你的实测对不上，就到 GitHub 提出来（带好页面信息的模板），或者先翻常见问题。
+import { link, langOf, REPO } from "../data/nav.js";
+interface Props { page: string }
+const lang = langOf(Astro.url.pathname);
+const site = Astro.site ? Astro.site.href.replace(/\/$/, "") : "";
+const url = site + Astro.url.pathname;
+const T = {
+  title: `[反馈] ${Astro.props.page}`,
+  body: `页面：${url}\n\n哪里没看懂 / 照做不成功 / 和我的实测对不上：\n\n我的产品类型（插件、网站、小程序、开源项目……）：\n\n我看到了什么（AI 的回答、后台截图、日志；别贴账号信息）：\n\n有没有出处可以补充：\n`,
+  lead: "这一页有没看懂、照做不成，或者和你的实测对不上的地方？",
+  gh: "到 GitHub 提出来",
+  faq: ["，也可以先翻翻", "常见问题", "。"],
+};
+const href = `${REPO}/issues/new?title=${encodeURIComponent(T.title)}&body=${encodeURIComponent(T.body)}`;
+---
+<aside class="feedback">
+  <i data-xxd-icon="MessagesSquare" data-size="16"></i>
+  <span>{T.lead}<a class="xxd-link" href={href} rel="noopener">{T.gh}</a>{T.faq[0]}<a class="xxd-link" href={link("/faq/", lang)}>{T.faq[1]}</a>{T.faq[2]}</span>
+</aside>

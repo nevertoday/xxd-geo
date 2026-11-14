@@ -1,0 +1,89 @@
+---
+// 首页：名字和一句话 → 三扇门（新手入门 / 完整教程 / 按产品类型）→ 遇到过的事 → 三课 → 完整教程 → 查资料 → 提问和讨论。
+// 文字是占位稿，正式内容写好后在这里改。
+import Site from "../layouts/Site.astro";
+import Contact from "../components/Contact.astro";
+import { NAME, TAGLINE, LESSONS, lessonHref, STEPS, stepHref, HOWTO, link, SECTIONS, sectionHref, langOf, t } from "../data/nav.js";
+
+const lang = langOf(Astro.url.pathname);
+const C = {
+  lead: ["有人问 AI「有什么好用的 xx 工具」，它会搜一圈、读几个网页，再给出推荐。", "这份手册讲怎么让它搜得到你、读得懂你、愿意提你", "。每条建议都标了出处和证据有多硬。"],
+  doors: [
+    { kicker: "第一次听说 GEO", title: "新手入门", desc: `${LESSONS.length} 课，先看看 AI 现在怎么说你`, href: lessonHref(LESSONS[0], lang) },
+    { kicker: "会写代码", title: "完整教程", desc: `${STEPS.length} 步，从爬虫到量效果`, href: stepHref(STEPS[0], lang) },
+    { kicker: "想直接照做", title: "按产品类型", desc: HOWTO[0].items.map((x) => t(x, "title", lang)).slice(0, 3).join("、") + "……", href: link("/howto/#g0", lang) },
+  ],
+  painH: "你是不是遇到过这些",
+  PAIN: [
+    "在 ChatGPT 里问你做的那类工具，它推荐了五个，没有你。",
+    "网上的 GEO 教程一篇比一篇玄，不知道哪条真的有用。",
+    "改了一堆东西，不知道 AI 到底有没有看到。",
+  ],
+  lessonsH: "新手先看这三课", lessonsP: "按顺序看。看完你会知道 AI 现在怎么说你，第一周该做什么。",
+  stepsH: "完整教程", stepsP: "按 AI 找答案的顺序：先爬到你，再搜到你，读懂你，最后引用你。",
+  refH: "查资料", refP: "遇到了再查，不用从头看。",
+};
+const headings = [["h-pain", C.painH], ["h-lessons", C.lessonsH], ["h-steps", C.stepsH], ["h-ref", C.refH]].map(([slug, text]) => ({ slug, text, depth: 2 }));
+---
+<Site title={NAME} headings={headings}>
+  <div class="home">
+    <h1>{NAME}</h1>
+    <p class="home__lead"><strong>{TAGLINE}。</strong>{C.lead[0]}<mark>{C.lead[1]}</mark>{C.lead[2]}</p>
+    <nav class="routes doors" aria-label="从哪里开始">
+      {C.doors.map((d) => (
+        <a class="route" href={d.href}>
+          <small>{d.kicker}</small>
+          <h3>{d.title}<i data-xxd-icon="ArrowRight" data-size="16"></i></h3>
+          <p>{d.desc}</p>
+        </a>
+      ))}
+    </nav>
+
+    <section aria-labelledby="h-pain">
+      <h2 id="h-pain">{C.painH}</h2>
+      <ul class="pain">{C.PAIN.map((x) => <li>{x}</li>)}</ul>
+    </section>
+
+    <section aria-labelledby="h-lessons">
+      <h2 id="h-lessons">{C.lessonsH}</h2>
+      <p>{C.lessonsP}</p>
+      <ol class="xxd-steps roadmap" data-vertical aria-label={C.lessonsH}>
+        {LESSONS.map((s) => (
+          <li class="xxd-steps__item">
+            <span class="xxd-steps__mark" aria-hidden="true">{s.n}</span>
+            <span class="xxd-steps__text">
+              {s.ready ? <a class="xxd-steps__title xxd-steps__link" href={lessonHref(s, lang)}>{t(s, "title", lang)}</a> : <span class="xxd-steps__title">{t(s, "title", lang)}</span>}
+              <span class="xxd-steps__desc">{t(s, "minutes", lang)} · {t(s, "sum", lang)}</span>
+            </span>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <section aria-labelledby="h-steps">
+      <h2 id="h-steps">{C.stepsH}</h2>
+      <p>{C.stepsP}</p>
+      <ol class="xxd-steps roadmap" data-vertical start={STEPS[0].n} aria-label={C.stepsH}>
+        {STEPS.map((s) => (
+          <li class="xxd-steps__item">
+            <span class="xxd-steps__mark" aria-hidden="true">{s.n}</span>
+            <span class="xxd-steps__text">
+              {s.ready ? <a class="xxd-steps__title xxd-steps__link" href={stepHref(s, lang)}>{t(s, "title", lang)}</a> : <span class="xxd-steps__title">{t(s, "title", lang)}</span>}
+              <span class="xxd-steps__desc">{t(s, "minutes", lang)} · {t(s, "sum", lang)}</span>
+            </span>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <section aria-labelledby="h-ref">
+      <h2 id="h-ref">{C.refH}</h2>
+      <p>{C.refP}</p>
+      <ul class="xxd-list" data-interactive>
+        {SECTIONS.map((x) => <li class="xxd-list__item"><a class="xxd-list__main list-link" href={sectionHref(x.slug, lang)}><span class="xxd-list__title">{t(x, "title", lang)}</span><span class="xxd-list__meta">{t(x, "sum", lang)}</span></a></li>)}
+      </ul>
+    </section>
+
+    <Contact />
+  </div>
+</Site>

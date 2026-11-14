@@ -1,0 +1,21 @@
+{
+  "name": "xxd-geo-site",
+  "private": true,
+  "license": "MIT",
+  "description": "GEO 实战手册：让 AI 在回答里推荐你的产品。写给独立开发者的开源 GEO 知识库，说人话，每条建议都有出处。界面用 xxd-ui-kit。",
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev --port 4430",
+    "build": "astro build && node scripts/search-sections.mjs && node scripts/base-links.mjs",
+    "preview": "astro preview --port 4430",
+    "sync-xxd": "node scripts/sync-xxd.mjs",
+    "release": "npm run build && wrangler deploy"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "7.0.3",
+    "astro": "7.2.8"
+  },
+  "devDependencies": {
+    "wrangler": "4.127.1"
+  }
+}

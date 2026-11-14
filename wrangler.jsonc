@@ -1,0 +1,14 @@
+// GEO 实战手册部署到 Cloudflare（纯静态，Workers 静态资源）。域名和 src/data/nav.js 的 SITE 保持一致。
+// 部署：npm run release（先构建再 wrangler deploy）
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "xxd-geo-site",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page",
+  },
+  "routes": [{ "pattern": "geo.xiaoxiaodong.ai", "custom_domain": true }],
+  "workers_dev": false,
+  "preview_urls": false,
+}
