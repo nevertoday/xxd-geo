@@ -32,3 +32,5 @@ ts	phase	decision	why	evidence	result
 2026-11-14T15:29:01Z	write	第 2 课时长从 10 分钟改成 20 分钟（导航、链接、README 一起改）	写手算过：问 48 次，10 分钟做不完	366d9c4	done
 2026-11-14T15:29:01Z	write	没有在站上另放一份 probe.mjs 和 geo-track.mjs，下载只走 GitHub raw	两份副本会走样；GitHub 上能看到源码	public/tools 已删除	open：国内访问 raw.githubusercontent.com 可能不稳
 2026-11-14T15:29:07Z	audit	上一行误用了 start 阶段名：这仍是同一次运行，那行应记为 audit	start 只留给新的一次运行接手同一份记录	docs/decisions.tsv 上一行	corrected
+2026-11-14T15:31:44Z	review	另一个模型（Fable）审了决策记录，提了 11 条；当场处理两条：维护说明写清核查是对照调研稿，补抽查第 2–6 组各一处改动	审查指出 5 组合并只看了构建；维护说明的说法比实际强	MAINTAINING.md；抽查 5 处都在 main 上且和调研稿一致	2 addressed, rest reported to user
+2026-11-14T15:31:44Z	review	审查说「没在浏览器里看过」，不对：14:5x 用无头 Chrome 截了首页、证据表、暗色、手机宽度	截图在 scratchpad/shots	/tmp/claude-501/-Volumes-T7-usb-js-GEO/399cf2b0-52ec-4e86-bbfe-bae4553ec41d/scratchpad/shots/	flag rejected
