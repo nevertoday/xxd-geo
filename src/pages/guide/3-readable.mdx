@@ -1,8 +1,262 @@
 ---
 layout: ../../layouts/Guide.astro
 step: 3
-tldr: "结构化数据、清楚的标题和页面结构"
-description: "让 AI 读得懂：结构化数据、清楚的标题和页面结构"
+need: 一个已经能被抓到的页面，和一个终端
+tldr: "AI 从你的页面摘段落时，摘到的是对的事实和完整的答案"
+description: "让 AI 读得懂你的页面：先在原始 HTML 里写清产品是什么，标题写成问题，答案放第一段，再看结构化数据和 llms.txt 到底有没有用。"
 ---
+import Callout from "../../components/Callout.astro";
+import Copy from "../../components/Copy.astro";
+import Src from "../../components/Src.astro";
+import Verdict from "../../components/Verdict.astro";
+import Term from "../../components/Term.astro";
+import Checkpoint from "../../components/Checkpoint.astro";
+import Q from "../../components/Q.astro";
 
-正文编写中。
+前两步让 AI 找得到你的页面。这一步让它读对。
+
+AI 回答问题时，会从网页里摘一两段话拼进回答。你要做的，是让它摘到的那段话自己就讲得清楚，事实也是对的。
+
+## 先看 AI 读到的是什么
+
+在终端里跑下面这段。它抓下页面的原始 HTML，去掉脚本和标签，只留文字。
+
+```bash
+URL='https://<你的域名>/<某个产品页>/'
+curl -s "$URL" | python3 -c "
+import sys, re
+h = sys.stdin.read()
+t = re.sub(r'<script.*?</script>|<style.*?</style>', ' ', h, flags=re.S)
+t = re.sub(r'<[^>]+>', ' ', t)
+print(re.sub(r'\s+', ' ', t)[:1500])
+"
+```
+
+<Callout type="ok">
+终端里打出页面正文的前 1500 个字。你能在里面读到产品名、它做什么、价格。
+</Callout>
+
+这就是多数 <Term k="AI 爬虫" /> 看到的样子。Vercel 统计了一个月几亿次抓取：GPTBot、ClaudeBot、PerplexityBot 都不执行 JavaScript <Src ids="03-S1" />。一次实测里，ChatGPT、Claude、Perplexity 替用户现场读网页时，也只读原始 HTML <Src ids="03-S2" />。
+
+所以这一页的每条建议，都落在这段文字上。打出来是空的，先回[第 1 步](/guide/1-crawlable/)把正文改成服务端输出。
+
+## 第一段就说清这是什么产品
+
+把产品页的第一段改成这个句式：
+
+<Copy id="entity-template" title="产品页第一段的句式" code={`<产品名>是一个<平台>上的<类别>，帮<谁><做什么>。
+<价格：免费 / 一次性多少钱 / 每月多少钱>。
+和 <一个同类产品> 相比，它<一个能核对的区别>。`} />
+
+一个 Chrome 插件的例子：
+
+```md
+# BookmarkMD
+
+BookmarkMD 是一个免费的 Chrome 插件，把浏览器书签导出成 Markdown 文件。
+它适合用 Obsidian 或 Logseq 管理资料的人。
+基础功能免费，按文件夹批量导出的 Pro 版一次性 9 美元。
+和 Raindrop.io 相比，它不需要账号，数据只存在本地。
+```
+
+这一段要回答五件事：
+
+- **是什么。** 产品名加类别，「Chrome 插件」「命令行工具」「提示词会员站」。
+- **给谁用。** 一类具体的人。
+- **在哪用。** Chrome、微信、网页、macOS。
+- **多少钱。** 免费也写出来。
+- **和谁像。** 点名一个同类产品，再说一个区别。
+
+为什么要这么直白：
+
+- **AI 摘的多是开头。** Kevin Indig 分析了 18,012 次 ChatGPT 引用，44.2% 来自页面前 30% 的文字 <Src ids="04-S11" />。
+- **话要说死。** 同一研究里，被引的句子用肯定句的比例是 36.2%，没被引的是 20.2% <Src ids="04-S11" />。
+- **难的是被归对类。** 一项对 112 个 Product Hunt 产品的测试：按名字问，ChatGPT 认得 99.4%。按需求问「有什么工具能……」，只有 3.32% 被提到 <Src ids="06-S47" />。你的第一句话，就是在告诉 AI 你属于哪一类。
+
+<Callout type="warn">
+官网、商店页、README 三处的产品名、价格、平台要一字不差。微软建议同一个产品在文字、图片、视频里的说法保持一致 <Src ids="06-S25" />。三处说法不同，AI 可能把旧价格写进回答。
+</Callout>
+
+## 标题写成问题，下面第一段直接答
+
+先看一个教程页改之前和改之后的标题：
+
+```md
+改之前                     改之后
+## 概述                    ## BookmarkMD 能导出哪些书签？
+## 安装                    ## 怎么在 Chrome 里装 BookmarkMD？
+## 高级                    ## 能按文件夹批量导出吗？
+## FAQ                     ## 导出的 Markdown 能直接放进 Obsidian 吗？
+```
+
+每个 `##` 下面的第一段，用两三句话直接回答标题。这段话单独拿出来也要看得懂，不写「如上所述」。后面再放步骤、截图和例外情况。
+
+层级也要对：一页一个 `h1`，`h2`、`h3` 按顺序往下，不跳级。
+
+证据：
+
+- **问句标题更常被引。** Indig 的数据里，被引文字带问号的比例是 18%，没被引的是 8.9% <Src ids="04-S11" />。
+- **标题贴着用户的问法。** Indig 和 AirOps 分析了 81 万多行 ChatGPT 检索记录。标题和查询高度匹配的页面，引用率 41%；匹配度低的是 30% <Src ids="04-S12" />。
+- **同站内少数有效的因素。** 一项研究分析了 15.8 万条 ChatGPT 回答。同一网站内比较时，标题和段落贴合问题仍然有效 <Src ids="01-S12" />。
+
+这里 Google 和微软的说法不一样，两边都写出来：
+
+- **Google** 说不需要为 AI 把内容切成小块，也不需要换一种写法 <Src ids="03-S11" />。Danny Sullivan 在播客里也说过「我们不希望你这样做」<Src ids="06-S11" />。
+- **微软 Bing** 建议写能单独摘出来的段落，避免大段文字墙 <Src ids="06-S24" />。
+
+折中的做法：只要求每节第一段直接回答，其余照常写给人看。不做「给 AI 的版本」和「给人的版本」两套。
+
+## 参数、价格、对比放进表格
+
+有对比、有参数，就用真正的 `<table>`：
+
+```html
+<table>
+  <caption>BookmarkMD 免费版和 Pro 版</caption>
+  <thead>
+    <tr><th>功能</th><th>免费版</th><th>Pro 版</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>导出全部书签</td><td>支持</td><td>支持</td></tr>
+    <tr><td>按文件夹批量导出</td><td>不支持</td><td>支持</td></tr>
+    <tr><td>价格</td><td>0</td><td>9 美元，一次性</td></tr>
+  </tbody>
+</table>
+```
+
+Markdown 里的表格，Astro 会输出成 `<table>`，效果一样。
+
+微软给的建议里有两条和这有关 <Src ids="06-S24" />：
+
+- **答案用列表和表格写。** 简短、能单独成立。
+- **关键信息别只放在图片或 PDF 里。** AI 读的是文字。
+
+<Callout type="warn">
+微软还提醒，别把重要答案藏在标签页或折叠菜单里 <Src ids="06-S24" />。内容如果在 HTML 里，只是用 CSS 收起来，原始 HTML 里还在。<u>点了才去加载的内容，AI 爬虫看不到。</u>
+</Callout>
+
+## 用语义标签，写可见日期和作者
+
+产品页和教程页的骨架照这个写：
+
+```html
+<main>
+  <article>
+    <h1>怎么把 Chrome 书签导出成 Markdown？</h1>
+    <p>
+      作者 <a href="/about/">小明</a> ·
+      最后更新 <time datetime="2026-11-12">2026-11-12</time>
+    </p>
+    <p>用 BookmarkMD 插件，点一下导出，得到一个 .md 文件。</p>
+    <h2>BookmarkMD 能导出哪些书签？</h2>
+    <p>……</p>
+  </article>
+</main>
+```
+
+要点：
+
+- **日期要看得见。** Google 要求可见日期和结构化数据里的一致。时区要对，不写未来日期 <Src ids="03-S39" />。
+- **只在真改了内容时改日期。** Ahrefs 统计了约 1,700 万条引用：AI 助手引用的页面，平均比 Google 自然结果新 25.7% <Src ids="03-S57" />。但 Lily Ray 记录的掉流量网站里，「人工刷新日期」是共同特征之一 <Src ids="04-S20" />。
+- **作者写真名或稳定的网名。** Google 建议在读者预期的地方写准确的署名，不要编造作者 <Src ids="03-S40" />。作者名链接到 About 页，About 页写清你做过哪些产品。
+- **按钮用 `<button>`，链接用 `<a>`。** OpenAI 说 ChatGPT Atlas 靠 ARIA 标签理解页面上能点的东西 <Src ids="03-S6" />。可访问性专家 Adrian Roselli 主张先用原生元素。ARIA 只给没有文字的图标按钮。这是他的观点 <Src ids="03-S60" />。原生元素本身就带角色和名字，两边都照顾到。
+
+Astro 站点怎么自动输出这些，见 [Astro 站点的 GEO 设置](/howto/astro/)。
+
+## 结构化数据：写几个，别指望它带来引用
+
+结构化数据是写在 `<script type="application/ld+json">` 里的一段 JSON。它告诉搜索引擎：这页是一个软件，叫什么，多少钱。
+
+先说结论：想被 AI 引用，它 <Verdict v="skip" />。想拿 Google 富结果、把产品信息写清楚，它 <Verdict v="try" />。
+
+证据两边都有：
+
+- **大样本对照：没有可测的提升。** Ahrefs 追踪了 1,885 个新加 JSON-LD 的页面，配了约 4,000 个对照页。加完以后 ChatGPT 引用 +2.2%、AI Mode +2.4%，都和零分不开；AI Overviews 反而 -4.6% <Src ids="03-S32" />。Ahrefs 卖 SEO 工具，这项研究也只看了已经被大量引用的页面。
+- **现场读网页时不看 JSON-LD。** searchVIU 把价格只写在 JSON-LD 里，五个 AI 现场读页面时都没读到 <Src ids="03-S33" />。
+- **同站比较时没用。** 还是那项 15.8 万条回答的研究。结构化数据只在跨网站比较时显得有用，同站内比较就没效果 <Src ids="01-S12" />。它更像「好网站的共同特征」。
+- **微软说有帮助。** 微软 Bing 的 Fabrice Canel 在会上说，schema 帮助微软的大模型理解内容 <Src ids="03-S34" />。Bing 产品经理在微软广告博客上也建议用 schema <Src ids="06-S24" />。
+- **Google 说不需要。** Google 写明，生成式 AI 搜索不需要特别的 schema.org 标记 <Src ids="03-S11" />。但它仍然支持富结果，比如 SoftwareApplication <Src ids="03-S38" />。
+
+<Callout type="warn" title="FAQ 富结果已经没了">
+Google 从 2026-05-07 起不再展示 FAQ 富结果，2026-06 删掉了相关文档 <Src ids="03-S35" />。为了富结果写 FAQPage 已经没用。网上很多 GEO 教程还在教这个，那是旧信息。
+</Callout>
+
+所以只写几个和页面可见内容一致的类型：
+
+- **产品页**：插件和工具用 `SoftwareApplication`，SaaS 和会员站用 `WebApplication`。
+- **教程和博客**：`TechArticle` 或 `BlogPosting`。
+- **全站一次**：`Organization` 或 `Person`，用 `sameAs` 连上 GitHub、商店页。
+
+<Callout type="no">
+别在 JSON-LD 里写页面上没有的东西：评分、用户数、正文里没写的价格。Google 要求结构化数据和可见文字一致 <Src ids="03-S10" />。
+</Callout>
+
+四种产品的完整写法和检查方法，见 [JSON-LD 结构化数据](/howto/json-ld/)。
+
+想自己验证有没有用：加之前在 Bing Webmaster Tools 的 AI Performance 报告里记下引用次数 <Src ids="03-S45" />，加完等 30 天再看。具体做法见[做一次前后对比实验](/howto/experiment/)。
+
+## llms.txt 和 Markdown 版本：给编程 Agent 看的
+
+llms.txt 是放在网站根目录的一份 Markdown 目录，列出站内重要页面。想靠它被 AI 搜索引用：<Verdict v="skip" />。你的产品是开发者工具、有文档站：<Verdict v="try" />。
+
+- **几乎没有 AI 搜索去读它。** Ahrefs 看了 137,210 个有流量的域名：放了 llms.txt 的，97% 一个月里零请求。有请求的里面，AI 搜索类爬虫只占 1.1% <Src ids="03-S30" />。
+- **和引用没有关系。** SE Ranking 对约 30 万个域名做分析，找不到 llms.txt 和 AI 引用的相关性 <Src ids="06-S33" />。SE Ranking 是卖工具的公司。
+- **Google 不用它。** Google 说 llms.txt 对 Google 搜索不帮也不害 <Src ids="03-S11" />。
+- **编程 Agent 在读 Markdown。** Evil Martians 的服务器日志里，Claude Code 的请求 88% 拿的是 Markdown。ChatGPT-User 只有 0.7% <Src ids="03-S3" />。
+
+<Callout type="no">
+别按 User-Agent 判断，给 AI 爬虫返回另一份页面。这属于 Google 定义的 cloaking <Src ids="03-S4" />。要给 Markdown，就按请求头 `Accept: text/markdown` 返回。
+</Callout>
+
+要不要加、怎么用 Astro 自动生成，见 [llms.txt：要不要加](/howto/llms-txt/)。
+
+## 交给 AI 做
+
+先用第一节的命令把页面抓下来，原样贴给 AI：
+
+<Copy id="readable-audit" title="发给 Claude Code 或 ChatGPT" code={`下面是用 curl 抓到的页面原始 HTML，没有执行 JavaScript。ChatGPT、Claude、Perplexity 读到的就是这些。
+我的产品资料（实体卡）也附在后面，所有事实以它为准。
+
+请逐条检查，按严重程度排序：
+1. 第一段有没有说清：产品名、类别、给谁用、平台、价格、和哪个产品类似。缺哪项就指出来。
+2. 用户最可能问的 3 个问题，答案在不在可见文字里。只在 script、JSON、图片或点击后才加载的部分里的，单独列出。
+3. h1 到 h3 层级是否连续。标题是不是用户会问的完整问题。
+4. 每个 h2 下第一段是否直接回答标题，单独拿出来能不能看懂。
+5. 参数、价格、对比有没有用 table。
+6. 有没有可见的更新日期和作者。JSON-LD 里的 dateModified、author、price 和正文是否一致。
+
+每个问题给出改后的 HTML 片段。
+不要新增实体卡里没有的事实、数字、评价。需要数据的地方写 [需补充]。
+不要建议加任何「AI 专用 meta 标签」。
+
+实体卡：
+<粘贴>
+
+HTML：
+<粘贴 curl 输出>`} />
+
+拿到结果后检查这几样：
+
+- 改后的第一段，每个事实都能在实体卡里找到。
+- 它没有加评分、用户数、「最好」「第一」这类词。
+- 改完重新部署，再跑一次第一节的命令，新的第一段出现在输出里。
+
+<Checkpoint id="g3" items={["用 curl 能在原始 HTML 里读到产品名、类别、价格", "产品页第一段说清了是什么、给谁、在哪用、多少钱、和谁像", "官网、商店页、README 的产品名和价格一致", "教程页的 h2 是问题，下面第一段直接回答", "页面上有看得见的更新日期和作者", "JSON-LD 里每个值都能在正文里找到"]} />
+
+## 卡住了？
+
+<Q q="curl 抓下来的文字是空的，或者只有菜单">
+<p>正文是浏览器里用 JavaScript 渲染出来的。多数 AI 爬虫不执行 JavaScript <Src ids="03-S1" />。回到[第 1 步](/guide/1-crawlable/)，把正文改成构建时或服务端输出。</p>
+</Q>
+<Q q="AI 回答里我的产品价格或功能是错的">
+<p>先搜一下你自己的三处页面：官网、商店页、README。常见原因是其中一处还写着旧价格。三处改成一致，改完在官网写上新的更新日期。AI 的回答每次都不同 <Src ids="06-S38" />，改完要隔几天多问几次，见[量出效果](/guide/7-measure/)。</p>
+</Q>
+<Q q="Rich Results Test 说我的插件页不能出富结果">
+<p>SoftwareApplication 富结果必须有评分或评论 <Src ids="03-S38" />。你的站上没有收集评分，就没有这个资格。这不影响页面被收录，也不要为了它去编评分。</p>
+</Q>
+<Q q="Search Console 里的 FAQ 报告不见了">
+<p>Google 在 2026-06 移除了 FAQ 报告，FAQ 富结果从 2026-05-07 起不再展示 <Src ids="03-S35" />。页面上的问答内容留着，对读者有用；FAQPage 标记删不删都行。</p>
+</Q>
+<Q q="Google 说别为 AI 改写法，我还要改标题吗">
+<p>改。问题式标题和答案先行的第一段，对来搜索的人一样有用。你只需要避免一件事：为了 AI 另做一个切成碎块的版本。</p>
+</Q>

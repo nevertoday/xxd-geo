@@ -2,8 +2,467 @@
 layout: ../../layouts/HowTo.astro
 slug: astro
 step: 3
-tldr: "Astro 站点的 GEO 设置"
-description: "Astro 站点的 GEO 设置"
+tldr: "Astro 站点一次配好 robots.txt、真实 lastmod、JSON-LD、可见日期和部署后推送"
+description: "Astro 静态站部署在 Cloudflare 上的 GEO 设置：robots.txt 端点、@astrojs/sitemap 写真实 lastmod、布局里输出 canonical、OG 和 JSON-LD、可见的更新日期、llms.txt、部署后推送 IndexNow。"
+time: "1 小时"
+for: "Astro 静态站：教程站、产品介绍页、文档站"
 ---
+import Callout from "../../components/Callout.astro";
+import Copy from "../../components/Copy.astro";
+import Cmd from "../../components/Cmd.astro";
+import Src from "../../components/Src.astro";
+import Q from "../../components/Q.astro";
 
-正文编写中。
+这页的代码按这个前提写：Astro 静态站，文章放在 content collection 里，部署到 Cloudflare Workers。本页代码在 Astro 7.2.8 和 `@astrojs/sitemap` 3.7.5 上构建过（2026-11）。Astro 5 以上的写法相同。
+
+Astro 默认在构建时输出完整的 HTML。多数 AI 爬虫不执行 JavaScript <Src ids="03-S1" />，所以这一点你已经天然满足。下面补的是剩下几样。
+
+做完以后，你的项目会多出这些文件：
+
+```txt
+astro.config.mjs           填 site，配 sitemap
+scripts/lastmod.mjs        从 frontmatter 读更新日期
+scripts/indexnow.mjs       部署后推送改过的网址
+src/content.config.ts      文章字段，加 updated
+src/components/Seo.astro   canonical、OG、JSON-LD
+src/layouts/DocLayout.astro 文章布局：标题、作者、更新日期
+src/pages/[...slug].astro  每篇文章一个页面
+src/pages/robots.txt.ts    robots.txt
+src/pages/llms.txt.ts      llms.txt（可选）
+wrangler.jsonc             Cloudflare 部署配置
+```
+
+## 1. 给文章加一个更新日期字段
+
+```ts
+// src/content.config.ts
+import { defineCollection } from 'astro:content';
+import { glob } from 'astro/loaders';
+import { z } from 'astro/zod';
+
+const docs = defineCollection({
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/docs' }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    pubDate: z.coerce.date(),
+    updated: z.coerce.date().optional(),
+    draft: z.boolean().default(false),
+  }),
+});
+
+export const collections = { docs };
+```
+
+每篇文章的 frontmatter 这样写：
+
+```md
+---
+title: "Astro 怎么生成带真实 lastmod 的 sitemap？"
+description: "用 @astrojs/sitemap 的 serialize，按 frontmatter 里的更新日期写 lastmod。"
+pubDate: 2026-10-02
+updated: 2026-11-12
+---
+```
+
+<u>只在真改了内容时改 `updated`。</u>后面的 sitemap、JSON-LD、页面上的日期都从它来。
+
+## 2. sitemap 写真实的 lastmod
+
+装上官方插件：
+
+<Cmd c="npx astro add sitemap" />
+
+再加一个小脚本，从每篇文章的 frontmatter 读日期。`astro.config.mjs` 里不能调用 `getCollection`，所以直接读文件：
+
+```js
+// scripts/lastmod.mjs
+import { readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+
+export function lastmodMap(site, dir = 'src/content/docs') {
+  const map = new Map();
+  for (const file of readdirSync(dir, { recursive: true })) {
+    if (!/\.mdx?$/.test(file)) continue;
+    const fm = readFileSync(join(dir, file), 'utf8').match(/^---\r?\n([\s\S]*?)\r?\n---/);
+    if (!fm) continue;
+    const pick = (key) => fm[1].match(new RegExp(`^${key}:\\s*["']?(\\d{4}-\\d{2}-\\d{2}[0-9TZ:+.\\-]*)`, 'm'))?.[1];
+    const date = pick('updated') ?? pick('pubDate');
+    if (!date) continue;
+    const slug = file.replace(/\\/g, '/').replace(/(\/index)?\.mdx?$/, '');
+    map.set(new URL(`/${slug}/`, site).href, new Date(date).toISOString());
+  }
+  return map;
+}
+```
+
+```js
+// astro.config.mjs
+import { defineConfig } from 'astro/config';
+import sitemap from '@astrojs/sitemap';
+import { lastmodMap } from './scripts/lastmod.mjs';
+
+const SITE = 'https://example.com';
+const lastmod = lastmodMap(SITE);
+
+export default defineConfig({
+  site: SITE,
+  trailingSlash: 'always',
+  integrations: [
+    sitemap({
+      filter: (page) => !page.includes('/drafts/'),
+      serialize(item) {
+        const date = lastmod.get(item.url);
+        if (date) item.lastmod = date;
+        return item;
+      },
+    }),
+  ],
+});
+```
+
+把 `example.com` 换成你的域名。`site` 必须填，canonical、sitemap、robots.txt 都靠它拼出完整网址。
+
+脚本里的 slug 规则对应「文章在 `src/content/docs/guide/a.md`，网址是 `/guide/a/`」。你的路由不一样，就改 `slug` 那一行。
+
+为什么不直接写 `lastmod: new Date()`：那样每次构建，所有页面都「更新」了。Google 只在 lastmod 一直准确时才用它 <Src ids="03-S42" />。Bing 明确说别把 lastmod 设成 sitemap 的生成时间 <Src ids="03-S43" />。
+
+<Callout type="ok">
+构建后打开 `dist/sitemap-0.xml`。每篇文章的 `<lastmod>` 等于它 frontmatter 里的 `updated`，没有 `updated` 的等于 `pubDate`。各篇的日期互不相同。
+</Callout>
+
+## 3. 用一个组件输出 canonical、OG 和 JSON-LD
+
+```astro
+---
+// src/components/Seo.astro
+interface Props {
+  title: string;
+  description: string;
+  image?: string;
+  type?: 'website' | 'article';
+  jsonLd?: Record<string, unknown>;
+}
+const { title, description, image = '/og.png', type = 'website', jsonLd } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const ogImage = new URL(image, Astro.site).href;
+const ld = jsonLd && JSON.stringify(jsonLd).replace(/</g, '\\u003c');
+---
+<title>{title}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+<meta property="og:type" content={type} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:image" content={ogImage} />
+<meta name="twitter:card" content="summary_large_image" />
+{ld && <script type="application/ld+json" set:html={ld} />}
+```
+
+两处细节：
+
+- **canonical 用 `Astro.url.pathname` 拼。** 配合 `trailingSlash: 'always'`，canonical 和 sitemap 里的网址完全一样，结尾都带斜杠。
+- **JSON 里的 `<` 换成 `\u003c`。** 正文里万一有 `</script>`，也不会把标签截断。
+
+## 4. 文章布局：看得见的作者和更新日期
+
+```astro
+---
+// src/layouts/DocLayout.astro
+import type { CollectionEntry } from 'astro:content';
+import Seo from '../components/Seo.astro';
+
+interface Props { entry: CollectionEntry<'docs'> }
+const { entry } = Astro.props;
+const { title, description, pubDate, updated } = entry.data;
+const modified = updated ?? pubDate;
+const AUTHOR = { name: '小明', url: new URL('/about/', Astro.site).href };
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'TechArticle',
+  headline: title,
+  description,
+  datePublished: pubDate.toISOString(),
+  dateModified: modified.toISOString(),
+  mainEntityOfPage: new URL(Astro.url.pathname, Astro.site).href,
+  inLanguage: 'zh-CN',
+  author: { '@type': 'Person', name: AUTHOR.name, url: AUTHOR.url },
+};
+---
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <Seo title={title} description={description} type="article" jsonLd={jsonLd} />
+  </head>
+  <body>
+    <main>
+      <article>
+        <h1>{title}</h1>
+        <p>{description}</p>
+        <p>
+          作者 <a href={AUTHOR.url}>{AUTHOR.name}</a> · 最后更新
+          <time datetime={modified.toISOString()}>{modified.toISOString().slice(0, 10)}</time>
+        </p>
+        <slot />
+      </article>
+    </main>
+  </body>
+</html>
+```
+
+```astro
+---
+// src/pages/[...slug].astro
+import { getCollection, render } from 'astro:content';
+import DocLayout from '../layouts/DocLayout.astro';
+
+export async function getStaticPaths() {
+  const docs = await getCollection('docs', ({ data }) => !data.draft);
+  return docs.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+---
+<DocLayout entry={entry}><Content /></DocLayout>
+```
+
+这样写的理由：
+
+- **页面日期和 JSON-LD 日期同源。** Google 要求可见日期和结构化数据里的日期一致 <Src ids="03-S39" />。两处都读 `modified`，不会对不上。
+- **description 显示在标题下。** JSON-LD 里写了 description，正文里就要看得见。它也正好是答案先行的第一句。
+- **作者链接到 About 页。** Google 建议写准确的署名 <Src ids="03-S40" />。
+
+产品介绍页不用这个布局，在页面里直接传 `jsonLd`：
+
+```astro
+---
+// src/pages/tabnote.astro
+import Seo from '../components/Seo.astro';
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'TabNote',
+  applicationCategory: 'BrowserApplication',
+  operatingSystem: 'Chrome',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
+---
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <Seo title="TabNote：在 Chrome 侧边栏给网页记笔记" description="TabNote 是一个免费的 Chrome 插件，在侧边栏给任意网页记笔记。" jsonLd={jsonLd} />
+  </head>
+  <body>
+    <main>
+      <h1>TabNote</h1>
+      <p>TabNote 是一个免费的 Chrome 插件，在侧边栏给任意网页记笔记。</p>
+    </main>
+  </body>
+</html>
+```
+
+插件、开源工具、会员站的完整 JSON-LD，见 [JSON-LD 结构化数据](/howto/json-ld/)。
+
+## 5. robots.txt
+
+```ts
+// src/pages/robots.txt.ts
+import type { APIRoute } from 'astro';
+
+export const GET: APIRoute = ({ site }) => {
+  const body = [
+    'User-agent: *',
+    'Allow: /',
+    'Disallow: /drafts/',
+    '',
+    `Sitemap: ${new URL('sitemap-index.xml', site).href}`,
+    '',
+  ].join('\n');
+  return new Response(body, { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+};
+```
+
+静态构建时，这个端点会变成 `dist/robots.txt`。用端点的好处是 Sitemap 网址跟着 `site` 走，换域名不用改两处。
+
+这里放行了所有爬虫。要不要挡训练用的爬虫、各家爬虫叫什么，见 [robots.txt：放行哪些 AI 爬虫](/howto/robots-txt/)。
+
+<Callout type="warn">
+部署后用 `curl -s https://<你的域名>/robots.txt` 看一眼线上的内容。Cloudflare 的托管 robots.txt 打开时，会在你的文件前面插一段，默认挡 GPTBot、ClaudeBot 等训练爬虫 <Src ids="03-S17" />。见 [Cloudflare 别把 AI 爬虫挡在门外](/howto/cloudflare-bots/)。
+</Callout>
+
+## 6. llms.txt（可选）
+
+```ts
+// src/pages/llms.txt.ts
+import type { APIRoute } from 'astro';
+import { getCollection } from 'astro:content';
+
+export const GET: APIRoute = async ({ site }) => {
+  const docs = (await getCollection('docs', ({ data }) => !data.draft))
+    .sort((a, b) => a.id.localeCompare(b.id));
+  const lines = [
+    '# 小明的 Astro 教程站',
+    '',
+    '> 给独立开发者的 Astro 和 Cloudflare 教程，每篇讲一个问题，附可以复制的代码。',
+    '',
+    '## 教程',
+    '',
+    ...docs.map((d) => `- [${d.data.title}](${new URL(`/${d.id}/`, site).href}): ${d.data.description}`),
+    '',
+  ];
+  return new Response(lines.join('\n'), { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+};
+```
+
+它对 AI 搜索引用没有可测的作用，主要读者是编程 Agent <Src ids="03-S30 03-S3" />。要不要加，见 [llms.txt：要不要加](/howto/llms-txt/)。
+
+## 7. 部署到 Cloudflare，部署后推送 IndexNow
+
+纯静态的 Astro 不需要 `@astrojs/cloudflare` 适配器，让 Workers 直接托管 `dist` 就行 <Src ids="03-S26" />：
+
+```jsonc
+// wrangler.jsonc
+{
+  "name": "my-astro-site",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page"
+  }
+}
+```
+
+`not_found_handling: "404-page"` 让不存在的网址显示 `src/pages/404.astro` 构建出的页面 <Src ids="03-S26" />。
+
+部署后，把这次改过的网址推给 Bing 等搜索引擎。Bing 把 IndexNow 列为让 AI 引用你最新页面的第一条建议 <Src ids="03-S45" />。下面的脚本只推 lastmod 在最近两天内的网址，所以依赖第 2 节的真实 lastmod：
+
+```js
+// scripts/indexnow.mjs
+import { readFileSync, readdirSync } from 'node:fs';
+
+const SITE = process.env.SITE_URL;
+const KEY = process.env.INDEXNOW_KEY;
+const DAYS = Number(process.env.INDEXNOW_DAYS ?? 2);
+if (!SITE || !KEY) throw new Error('SITE_URL and INDEXNOW_KEY must be set');
+
+const since = Date.now() - DAYS * 864e5;
+const urls = [];
+for (const file of readdirSync('dist').filter((f) => /^sitemap-\d+\.xml$/.test(f))) {
+  for (const block of readFileSync(`dist/${file}`, 'utf8').split('<url>').slice(1)) {
+    const loc = block.match(/<loc>([^<]+)<\/loc>/)?.[1];
+    const lastmod = block.match(/<lastmod>([^<]+)<\/lastmod>/)?.[1];
+    if (loc && lastmod && Date.parse(lastmod) >= since) urls.push(loc);
+  }
+}
+if (urls.length === 0) {
+  console.log(`IndexNow: nothing changed in the last ${DAYS} days`);
+  process.exit(0);
+}
+
+const res = await fetch('https://api.indexnow.org/indexnow', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json; charset=utf-8' },
+  body: JSON.stringify({
+    host: new URL(SITE).host,
+    key: KEY,
+    keyLocation: new URL(`/${KEY}.txt`, SITE).href,
+    urlList: urls.slice(0, 10000),
+  }),
+});
+console.log(`IndexNow: sent ${urls.length} URLs, HTTP ${res.status}`);
+if (res.status !== 200 && res.status !== 202) process.exit(1);
+```
+
+在 `package.json` 里串起来：
+
+```json
+{
+  "scripts": {
+    "build": "astro build",
+    "deploy": "astro build && wrangler deploy && node scripts/indexnow.mjs"
+  }
+}
+```
+
+还要一个 key 文件。生成一个 key，存成 `public/<key>.txt`，文件内容就是这个 key <Src ids="03-S48" />：
+
+<Copy id="indexnow-key" title="在项目根目录运行" code={`KEY=$(openssl rand -hex 16)
+echo "$KEY" > "public/$KEY.txt"
+echo "INDEXNOW_KEY=$KEY"`} />
+
+部署时带上环境变量：
+
+<Copy id="deploy" title="部署" code={`SITE_URL=https://<你的域名> INDEXNOW_KEY=<你的 key> npm run deploy`} />
+
+<Callout type="ok">
+最后一行是 `IndexNow: sent 3 URLs, HTTP 200` 或 `HTTP 202`，数字是这次改过的篇数。没改文章时是 `IndexNow: nothing changed in the last 2 days`。
+</Callout>
+
+返回码各是什么意思、怎么在 Bing 后台确认，见 [IndexNow：新页面主动推给搜索引擎](/howto/indexnow/)。
+
+## 8. 构建完检查一遍
+
+<Copy id="astro-check" title="构建后在项目根目录运行" code={`npm run build
+cat dist/robots.txt
+grep -o '<lastmod>[^<]*' dist/sitemap-0.xml | sort | uniq -c | sort -rn | head
+grep -o '<link rel="canonical"[^>]*>' dist/guide/*/index.html | head -3
+grep -c 'application/ld+json' dist/guide/*/index.html | head -3
+grep -o '<time[^<]*</time>' dist/guide/*/index.html | head -3`} />
+
+<Callout type="ok">
+- `robots.txt` 最后一行是 `Sitemap: https://<你的域名>/sitemap-index.xml`。
+- lastmod 的统计里，每个日期只出现一两次。
+- 每页的 canonical 是带结尾斜杠的完整网址。
+- 每页 `application/ld+json` 计数是 1。
+- `<time>` 里的日期等于那篇文章的 `updated`。
+</Callout>
+
+还要确认 JSON-LD 的值都在正文里，用 [JSON-LD 结构化数据](/howto/json-ld/) 里的检查脚本。
+
+## 交给 AI 做
+
+<Copy id="astro-prompt" title="在项目里发给 Claude Code" code={`这是一个 Astro 静态站，部署在 Cloudflare Workers 静态资源上，文章在 src/content/docs。
+请按下面做，每做完一项就运行 npm run build，并用 cat 或 grep 检查 dist 里的产物给我看：
+
+1. src/content.config.ts 的 docs 集合加 updated（可选日期）和 draft（默认 false）字段。
+2. 新建 src/components/Seo.astro：输出 title、description、canonical（用 Astro.site 和 Astro.url.pathname 拼）、OG 标签、JSON-LD。JSON.stringify 后把 < 替换成 \\u003c。
+3. 文章布局在 h1 下显示 description、作者链接和「最后更新」日期，用 time 标签。JSON-LD 的 dateModified 和这个日期来自同一个变量。
+4. 用 @astrojs/sitemap 的 serialize，按 frontmatter 的 updated（没有就用 pubDate）设置 lastmod。不要设全局 lastmod。
+5. 新增 src/pages/robots.txt.ts，Sitemap 行用 site 拼出完整网址。
+6. 新增 scripts/indexnow.mjs：读取 dist/sitemap-*.xml，只提交 lastmod 在最近 2 天内的网址到 https://api.indexnow.org/indexnow。SITE_URL 和 INDEXNOW_KEY 从环境变量读。
+7. 不要启动开发服务器，只用 npm run build。如果确实启动了，结束前关掉，并确认端口已释放。
+
+完成后列出改动的文件，以及每一项的检查命令和输出。`} />
+
+收到以后检查：
+
+- 它给的 `dist/sitemap-0.xml` 里，lastmod 各不相同。
+- 它没有改 `astro.config.mjs` 以外的部署配置。
+- 你自己跑一遍第 8 节的命令，结果和它说的一致。
+
+## 卡住了？
+
+<Q q="构建报错 Astro.site is undefined，或 canonical 变成了相对路径">
+<p><code>astro.config.mjs</code> 里没填 <code>site</code>。填上带 <code>https://</code> 的完整域名，再构建。</p>
+</Q>
+<Q q="sitemap 里所有页面的 lastmod 都一样">
+<p>某处设了全局 <code>lastmod</code>，或者 <code>serialize</code> 里用了 <code>new Date()</code>。删掉它，只用第 2 节的 <code>lastmodMap</code>。</p>
+</Q>
+<Q q="sitemap 里有的页面没有 lastmod">
+<p><code>lastmodMap</code> 算出的网址和 sitemap 里的对不上。在 <code>serialize</code> 里临时加一行 <code>console.log(item.url)</code>，和 <code>lastmodMap</code> 的键比一下，再改 <code>slug</code> 那一行。首页和不在 content collection 里的页面没有 lastmod，这是正常的。</p>
+</Q>
+<Q q="线上的 robots.txt 和 dist 里的不一样">
+<p>多半是 Cloudflare 的托管 robots.txt 在前面插了内容 <Src ids="03-S17" />。到 Cloudflare 后台关掉它，或者确认插入的规则符合你的意图。见 <a href="/howto/cloudflare-bots/">Cloudflare 别把 AI 爬虫挡在门外</a>。</p>
+</Q>
+<Q q="IndexNow 返回 403">
+<p>key 对不上。用 <code>curl https://&lt;你的域名&gt;/&lt;你的 key&gt;.txt</code> 看线上能不能拿到这个文件。内容要和 <code>INDEXNOW_KEY</code> 一模一样 <Src ids="03-S48" />。</p>
+</Q>
+<Q q="老教程里写 import { z } from 'astro:content'，能用吗">
+<p>在 Astro 7.2.8 上两种写法都能构建通过。新项目照本页写 <code>astro/zod</code>，旧项目不用急着改。</p>
+</Q>

@@ -2,8 +2,173 @@
 layout: ../../layouts/HowTo.astro
 slug: llms-txt
 step: 3
-tldr: "llms.txt：要不要加"
-description: "llms.txt：要不要加"
+tldr: "知道 llms.txt 谁在读，十分钟加上，不把它当成让 AI 引用的办法"
+description: "llms.txt 是什么，AI 搜索读不读它的数据，真正在读 Markdown 的编程 Agent，加它的成本，一份最小的 llms.txt 和自动生成它的 Astro 端点。"
+time: "10 分钟"
+for: "文档站、开源项目、开发者工具"
 ---
+import Callout from "../../components/Callout.astro";
+import Copy from "../../components/Copy.astro";
+import Src from "../../components/Src.astro";
+import Verdict from "../../components/Verdict.astro";
+import Q from "../../components/Q.astro";
 
-正文编写中。
+先给结论：
+
+- **想靠它被 ChatGPT、Perplexity、Google AI 引用**：<Verdict v="skip" />。几乎没有 AI 搜索去读它。
+- **你的产品是开发者工具、有文档站**：<Verdict v="try" />。Claude Code 这类编程 Agent 会读 Markdown。
+- **营销页、会员站、小程序介绍页**：加不加都行，花不了十分钟，也别指望它。
+
+## 它是什么
+
+llms.txt 是放在网站根目录的一个 Markdown 文件，给大模型一份精简的站内目录。提案作者是 Jeremy Howard，2024-09 发布，2026-08 修订到第 2 版 <Src ids="03-S29" />。
+
+格式只有一条硬要求：第一行是一个 H1，写站点或项目名。后面依次可选 <Src ids="03-S29" />：
+
+- 一个引用块，一两句话说这个站是什么。
+- 几段不带标题的说明。
+- 几个 H2 分组，每组是 `[名称](网址): 说明` 的链接列表。
+- 一个叫 `Optional` 的 H2，放 Agent 赶时间时可以跳过的页面。
+
+提案还约定，每个页面可以有一份 Markdown 版本，放在原网址加 `.md` 的位置 <Src ids="03-S29" />。网上常见的 `llms-full.txt`（把全部文档拼成一个文件）不在提案里，是社区自己的做法。
+
+## AI 搜索读不读它
+
+数据都指向「不读」：
+
+- **97% 一个月零请求。** Ahrefs 看了 137,210 个有流量的域名 2026 年 5 月的日志。放了 llms.txt 的站，97% 当月一次请求都没有。有请求的那些里，AI 搜索类爬虫只占 1.1%，OAI-SearchBot 占 0.74% <Src ids="03-S30" />。
+- **和引用没有相关。** SE Ranking 分析约 30 万个域名，找不到 llms.txt 和 AI 引用之间的相关 <Src ids="06-S33" />。这是卖工具的公司自己的数据。
+- **Google 不用它。** Google 的官方指南说，出现在 Google 搜索里不需要 llms.txt，也不需要别的 AI 专用文件 <Src ids="03-S11" />。John Mueller 把它比作早就没用的 keywords meta 标签 <Src ids="03-S13" />。
+- **单站日志也一样。** Evil Martians 两个月的日志里，`/llms.txt` 和 `/llms-full.txt` 共 593 次请求。能认出名字的 AI 助手只占 47 次，其中 43 次是 Claude Code，ChatGPT 和 Perplexity 各 1 次 <Src ids="03-S3" />。
+
+也有说法相反的数据。Mintlify 统计了 25 家公司 7 天的访问，说 `llms-full.txt` 的流量主要来自 ChatGPT <Src ids="03-S31" />。Mintlify 卖文档托管服务，样本也小。
+
+想知道你自己的站是哪种情况，看服务器日志里谁请求了 `/llms.txt`。做法见[从访问日志看 AI 爬虫来没来](/howto/crawler-logs/)。
+
+## 谁真的在读：编程 Agent
+
+读 Markdown 的是写代码时帮你查文档的 Agent：
+
+| 访问者 | 请求数 | 拿 Markdown 的比例 |
+| --- | --- | --- |
+| Claude Code | 36,691 | 88% |
+| ChatGPT-User | 16,445 | 0.7% |
+| DeepSeek | 483 | 1.9% |
+
+这是 Evil Martians 2026 年 9 到 10 月的日志 <Src ids="03-S3" />。Claude Code 请求时带 `Accept: text/markdown` 请求头。另一次测试发现 Cursor、OpenCode 也带这个头 <Src ids="03-S4" />。
+
+Ahrefs 的数据里也是这样：读 llms.txt 的，主要是 Agent 和 Agent 用的基础设施。它们只在有链接或指令指过去时才去读 <Src ids="03-S30" />。
+
+Chrome 的 Lighthouse 在 2026-05 加了一个实验性的「Agentic Browsing」类别，会检查 llms.txt。没有这个文件记为「不适用」，不算失败 <Src ids="03-S64" />。它衡量的是 Agent 用起来顺不顺，和搜索排名无关。
+
+## 加它要花什么
+
+- **时间。** 一个构建时生成的端点，十分钟。下面有现成代码。
+- **维护。** 用端点从文章列表自动生成，就不用手动维护。
+- **安全。** Ahrefs 提醒，llms.txt 可能被拿来做提示词注入，要像代码一样审查 <Src ids="03-S30" />。端点生成时只放标题和描述，不放用户提交的内容。
+
+几件别做的事：
+
+<Callout type="no">
+- 别按 User-Agent 判断是不是 AI，再给它返回 Markdown。这属于 Google 定义的 cloaking <Src ids="03-S4" />。要给 Markdown，就按 `Accept: text/markdown` 请求头返回。
+- 别加 `<meta name="llms">`、`/ai.txt` 这类东西。Evil Martians 把它们列为「没用」<Src ids="03-S4" />。
+</Callout>
+
+<Callout type="warn">
+Cloudflare Pro 以上套餐有 Markdown for Agents，能把 HTML 自动转成 Markdown。源站没设时，它默认加上 `Content-Signal: ai-train=yes, search=yes, ai-input=yes` 响应头 <Src ids="03-S23" />。<u>这等于替你表态「允许拿去训练」。</u>不想要，就在源站自己设这个头。
+</Callout>
+
+## 一份最小的 llms.txt
+
+照这个改成你的站：
+
+```md
+# BookmarkMD
+
+> BookmarkMD 是一个免费的 Chrome 插件，把浏览器书签导出成 Markdown 文件。这里是它的文档。
+
+## 文档
+
+- [安装](https://example.com/docs/install/): 从 Chrome 应用商店安装，支持 Chrome 120 以上
+- [导出书签](https://example.com/docs/export/): 导出全部书签或单个文件夹
+- [导出格式](https://example.com/docs/format/): 生成的 Markdown 长什么样，怎么放进 Obsidian
+
+## Optional
+
+- [更新日志](https://example.com/changelog/): 每个版本改了什么
+```
+
+放到 `public/llms.txt`，部署后就是 `https://<你的域名>/llms.txt`。页面不多、很少变的站，手写这一份就够了。
+
+## 用 Astro 端点自动生成
+
+页面多的站，让它在构建时从 content collection 生成。新建 `src/pages/llms.txt.ts`：
+
+```ts
+// src/pages/llms.txt.ts
+import type { APIRoute } from 'astro';
+import { getCollection } from 'astro:content';
+
+export const GET: APIRoute = async ({ site }) => {
+  const docs = (await getCollection('docs', ({ data }) => !data.draft))
+    .sort((a, b) => a.id.localeCompare(b.id));
+  const lines = [
+    '# 小明的 Astro 教程站',
+    '',
+    '> 给独立开发者的 Astro 和 Cloudflare 教程，每篇讲一个问题，附可以复制的代码。',
+    '',
+    '## 教程',
+    '',
+    ...docs.map((d) => `- [${d.data.title}](${new URL(`/${d.id}/`, site).href}): ${d.data.description}`),
+    '',
+  ];
+  return new Response(lines.join('\n'), { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+};
+```
+
+这段假设你的集合叫 `docs`，每篇有 `title`、`description`、`draft` 字段，网址是 `/<id>/`。集合怎么定义，见 [Astro 站点的 GEO 设置](/howto/astro/)。`astro.config.mjs` 里要填 `site`，否则拼不出完整网址。
+
+用 Starlight 搭文档站的，直接装 `starlight-llms-txt` 插件。它会生成 llms.txt、llms-full.txt 和 llms-small.txt <Src ids="03-S56" />。普通 Astro 站也有 `astro-llms-txt` 这类社区插件 <Src ids="06-S70" />。
+
+## 检查
+
+<Copy id="llms-check" title="构建后、部署后各跑一次" code={`npm run build && head -20 dist/llms.txt
+curl -s https://<你的域名>/llms.txt | head -20
+curl -sI https://<你的域名>/llms.txt | grep -i content-type`} />
+
+<Callout type="ok">
+- 第一行是 `# 你的站名`。
+- 每篇没标 `draft` 的文章占一行，网址是带 `https://` 的完整地址。
+- `content-type` 是 `text/plain` 或 `text/markdown`。
+</Callout>
+
+## 交给 AI 做
+
+<Copy id="llms-prompt" title="在项目里发给 Claude Code" code={`给这个 Astro 项目加一个构建时生成的 llms.txt，符合 llmstxt.org 的格式：
+1. 新建 src/pages/llms.txt.ts，从 content collection 读文章，过滤掉 draft。
+2. 第一行 H1 是站点名，接一个引用块，一两句话说这个站是什么、给谁看。
+3. 用 H2 分组列出文章，每行格式：- [标题](完整网址): 描述。网址用 Astro 的 site 拼。
+4. 更新日志、标签页这类次要页面放进「## Optional」。
+5. 只列真实存在的页面，不要编页面。
+6. 不要启动开发服务器。运行 npm run build，然后把 dist/llms.txt 的前 30 行给我看。`} />
+
+收到以后检查：
+
+- `dist/llms.txt` 里的网址，随便点开三个都能打开。
+- 没有草稿、没有后台页面。
+- 它没有顺手加 `<meta name="llms">` 之类的标签。
+
+## 卡住了？
+
+<Q q="加了 llms.txt 一个月，日志里一次请求都没有">
+<p>这是常态。Ahrefs 的样本里 97% 的 llms.txt 一个月零请求 <Src ids="03-S30" />。Agent 只在有链接或指令时去读。你可以在 README 或文档首页链接到它，方便用户把它交给编程 Agent。</p>
+</Q>
+<Q q="dist 里没有 llms.txt">
+<p>确认文件名是 <code>src/pages/llms.txt.ts</code>，导出的函数名是大写的 <code>GET</code>。构建日志里应该有一行 <code>/llms.txt</code>。</p>
+</Q>
+<Q q="llms.txt 里的网址是 undefined 开头">
+<p><code>astro.config.mjs</code> 里没填 <code>site</code>。填上带 <code>https://</code> 的域名，重新构建。</p>
+</Q>
+<Q q="SEO 工具说我缺 llms.txt，扣了分">
+<p>这是工具自己的打分。Google 说 Google 搜索不需要它 <Src ids="03-S11" />，也没有数据证明它影响 AI 引用 <Src ids="06-S33" />。按上面十分钟加上就行，别为它花更多时间。</p>
+</Q>

@@ -2,8 +2,366 @@
 layout: ../../layouts/HowTo.astro
 slug: json-ld
 step: 3
-tldr: "JSON-LD 结构化数据"
-description: "JSON-LD 结构化数据"
+tldr: "给插件、开源工具、会员站和教程页写对 JSON-LD，并确认它和页面一致"
+description: "Chrome 插件、开源工具、SaaS 会员站、教程文章四种页面的完整 JSON-LD，怎么在本地和 Google 工具里检查，哪些内容不该标。"
+time: "30 分钟"
+for: "Chrome 插件、开源项目、会员站、教程站"
 ---
+import Callout from "../../components/Callout.astro";
+import Copy from "../../components/Copy.astro";
+import Src from "../../components/Src.astro";
+import Verdict from "../../components/Verdict.astro";
+import Q from "../../components/Q.astro";
 
-正文编写中。
+JSON-LD 是写在页面 `<script type="application/ld+json">` 里的一段 JSON。它告诉搜索引擎：这页是一个软件，叫什么，谁做的，多少钱。
+
+先摆好期望。想拿 Google 富结果、把产品信息说清楚：<Verdict v="try" />。想靠它多被 AI 引用：<Verdict v="skip" />。Ahrefs 追踪 1,885 个新加 JSON-LD 的页面，ChatGPT 和 AI Mode 的引用没有可测的变化 <Src ids="03-S32" />。AI 现场读网页时只读可见文字 <Src ids="03-S33" />。微软的说法相反，说 schema 帮助它的模型理解内容 <Src ids="03-S34" />。完整的证据见[让 AI 读得懂](/guide/3-readable/)。
+
+所以下面的写法只追求一件事：<mark>每个值都和页面上看得见的文字一致。</mark>
+
+## 先决定每页用哪个类型
+
+| 页面 | 用这个类型 |
+| --- | --- |
+| 插件、命令行工具首页 | SoftwareApplication |
+| SaaS、会员站首页 | WebApplication |
+| 开源仓库的介绍页 | 再加 SoftwareSourceCode |
+| 教程、博客文章 | TechArticle |
+| 全站一次 | Person 或 Organization |
+
+内页再加一个 `BreadcrumbList`。下面四个例子都用 `@graph` 把几个对象放在一起，用 `@id` 互相引用。同一个人在全站用同一个 `@id`。
+
+例子里的域名都是 `example.com`，换成 `<你的域名>`。
+
+## Chrome 插件
+
+```json
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://example.com/tabnote/#app",
+      "name": "TabNote",
+      "description": "TabNote 是一个 Chrome 插件，在侧边栏给任意网页记笔记，笔记按网址保存，下次打开同一个网页会自动出现。",
+      "url": "https://example.com/tabnote/",
+      "applicationCategory": "BrowserApplication",
+      "applicationSubCategory": "Chrome extension",
+      "operatingSystem": "Chrome, Microsoft Edge",
+      "softwareRequirements": "Chrome 120 或更高版本",
+      "permissions": "sidePanel, storage, activeTab",
+      "softwareVersion": "2.3.1",
+      "datePublished": "2025-03-02",
+      "dateModified": "2026-11-10",
+      "inLanguage": ["zh-CN", "en"],
+      "installUrl": "https://chromewebstore.google.com/detail/tabnote/abcdefghijklmnopabcdefghijklmnop",
+      "image": "https://example.com/tabnote/icon-512.png",
+      "screenshot": ["https://example.com/tabnote/screenshot-1.png"],
+      "featureList": ["按网址自动保存和显示笔记", "笔记只存在本地", "Pro 版导出 Markdown"],
+      "offers": [
+        { "@type": "Offer", "name": "免费版", "price": "0", "priceCurrency": "USD" },
+        { "@type": "Offer", "name": "Pro 版", "price": "4.99", "priceCurrency": "USD" }
+      ],
+      "author": { "@id": "https://example.com/#me" },
+      "sameAs": [
+        "https://chromewebstore.google.com/detail/tabnote/abcdefghijklmnopabcdefghijklmnop",
+        "https://github.com/example/tabnote"
+      ]
+    },
+    {
+      "@type": "Person",
+      "@id": "https://example.com/#me",
+      "name": "小明",
+      "url": "https://example.com/about/",
+      "sameAs": ["https://github.com/example", "https://x.com/example"]
+    }
+  ]
+}
+```
+
+几处要注意：
+
+- **`applicationCategory` 填 `BrowserApplication`。** 这是 Google 文档里列出的取值之一 <Src ids="03-S38" />。
+- **没写 `aggregateRating`。** 商店里的评分不是在你的站上收集的，页面上也没显示。代价是这页没有 SoftwareApplication 富结果的资格，Google 要求评分或评论二选一 <Src ids="03-S38" />。
+- **`sameAs` 连起商店页和 GitHub。** 让搜索引擎知道这几个地方说的是同一个产品。
+- **`permissions` 写真实申请的权限。** 和 `manifest.json` 一致。
+
+## 开源命令行工具
+
+```json
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://mdshot.example.com/#app",
+      "name": "mdshot",
+      "description": "mdshot 是一个命令行工具，把 Markdown 文件渲染成适合发社交媒体的长图。",
+      "url": "https://mdshot.example.com/",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "macOS, Linux, Windows",
+      "softwareRequirements": "Node.js 20 或更高版本",
+      "softwareVersion": "1.8.0",
+      "datePublished": "2024-11-20",
+      "dateModified": "2026-10-30",
+      "downloadUrl": "https://www.npmjs.com/package/mdshot",
+      "license": "https://opensource.org/licenses/MIT",
+      "isAccessibleForFree": true,
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+      "author": { "@id": "https://example.com/#me" },
+      "sameAs": ["https://github.com/example/mdshot", "https://www.npmjs.com/package/mdshot"]
+    },
+    {
+      "@type": "SoftwareSourceCode",
+      "@id": "https://mdshot.example.com/#code",
+      "name": "mdshot",
+      "codeRepository": "https://github.com/example/mdshot",
+      "programmingLanguage": "TypeScript",
+      "runtimePlatform": "Node.js",
+      "license": "https://opensource.org/licenses/MIT",
+      "targetProduct": { "@id": "https://mdshot.example.com/#app" },
+      "author": { "@id": "https://example.com/#me" }
+    },
+    {
+      "@type": "Person",
+      "@id": "https://example.com/#me",
+      "name": "小明",
+      "url": "https://example.com/about/"
+    }
+  ]
+}
+```
+
+`SoftwareSourceCode` 描述仓库本身，`targetProduct` 指回工具。这段放在你自己的介绍页上。GitHub 上的 README 你加不了 JSON-LD，在那里把第一段写清楚就行，见[开源项目和 GitHub 仓库](/howto/open-source/)。
+
+## SaaS 或会员站
+
+```json
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://prompts.example.com/#org",
+      "name": "小明提示词",
+      "url": "https://prompts.example.com/",
+      "logo": "https://prompts.example.com/logo-512.png",
+      "founder": { "@id": "https://example.com/#me" },
+      "sameAs": ["https://github.com/example", "https://x.com/example"]
+    },
+    {
+      "@type": "WebApplication",
+      "@id": "https://prompts.example.com/#app",
+      "name": "小明提示词会员站",
+      "description": "收录 800 多套可以直接复制的 AI 绘图风格提示词，每套附样图和中英文版本，会员可以下载全部原图。",
+      "url": "https://prompts.example.com/",
+      "applicationCategory": "DesignApplication",
+      "operatingSystem": "Any",
+      "browserRequirements": "需要启用 JavaScript 的现代浏览器",
+      "inLanguage": ["zh-CN", "en"],
+      "dateModified": "2026-11-10",
+      "provider": { "@id": "https://prompts.example.com/#org" },
+      "offers": [
+        {
+          "@type": "Offer",
+          "name": "免费版",
+          "price": "0",
+          "priceCurrency": "CNY",
+          "description": "每天浏览 20 套提示词"
+        },
+        {
+          "@type": "Offer",
+          "name": "月度会员",
+          "price": "29",
+          "priceCurrency": "CNY",
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": "29",
+            "priceCurrency": "CNY",
+            "billingDuration": "P1M"
+          },
+          "url": "https://prompts.example.com/pricing/"
+        }
+      ]
+    },
+    {
+      "@type": "Person",
+      "@id": "https://example.com/#me",
+      "name": "小明",
+      "url": "https://example.com/about/"
+    }
+  ]
+}
+```
+
+- **订阅价用 `UnitPriceSpecification`。** `billingDuration` 写 ISO 8601 时长，`P1M` 是一个月。
+- **`browserRequirements` 只属于 `WebApplication`。** 插件页用 `softwareRequirements`。
+- **付费内容 AI 读不到。** 爬虫只看得到没登录时的页面。给每套付费内容做一个公开介绍页，写标题、样图、适用场景。见 [SaaS 和会员网站](/howto/saas/)。
+
+## 教程文章
+
+```json
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "TechArticle",
+      "@id": "https://example.com/guide/astro-sitemap/#article",
+      "headline": "Astro 怎么生成带真实 lastmod 的 sitemap？",
+      "description": "用 @astrojs/sitemap 的 serialize，按每篇文章 frontmatter 里的更新日期写 lastmod。",
+      "datePublished": "2026-10-02T09:00:00+08:00",
+      "dateModified": "2026-11-12T21:30:00+08:00",
+      "inLanguage": "zh-CN",
+      "proficiencyLevel": "Beginner",
+      "dependencies": "Astro 5 或更高版本",
+      "mainEntityOfPage": "https://example.com/guide/astro-sitemap/",
+      "author": { "@id": "https://example.com/#me" },
+      "publisher": { "@id": "https://example.com/#me" }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "首页", "item": "https://example.com/" },
+        { "@type": "ListItem", "position": 2, "name": "教程", "item": "https://example.com/guide/" },
+        { "@type": "ListItem", "position": 3, "name": "Astro 怎么生成带真实 lastmod 的 sitemap？" }
+      ]
+    },
+    {
+      "@type": "Person",
+      "@id": "https://example.com/#me",
+      "name": "小明",
+      "url": "https://example.com/about/",
+      "jobTitle": "独立开发者",
+      "sameAs": ["https://github.com/example"]
+    }
+  ]
+}
+```
+
+日期带上时区。页面上要有看得见的日期，和 `dateModified` 是同一天。Google 要求两处一致，不写未来日期 <Src ids="03-S39" />。面包屑最后一项是当前页，可以不写 `item`。
+
+## 放进页面
+
+放在 `<head>` 里，一页可以有一个或几个：
+
+```html
+<script type="application/ld+json">
+{ "@context": "https://schema.org", "@type": "SoftwareApplication", "name": "TabNote" }
+</script>
+```
+
+用 Astro 的，在布局里从 frontmatter 生成。要把 JSON 里的 `<` 转义成 `\u003c`，防止正文里出现 `</script>` 把标签截断。完整组件见 [Astro 站点的 GEO 设置](/howto/astro/)。
+
+## 检查有没有写对
+
+**第一步：JSON 能不能解析。** 手写的 JSON 最常见的错，是多一个逗号或少一个引号。先存成文件，在本地解析一次：
+
+<Copy id="ld-parse" title="在终端里运行" code={`node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")); console.log("JSON OK")' tabnote.jsonld`} />
+
+<Callout type="ok">
+终端打出 `JSON OK`。写错时会打出 `SyntaxError` 和出错的位置。
+</Callout>
+
+**第二步：每个值都在正文里。** 构建完以后，在项目根目录放这个脚本。它找出 `dist/` 里每一页的 JSON-LD，看名字、描述、版本、价格、更新日期在不在正文里：
+
+```js
+// scripts/check-jsonld.mjs 用法：构建后运行 node scripts/check-jsonld.mjs
+import { readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+
+const KEYS = ['name', 'headline', 'description', 'softwareVersion', 'price', 'dateModified'];
+const walk = (dir) => readdirSync(dir, { withFileTypes: true })
+  .flatMap((e) => (e.isDirectory() ? walk(join(dir, e.name)) : [join(dir, e.name)]));
+const decode = (s) => s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&');
+
+let problems = 0;
+for (const file of walk('dist').filter((f) => f.endsWith('.html'))) {
+  const html = readFileSync(file, 'utf8');
+  const text = decode(html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, ' ').replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ');
+  for (const [, raw] of html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)) {
+    let data;
+    try { data = JSON.parse(raw); } catch (e) { console.log(`✗ ${file} JSON 写错了：${e.message}`); problems++; continue; }
+    const visit = (node) => {
+      if (Array.isArray(node)) return node.forEach(visit);
+      if (!node || typeof node !== 'object') return;
+      for (const [k, v] of Object.entries(node)) {
+        if (typeof v === 'object') { visit(v); continue; }
+        if (!KEYS.includes(k)) continue;
+        const want = k === 'dateModified' ? String(v).slice(0, 10) : String(v);
+        if (k === 'price' && want === '0') continue;
+        if (!text.includes(want)) { console.log(`✗ ${file} ${k}「${want}」在页面正文里找不到`); problems++; }
+      }
+    };
+    visit(data);
+  }
+}
+console.log(problems ? `共 ${problems} 处要改` : '✓ JSON-LD 都能解析，关键字段都在正文里');
+process.exit(problems ? 1 : 0);
+```
+
+<Callout type="ok">
+最后一行是 `✓ JSON-LD 都能解析，关键字段都在正文里`。有 `✗` 的行，要么把那个值写进正文，要么从 JSON-LD 里删掉。
+</Callout>
+
+最常见的 `✗` 是 `description`：它只写在 meta 里，正文没有。在标题下面把这句话显示出来，正好就是答案先行的第一段。
+
+**第三步：上线后用 Google 的工具看。**
+
+- **Rich Results Test**（`search.google.com/test/rich-results`）：看 Google 能识别出哪些富结果，缺哪些必填字段。
+- **Schema Markup Validator**（`validator.schema.org`）：看每个属性是不是属于这个类型，拼写对不对。
+
+<Callout type="ok">
+Rich Results Test 里能看到你的 `SoftwareApplication` 或 `TechArticle`。插件页提示缺 `aggregateRating` 或 `review`，是正常的，见下一节。
+</Callout>
+
+## 哪些不要标
+
+- **不在你页面上的评分。** 比如 Chrome 商店的星级。Google 要求结构化数据和可见文字一致 <Src ids="03-S10" />。自己站上能不能转标商店评分，本手册还没查清。先别写。
+- **页面上没写的价格、功能、用户数。** 规则同上。AI 现场读网页时也读不到它们 <Src ids="03-S33" />。
+- **为了富结果写 FAQPage。** Google 从 2026-05-07 起不再展示 FAQ 富结果 <Src ids="03-S35" />。
+- **已经下线的类型。** Google 在 2025-06 停掉了 Course Info、Learning Video 等 7 类富结果 <Src ids="03-S36" />。教程站不用为它们写 Course 标记。
+- **编出来的作者。** Google 建议写准确的署名，不要编造作者 <Src ids="03-S40" />。
+
+<Callout type="warn">
+让 AI 生成 JSON-LD 时，它最常加的就是评分、评论数、下载量。Google 要求发布前人工核对 AI 生成的结构化数据 <Src ids="06-S3" />。每次都跑一遍上面的检查脚本。
+</Callout>
+
+## 交给 AI 做
+
+<Copy id="ld-prompt" title="发给 Claude Code 或 ChatGPT" code={`根据下面的产品资料，为 <页面网址> 生成一段 schema.org JSON-LD。
+
+规则：
+1. 用 @graph，放一个产品对象和一个 Person，用 @id 互相引用。Person 的 @id 用 <你的域名>/#me。
+2. 产品类型：Chrome 插件和命令行工具用 SoftwareApplication，SaaS 和会员站用 WebApplication，开源项目再加一个 SoftwareSourceCode。
+3. Chrome 插件的 applicationCategory 填 "BrowserApplication"。免费的 offers.price 填 "0"。
+4. 只用资料里出现的事实。资料里没有的字段不写。不写 aggregateRating、review、评论数、下载量、用户数。
+5. sameAs 放商店链接、GitHub、npm（资料里有的才放）。
+6. 输出纯 JSON，不加注释。
+7. JSON 后面列一张表：每个字段的值，对应页面可见文字里的哪一句原文。找不到原文的字段，标 [页面上没有]。
+
+产品资料（商店描述、README 第一段、页面可见文字）：
+<粘贴>`} />
+
+拿到以后：
+
+- 看那张对照表，标了 `[页面上没有]` 的字段删掉，或者把内容补进页面正文。
+- 用上面的 `node -e` 命令解析一次。
+- 部署后跑检查脚本和 Rich Results Test。
+
+## 卡住了？
+
+<Q q="Rich Results Test 说缺少 aggregateRating 或 review">
+<p>SoftwareApplication 富结果必须有评分或评论，二选一 <Src ids="03-S38" />。你的站上没有收集评分，就不会有这个富结果。这只是没有星星，页面照常收录。别为了它去编评分。</p>
+</Q>
+<Q q="加了 JSON-LD 以后页面变空白，或者源码里 JSON 被截断了">
+<p>多半是 JSON 里某个字符串含有 <code>&lt;/script&gt;</code>，浏览器提前结束了标签。输出前把 <code>&lt;</code> 换成 <code>\u003c</code>，Astro 的写法见 <a href="/howto/astro/">Astro 站点的 GEO 设置</a>。</p>
+</Q>
+<Q q="检查脚本说 dateModified 在正文里找不到">
+<p>页面上没显示更新日期，或者显示的格式不是 <code>2026-11-12</code> 这种。在标题下面加一行「最后更新 2026-11-12」，用 <code>&lt;time datetime&gt;</code> 包起来。</p>
+</Q>
+<Q q="Search Console 里看不到我的结构化数据">
+<p>先用 Rich Results Test 或 Schema Markup Validator 单页检查，确认 Google 读得到。TechArticle、SoftwareSourceCode 这类类型没有对应的富结果，后台不一定有单独的报告。</p>
+</Q>
+<Q q="我有十几个产品，每个页面都要重复写一遍 Person 吗">
+<p>每个页面的 @graph 里都放同一个 Person，@id 完全相同。搜索引擎会把它们当成同一个人。全站共用一个组件生成这段，改一处就行。</p>
+</Q>
