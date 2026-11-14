@@ -1,8 +1,222 @@
 ---
 layout: ../../layouts/Lesson.astro
 lesson: 3
-tldr: "先做投入小、有证据的几件事"
-description: "第一周先做这五件事：先做投入小、有证据的几件事"
+tldr: "一周做完五件投入小、有证据的事，并留好一个月后对比用的底"
+description: "第一周先做这五件事：放行 AI 搜索爬虫、提交 sitemap 并验证 Bing 和 Google 后台、改写产品页第一段、确认正文在原始 HTML 里、存好基线 4 周后复查"
 ---
+import Src from "../../components/Src.astro";
+import Callout from "../../components/Callout.astro";
+import Copy from "../../components/Copy.astro";
+import Q from "../../components/Q.astro";
+import Checkpoint from "../../components/Checkpoint.astro";
 
-正文编写中。
+这五件事每件花 10 到 40 分钟，每件都有 A 级或 B 级证据撑着。按顺序做，一天做一件也行。
+
+例子用的是 Astro 搭在 Cloudflare 上的网站。别的框架和主机，做法一样，只是文件放的位置不同。
+
+## 第 1 件：放行 AI 的搜索爬虫
+
+先看线上的 robots.txt 写了什么。robots.txt 是放在网站根目录的一个文本文件，告诉各家爬虫哪些页面能抓。
+
+<Copy id="curl-robots" title="在终端里跑" lang="bash" code={`curl -s https://<你的域名>/robots.txt`} />
+
+然后把下面这份存成项目里的 `public/robots.txt`。Astro 构建时会把它放到网站根目录。
+
+<Copy id="robots-short" title="public/robots.txt" code={`User-agent: *
+Allow: /
+
+# 传统搜索：AI Overviews、Copilot、Claude、Siri 都靠它们
+User-agent: Googlebot
+User-agent: Bingbot
+User-agent: Applebot
+User-agent: Baiduspider
+Allow: /
+
+# AI 搜索和用户触发：决定你能不能出现在 AI 的搜索回答里
+User-agent: OAI-SearchBot
+User-agent: Claude-SearchBot
+User-agent: PerplexityBot
+User-agent: ChatGPT-User
+User-agent: Claude-User
+User-agent: Perplexity-User
+Allow: /
+
+# Gemini 应用里的引用也归它管
+User-agent: Google-Extended
+Allow: /
+
+Sitemap: https://<你的域名>/sitemap-index.xml`} />
+
+部署以后，用各家爬虫的名字请求一个内页，看服务器回什么：
+
+<Copy id="curl-ua" title="换成你的一个内页地址" lang="bash" code={`URL="https://<你的域名>/<某个内页>/"
+for ua in OAI-SearchBot ChatGPT-User Claude-SearchBot Claude-User PerplexityBot Perplexity-User Googlebot bingbot; do
+  printf "%-18s " "$ua"
+  curl -s -o /dev/null -w "%{http_code}\\n" -A "Mozilla/5.0 (compatible; $ua)" "$URL"
+done`} />
+
+<Callout type="ok">
+第一条命令打出的内容，和你写的 `public/robots.txt` 一样。第二条命令每行一个爬虫名，后面都是 200。
+</Callout>
+
+有 403，就去 Cloudflare 后台看两处（菜单截至 2026-11）：
+
+1. 域名下的 **Security** → **Settings**，筛选 **Bot traffic**，找到 **AI Crawler and Agent access policies**。把 **Search** 和 **Agent** 都设成 **Allow** <Src ids="21-S4" />。
+2. 同一页找到 **Bot fight mode**。它开着时，自定义规则也绕不过它 <Src ids="21-S2" />。有 AI 搜索爬虫被挡，就先关掉它再测。
+
+<Callout type="ok">
+改完再跑一遍第二条命令，搜索类和用户触发类都变成 200。
+</Callout>
+
+为什么做：OpenAI 写明，挡了 OAI-SearchBot 就不会出现在 ChatGPT 搜索回答里 <Src ids="02-S1" />。Anthropic 和 Perplexity 的说法一样 <Src ids="02-S25 02-S33" />。Cloudflare 从 2025-07-01 起，给新接入的域名默认屏蔽 AI 爬虫 <Src ids="03-S14" />。老域名停在什么状态，只能自己去看。
+
+训练类爬虫（GPTBot、ClaudeBot）这份模板默认放行。想挡掉它们，见 [robots.txt：放行哪些 AI 爬虫](/howto/robots-txt/)。整件事的来龙去脉见 [让 AI 爬得到](/guide/1-crawlable/)。
+
+## 第 2 件：提交 sitemap，验证 Bing 和 Google 的后台
+
+Astro 站先装上 sitemap 插件：
+
+<Copy id="astro-sitemap" title="在项目根目录跑" lang="bash" code={`npx astro add sitemap`} />
+
+再确认 `astro.config.mjs` 里写了 `site: 'https://<你的域名>'`。插件要靠它生成完整网址 <Src ids="03-S55" />。部署后检查：
+
+<Copy id="sitemap-check" title="在终端里跑" lang="bash" code={`curl -s -o /dev/null -w "%{http_code}\\n" https://<你的域名>/sitemap-index.xml`} />
+
+<Callout type="ok">
+输出 200。
+</Callout>
+
+然后在两个后台各做一遍：
+
+1. 打开 [Google Search Console](https://search.google.com/search-console)，添加你的网站，按提示完成验证。左侧点 **站点地图**，填 `sitemap-index.xml`，提交。
+2. 打开 [Bing Webmaster Tools](https://www.bing.com/webmasters)，添加你的网站，按提示完成验证。左侧点 **Sitemaps**，提交 `https://<你的域名>/sitemap-index.xml`。
+
+<Callout type="ok">
+两个后台的 sitemap 列表里都出现了你刚提交的地址，状态没有报错。
+</Callout>
+
+为什么做：Copilot 用的就是 Bing 的索引 <Src ids="02-S20" />。Google 的 AI Overviews 和 AI Mode 只用已经进了 Google 索引的页面 <Src ids="02-S9" />。Bing 后台还有一个免费的 AI Performance 报告，能看到你被 AI 引用了几次 <Src ids="02-S21" />。新站刚验证时它多半是空的，过几周再回来看。
+
+sitemap 里每页的更新时间要写真实的，Google 和 Bing 都这么要求 <Src ids="03-S42 03-S43" />。怎么改、两个后台还要点哪里，见 [让 AI 搜得到](/guide/2-indexed/)。
+
+## 第 3 件：重写产品页的第一段
+
+把产品页第一段改成这个句式：
+
+<Copy id="first-para" title="产品页第一段的句式" code={`<产品名>是一个<平台>上的<类别>，帮<谁><做什么>。
+<价格：免费 / 一次性多少钱 / 每月多少钱>。
+和 <一个同类产品> 相比，它<一个能核对的区别>。`} />
+
+本书编的例子 BookmarkMD，改完是这样：
+
+```md
+BookmarkMD 是一个免费的 Chrome 插件，把浏览器书签导出成 Markdown 文件。
+它适合用 Obsidian 或 Logseq 管理资料的人。
+基础功能免费，按文件夹批量导出的 Pro 版一次性 9 美元。
+和 Raindrop.io 相比，它不需要账号，数据只存在本地。
+```
+
+想让 AI 起草，把这段发给 ChatGPT 或 Claude：
+
+<Copy id="first-para-prompt" title="发给 ChatGPT 或 Claude" code={`下面是我的产品的商店页、README 和官网首页的文字。
+请按这个句式，给官网产品页写第一段：
+「<产品名>是一个<平台>上的<类别>，帮<谁><做什么>。<价格>。和<一个同类产品>相比，它<一个能核对的区别>。」
+规则：
+1. 只用材料里有的事实，材料里没有的写「待补」，不要猜。
+2. 不写「最好」「领先」这类自夸的话。
+3. 再列出三份材料里产品名、价格、平台说法不一致的地方。
+
+材料：
+<粘贴>`} />
+
+<Callout type="ok">
+新的第一段回答了五件事：是什么、给谁用、在哪用、多少钱、和谁像。官网、商店页、README 三处的产品名和价格一字不差。
+</Callout>
+
+为什么做：Kevin Indig 分析了 18,012 次 ChatGPT 引用。44.2% 的引用来自页面前 30% 的文字 <Src ids="04-S11" />。第一句话也在告诉 AI 你属于哪一类。按品类问时小产品才 3.32% 被提到 <Src ids="01-S16" />，归错了类就更没机会。
+
+标题怎么写、表格怎么放，见 [让 AI 读得懂](/guide/3-readable/)。
+
+## 第 4 件：确认正文在原始 HTML 里
+
+拿第 3 件写好的第一句话，去原始 HTML 里找它：
+
+<Copy id="curl-raw-html" title="把「一句你页面上的话」换成第一段里的一句" lang="bash" code={`curl -s https://<你的域名>/<产品页>/ \\
+  | python3 -c "import sys,re; h=sys.stdin.read(); t=re.sub(r'<script.*?</script>|<style.*?</style>','',h,flags=re.S); t=re.sub(r'<[^>]+>',' ',t); print('找到了' if sys.argv[1] in t else '没找到')" "一句你页面上的话"`} />
+
+<Callout type="ok">
+输出「找到了」。再换成价格那一句试一次，也是「找到了」。
+</Callout>
+
+为什么做：Vercel 统计了一个月里几亿次抓取。GPTBot、ClaudeBot、PerplexityBot 都不执行 JavaScript <Src ids="02-S43" />。浏览器里才画出来的字，它们读不到。
+
+输出「没找到」，多半是这段字由 JavaScript 渲染。Astro 里常见的是 `client:only` 组件，和在浏览器里 `fetch` 再填进去的内容。改法见 [让 AI 爬得到](/guide/1-crawlable/) 的最后一节。
+
+## 第 5 件：存好基线，4 周后再测一次
+
+第 2 课存下的 `geo-baseline-<日期>.csv` 和 `probe-<日期>.txt`，就是你的基线。基线是改动之前的样子，以后拿来对比。
+
+1. 在产品仓库里建一个 `geo/` 文件夹，把这两个文件放进去，提交。
+2. 在日历里加一个 4 周后的提醒，写上「重做第 2 课」。
+3. 到时候用同样的 8 个问题，问同样的 6 个 AI，推荐类问题同样问 3 遍。
+
+<Callout type="ok">
+仓库里有 `geo/geo-baseline-<日期>.csv`。日历里有一个 4 周后的提醒。
+</Callout>
+
+为什么做：AI 的回答每次都变，同一份品牌清单重复出现的概率不到 1% <Src ids="06-S38" />。不留底，你没法分清是改动起了作用，还是这次运气好。对比时看「3 遍里提到几遍」变没变，别看某一次排第几。
+
+4 周是本书建议的间隔，没有哪项研究专门定过它。爬虫和索引都要时间。OpenAI 说改了 robots.txt 约 24 小时生效 <Src ids="02-S1" />，收录新页面还要更久。
+
+以后怎么固定问题、怎么定期追踪，见 [量出效果](/guide/7-measure/) 和 [定一组固定问题](/howto/prompt-set/)。
+
+<Checkpoint id="first-week" items={[
+  "第二条 curl 命令里，搜索类和用户触发类爬虫都是 200",
+  "Google Search Console 和 Bing Webmaster Tools 都已验证，sitemap 已提交",
+  "产品页第一段写清了是什么、给谁、在哪用、多少钱、和谁像",
+  "用第一段里的一句话去原始 HTML 里找，输出「找到了」",
+  "基线文件已提交，日历里有 4 周后的提醒",
+]} />
+
+## 交给 AI 做
+
+第 1、2、4 件可以交给 Claude Code，在你的项目里一次做完。
+
+<Copy id="first-week-prompt" title="发给 Claude Code" code={`这是我的 Astro 网站项目，线上地址是 https://<你的域名>，产品页是 /<产品页>/。请按顺序做，每一步把命令和输出贴给我：
+1. 检查 public/robots.txt。没有就新建。确保 OAI-SearchBot、Claude-SearchBot、PerplexityBot、ChatGPT-User、Claude-User、Perplexity-User、Googlebot、Bingbot、Applebot、Google-Extended 都是 Allow，末尾有 Sitemap: https://<你的域名>/sitemap-index.xml。训练类爬虫的规则不要动。
+2. 检查有没有装 @astrojs/sitemap，astro.config.mjs 里有没有 site。没有就补上。
+3. 跑 npm run build，确认 dist/robots.txt 和 dist/sitemap-index.xml 都在。
+4. 在 dist/ 里产品页的 HTML 中，去掉 script 和 style 后，找这句话：<第一段里的一句话>。找不到的话，在源码里找出是哪个组件用 JavaScript 渲染了它。
+5. 不要部署，不要启动开发服务器。最后用一张表总结每一项通过还是不通过。`} />
+
+拿到结果后检查三件事：
+
+- **它贴了原始输出。** 别只看它的总结。
+- **它没动训练类爬虫的规则。** 挡不挡训练由你决定。
+- **Cloudflare 那两处它看不到。** 后台要你自己去点。
+
+## 不对怎么办
+
+<Q q="改了 robots.txt，curl 测出来还是 403">
+robots.txt 不会让服务器返回 403，拦人的是 CDN 那一层。按第 1 件里的两处去 Cloudflare 后台看，完整步骤见 [Cloudflare 别把 AI 爬虫挡在门外](/howto/cloudflare-bots/)。
+</Q>
+
+<Q q="线上的 robots.txt 里有我没写过的内容">
+多半是 Cloudflare 的托管 robots.txt 插进来的。它会挡 Google-Extended <Src ids="03-S17" />，挡了它你就不在 Gemini 应用的引用里 <Src ids="02-S15" />。怎么关见 [Cloudflare 那篇](/howto/cloudflare-bots/)。
+</Q>
+
+<Q q="Search Console 说无法读取 sitemap">
+先用第 2 件里的 curl 命令确认它返回 200。再看 sitemap 里的网址是不是你的线上域名，别是 localhost。
+</Q>
+
+<Q q="一周做完了，AI 还是不提我">
+这很正常。这五件事让 AI 能找到你、读对你。被推荐还要靠别人的页面提到你，小产品尤其如此 <Src ids="01-S12" />。4 周后按基线复查，同时看 [让别人提到你](/guide/5-mentions/)。
+</Q>
+
+<Q q="我的网站不在 Cloudflare 上，或者不是 Astro">
+robots.txt 放在网站根目录就行，Cloudflare 那两处跳过。sitemap 用你的框架自带的插件生成，地址填它实际生成的那个。
+</Q>
+
+<Q q="我的产品只有商店页或小程序，没有自己的网站">
+第 1、2、4 件先跳过，第 3 件改在商店简介和 README 里。具体做法见 [Chrome 插件](/howto/chrome-extension/)、[微信小程序](/howto/mini-program/)、[开源项目](/howto/open-source/)。
+</Q>
