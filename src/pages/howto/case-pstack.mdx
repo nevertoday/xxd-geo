@@ -76,7 +76,7 @@ curl -s $P | grep -oE '<link[^>]+rel="(canonical|alternate)"[^>]*>'
 curl -s $P | grep -oE '<time[^>]*>' | head -3`} />
 
 <Callout type="warn">
-从你电脑上伪造 User-Agent，只能测出「按 User-Agent 拦截」的规则。Cloudflare 还会看 IP。本地 403 不等于真爬虫被挡，本地 200 也不保证真爬虫能进。最终以 Cloudflare 后台的 AI Crawl Control 记录为准 <Src ids="03-S20" />。
+从你电脑上伪造 User-Agent，只能测出「按 User-Agent 拦截」的规则。付费版 Cloudflare 还会用 Bot Management 的检测结果 <Src ids="21-S3" />。本地 403 不等于真爬虫被挡，本地 200 也不保证真爬虫能进。最终以 Cloudflare 后台的 AI Crawl Control 记录为准 <Src ids="03-S20" />。
 </Callout>
 
 ## 诊断：每一项意味着什么
