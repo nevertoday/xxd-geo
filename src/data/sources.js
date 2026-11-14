@@ -1,7 +1,6 @@
 import { GENERATED, ALIAS } from "./sources.gen.js";
 // 出处：全站每条结论的来源。正文里用 <Src ids="id1 id2" /> 引用，tactics / platforms / tools 的 sources 里写 id。
 // /sources/ 按证据等级列出全部出处，每条的锚点是 #<id>。check-content 会查：引用的 id 都存在，等级、类型、日期、链接都合规。
-// sample: true 是先放着让页面能显示的示例，换成调研出的真实出处后删掉这个字段。
 
 /** @typedef {"A"|"B"|"C"|"D"|"X"} Grade */
 /** @typedef {"官方文档"|"论文"|"数据研究"|"报道"|"案例"|"观点"} SourceKind */
@@ -34,53 +33,14 @@ export const GRADE_ORDER = Object.keys(GRADES);
 export const KINDS = ["官方文档", "论文", "数据研究", "报道", "案例", "观点"];
 
 /** @type {Record<string, Source>} 手写的出处，和 sources.gen.js 里导入的合在一起 */
-const MANUAL = {
-  "openai-bots": {
-    title: "Overview of OpenAI Crawlers",
-    publisher: "OpenAI",
-    date: "2025-06",
-    url: "https://platform.openai.com/docs/bots",
-    kind: "官方文档",
-    grade: "A",
-    note: "OpenAI 的三个爬虫各管什么：GPTBot 拿去训练，OAI-SearchBot 给 ChatGPT 搜索用，ChatGPT-User 是用户提问时现场去读。",
-    sample: true,
-  },
-  "geo-paper": {
-    title: "GEO: Generative Engine Optimization",
-    publisher: "Aggarwal 等（Princeton、IIT Delhi），KDD 2024",
-    date: "2023-11",
-    url: "https://arxiv.org/abs/2311.09735",
-    kind: "论文",
-    grade: "A",
-    note: "提出 GEO 这个说法；实验里给内容加引用、引语和统计数字，在生成式回答里的可见度明显提高。",
-    sample: true,
-  },
-  "vercel-ai-crawlers": {
-    title: "The rise of the AI crawler",
-    publisher: "Vercel",
-    date: "2024-12",
-    url: "https://vercel.com/blog/the-rise-of-the-ai-crawler",
-    kind: "数据研究",
-    grade: "B",
-    note: "按 Vercel 网络上的抓取数据，ChatGPT 和 Claude 的爬虫不执行 JavaScript，只看服务器直接给的 HTML。",
-    sample: true,
-  },
-  "google-ai-features": {
-    title: "AI features and your website",
-    publisher: "Google Search Central",
-    date: "2025-05",
-    url: "https://developers.google.com/search/docs/appearance/ai-features",
-    kind: "官方文档",
-    grade: "A",
-    note: "AI Overviews 和 AI Mode 没有额外的优化要求，照常做好 SEO；带来的点击算在 Search Console 的网页搜索报告里。",
-    sample: true,
-  },
-};
+const MANUAL = {};
 
 /** @type {Record<string, Source>} */
 export const SOURCES = { ...GENERATED, ...MANUAL };
 /** 正文和数据里写的出处 id 换成真正的 id：不分大小写，重复的编号指向第一次出现的那条 */
-export const canon = (id) => { const k = id.toLowerCase(); return ALIAS[k] ?? k; };
+// 删掉的示例出处指向同一链接的调研稿编号。tools.js 还在用 google-ai-features，换掉后删这一行。
+const RETIRED = { "google-ai-features": "01-s30" };
+export const canon = (id) => { const k = id.toLowerCase(); return ALIAS[k] ?? RETIRED[k] ?? k; };
 export const sourceOf = (id) => SOURCES[canon(id)];
 
 /** 一组出处里最强的等级（A 最强，X 最弱）。没有出处返回 null。 */
