@@ -1,0 +1,8 @@
+---
+// 结论徽章：<Verdict v="must" />。四种：must 必做、try 值得试、skip 不必做、avoid 别做（文字和颜色在 tactics.js 的 VERDICTS）。
+import { VERDICTS } from "../data/tactics.js";
+interface Props { v: keyof typeof VERDICTS }
+const k = VERDICTS[Astro.props.v];
+if (!k) throw new Error(`Verdict 只认 ${Object.keys(VERDICTS).join(" / ")}，收到「${Astro.props.v}」`);
+---
+<span class="xxd-badge verdict" data-tone={k.tone} data-v={Astro.props.v}>{k.label}</span>

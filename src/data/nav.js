@@ -100,6 +100,16 @@ export const sectionHref = (slug, lang = "zh") => link(`/${slug}/`, lang);
 
 export const wikiHref = (slug, lang = "zh") => link(`/wiki/${slug}/`, lang);
 
+/** 数据条目（做法、提示词……）上的 step / howto 变成「相关教程」链接；还没写好的页面不出链接 */
+export const related = (x, lang = "zh") => {
+  const s = x.step !== undefined && STEPS.find((y) => y.n === x.step && y.ready);
+  const h = x.howto && HOWTO_FLAT.find((y) => y.slug === x.howto && y.ready);
+  return [
+    ...(s ? [{ href: stepHref(s, lang), label: `完整教程第 ${s.n} 步：${t(s, "title", lang)}` }] : []),
+    ...(h ? [{ href: howtoHref(h.slug, lang), label: `How-to：${t(h, "title", lang)}` }] : []),
+  ];
+};
+
 // 正文里虚线标出的术语：悬停看一句话解释（Term 组件）。wiki: 对应的 Wiki 条目
 export const GLOSSARY = {
   GEO: { tip: "Generative Engine Optimization：让你的产品出现在 AI 的回答里，并被它引用。", wiki: "geo" },

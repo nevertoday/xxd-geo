@@ -1,0 +1,38 @@
+---
+// 一个平台：从哪里找答案、派哪些爬虫、回答里怎么标出处、访问从哪来、怎么做、官方文档、出处。
+import Site from "../layouts/Site.astro";
+import Src from "../components/Src.astro";
+import { PLATFORMS, REGIONS, PURPOSES, JS_LABEL } from "../data/platforms.js";
+import { link, langOf } from "../data/nav.js";
+interface Props { slug: string }
+const lang = langOf(Astro.url.pathname);
+const p = PLATFORMS.find((x) => x.slug === Astro.props.slug);
+if (!p) throw new Error(`platforms.js 里没有 ${Astro.props.slug}`);
+const H = [["retrieval", "从哪里找答案"], ["crawlers", "派哪些爬虫"], ["citations", "回答里怎么标出处"], ["tips", "针对它要做的事"], ["docs", "官方文档"]];
+const headings = H.map(([slug, text]) => ({ slug, text, depth: 2 }));
+---
+<Site title={`${p.name} · 平台`} description={`${p.name}（${p.vendor}）从哪里找答案、派哪些爬虫、怎么让它引用你。`} headings={headings}>
+  <article class="xxd-prose">
+    <ol class="xxd-breadcrumbs" data-size="sm"><li><a href={link("/platforms/", lang)}>平台</a></li><li>{REGIONS[p.region].title}</li><li aria-current="page">{p.name}</li></ol>
+    <h1>{p.name}</h1>
+    <p>{p.vendor}{p.sample && <span class="sample-tag">（示例数据，待替换）</span>}</p>
+    <h2 id="retrieval">从哪里找答案</h2>
+    <p>{p.retrieval}</p>
+    <h2 id="crawlers">派哪些爬虫</h2>
+    {p.crawlers.length ? (
+      <table>
+        <thead><tr><th>爬虫名</th><th>用途</th><th>说明</th></tr></thead>
+        <tbody>{p.crawlers.map((c) => <tr><td><code>{c.ua}</code></td><td>{PURPOSES[c.purpose]}</td><td>{c.note ?? ""}</td></tr>)}</tbody>
+      </table>
+    ) : <p>还没查清。</p>}
+    <p>爬虫会不会执行 JavaScript：{JS_LABEL(p.js)}。</p>
+    <h2 id="citations">回答里怎么标出处</h2>
+    <p>{p.citations}</p>
+    <p>点过来的访问：{p.referrer}</p>
+    <h2 id="tips">针对它要做的事</h2>
+    {p.tips.length ? <ul>{p.tips.map((x) => <li>{x}</li>)}</ul> : <p>还没整理。</p>}
+    <h2 id="docs">官方文档</h2>
+    {p.docs.length ? <ul>{p.docs.map((d) => <li><a href={d.url} rel="noopener">{d.title}</a></li>)}</ul> : <p>还没找到。</p>}
+    {p.sources.length > 0 && <p class="entry__meta">本页出处：<Src ids={p.sources} /></p>}
+  </article>
+</Site>

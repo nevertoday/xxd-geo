@@ -517,3 +517,34 @@
   .site-lang__name { font-size: var(--text-sm); }
   .site-lang-menu { min-width: 160px; }
 }
+
+/* ---------- 出处和结论：<Src>、<Verdict>，证据表、平台、工具、提示词、出处页 ---------- */
+@layer site {
+  /* 出处小标：一个等级字母一个小方块，颜色从强到弱：A 绿、B 主色、C 中性、D 黄、X 红并划掉 */
+  .src { display: inline-flex; gap: 2px; margin-inline-start: 4px; vertical-align: 1px; }
+  .grade { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 3px; border: 1px solid var(--line-strong); border-radius: var(--r-xs); color: var(--muted); font: var(--weight-strong) 11px / 1 var(--font-mono); text-decoration: none !important; }
+  a.grade:hover { border-color: var(--ink); color: var(--ink); }
+  .grade[data-grade="A"] { border-color: transparent; background: var(--success-tint); color: var(--success-text); }
+  .grade[data-grade="B"] { border-color: transparent; background: var(--accent-tint); color: var(--action-text); }
+  .grade[data-grade="D"] { border-color: transparent; background: var(--warning-tint); color: var(--warning-text); }
+  .grade[data-grade="X"] { border-color: transparent; background: var(--danger-tint); color: var(--danger-text); text-decoration: line-through !important; }
+  .verdict { white-space: nowrap; }
+
+  /* 一条做法 / 一个工具 / 一个平台：细线框卡片，标题一行，下面是徽章和一两句话 */
+  .entries { display: grid; gap: var(--space-3); margin: var(--space-3) 0 0 !important; padding: 0 !important; list-style: none; }
+  .entries--grid { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+  .entry { margin: 0 !important; padding: var(--space-3) var(--space-4); border: 1px solid var(--line); border-radius: var(--r-md); background: var(--paper); scroll-margin-top: calc(var(--site-top-h) + var(--space-4)); }
+  .entry:target { border-color: var(--ink); }
+  .entry__head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; }
+  .entry__title { margin: 0 !important; font: var(--weight-strong) var(--text-base) / 1.5 var(--font-body); }
+  .entry__title a { color: inherit; }
+  .entry__meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 6px 0 0 !important; color: var(--muted); font-size: var(--text-xs); }
+  .entry p { margin: 6px 0 0 !important; font-size: var(--text-sm); line-height: 22px; }
+  .entry__facts { display: grid; gap: 4px; margin: var(--space-2) 0 0 !important; font-size: var(--text-sm); line-height: 22px; }
+  .entry__facts > div { display: grid; grid-template-columns: 6em 1fr; gap: var(--space-2); }
+  .entry__facts dt { color: var(--muted); }
+  .entry__facts dd { margin: 0; }
+  .entry__links { margin: 6px 0 0 !important; font-size: var(--text-xs); }
+  .entry .copy-block { margin: var(--space-3) 0 0; }
+  .sample-tag { color: var(--warning-text); }
+}

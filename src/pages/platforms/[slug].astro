@@ -1,0 +1,6 @@
+---
+import V from "../../views/PlatformPage.astro";
+import { PLATFORMS } from "../../data/platforms.js";
+export function getStaticPaths() { return PLATFORMS.map((p) => ({ params: { slug: p.slug } })); }
+---
+<V slug={Astro.params.slug} />

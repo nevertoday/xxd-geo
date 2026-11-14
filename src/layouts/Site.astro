@@ -5,6 +5,7 @@
 import { NAME, TAGLINE, REPO, LESSONS, lessonHref, STEPS, stepHref, HOWTO, HOWTO_FLAT, howtoHref, SECTIONS, sectionHref, wikiHref, link, LANGS, langInfo, langOf, langHref, t } from "../data/nav.js";
 import { WIKI } from "../data/wiki.js";
 import { FAQ } from "../data/faq.js";
+import { PLATFORMS } from "../data/platforms.js";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
@@ -41,6 +42,7 @@ const searchIndex = JSON.stringify([
   ...STEPS.filter((x) => x.ready).map((x) => ({ label: `${x.n}. ${t(x, "title", lang)}`, hint: L.hintMain, keywords: t(x, "sum", lang), href: stepHref(x, lang) })),
   ...HOWTO_FLAT.filter((x) => x.ready).map((x) => ({ label: t(x, "title", lang), hint: `How-to · ${t(x.g, "group", lang)}`, keywords: t(x.g, "group", lang), href: howtoHref(x.slug, lang) })),
   ...SECTIONS.map((x) => ({ label: t(x, "title", lang), hint: L.ref, keywords: t(x, "sum", lang), href: sectionHref(x.slug, lang) })),
+  ...PLATFORMS.map((x) => ({ label: x.name, hint: `${L.hintPlatform} · ${x.vendor}`, keywords: `${x.retrieval} ${x.crawlers.map((c) => c.ua).join(" ")}`, href: link(`/platforms/${x.slug}/`, lang) })),
   ...WIKI.map((x) => ({ label: x.title, hint: "Wiki", keywords: plain(x.one), href: wikiHref(x.slug, lang) })),
   ...FAQ.flatMap((g) => g.items.map(([q, a], i) => ({ label: q, hint: `${L.hintFaq} · ${g.title}`, keywords: plain(a), href: link(`/faq/#${g.id}-${i + 1}`, lang) }))),
 ]);

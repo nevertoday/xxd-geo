@@ -1,0 +1,16 @@
+---
+// 出处小标：<Src ids="openai-bots geo-paper" />。每个出处一个小方块，写着证据等级，点进 /sources/#<id>，悬停看标题。
+// 页面组件里也可以传数组：<Src ids={t.sources} />。id 不在 sources.js 里，构建直接报错。
+import { SOURCES } from "../data/sources.js";
+import { link, langOf } from "../data/nav.js";
+interface Props { ids: string | string[] }
+const ids = Array.isArray(Astro.props.ids) ? Astro.props.ids : Astro.props.ids.trim().split(/\s+/).filter(Boolean);
+for (const id of ids) if (!SOURCES[id]) throw new Error(`src/data/sources.js 里没有出处「${id}」`);
+const lang = langOf(Astro.url.pathname);
+---
+{ids.length > 0 && (
+  <span class="src">{ids.map((id) => {
+    const s = SOURCES[id];
+    return <a class="grade" data-grade={s.grade} href={link(`/sources/#${id}`, lang)} title={`${s.title} · ${s.publisher}`} aria-label={`出处：${s.title}，证据等级 ${s.grade}`}>{s.grade}</a>;
+  })}</span>
+)}

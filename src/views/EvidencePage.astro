@@ -1,0 +1,43 @@
+---
+// 证据表：每个做法一条，按「哪一层」分组。证据等级不存，从出处里最强的那条算（bestGrade）。
+import Site from "../layouts/Site.astro";
+import Src from "../components/Src.astro";
+import Verdict from "../components/Verdict.astro";
+import { TACTICS, LAYERS, VERDICTS } from "../data/tactics.js";
+import { bestGrade } from "../data/sources.js";
+import { STEPS, stepHref, link, related, langOf, t } from "../data/nav.js";
+const lang = langOf(Astro.url.pathname);
+const headings = Object.entries(LAYERS).map(([k, l]) => ({ slug: k, text: l.title, depth: 2 }));
+---
+<Site title="证据表" description="每个 GEO 做法该不该做、费多大劲、证据有多硬。" headings={headings}>
+  <article class="xxd-prose">
+    <h1>证据表</h1>
+    <p>每个做法一条：该不该做、费多大劲、证据有多硬。证据等级取它所有出处里最强的那条，等级怎么分见<a href={link("/sources/", lang)}>出处</a>。</p>
+    <p class="entry__meta">{Object.keys(VERDICTS).map((v) => <Verdict v={v} />)}</p>
+    {Object.entries(LAYERS).map(([k, l]) => {
+      const items = TACTICS.filter((x) => x.layer === k);
+      const step = STEPS.find((s) => s.n === l.step && s.ready);
+      return (
+        <>
+          <h2 id={k}>{l.title}</h2>
+          <p>{l.sum}{step && <>。详细做法见<a href={stepHref(step, lang)}>第 {step.n} 步：{t(step, "title", lang)}</a></>}。</p>
+          {items.length === 0 ? <p class="entry__meta">还没有条目。</p> : (
+            <ul class="entries">
+              {items.map((x) => {
+                const g = bestGrade(x.sources);
+                return (
+                  <li class="entry" id={x.id}>
+                    <div class="entry__head"><h3 class="entry__title">{x.title}</h3><Verdict v={x.verdict} />{x.sample && <span class="sample-tag entry__meta">示例</span>}</div>
+                    <p class="entry__meta">费力：{x.effort} · 证据：{g ? <span class="grade" data-grade={g}>{g}</span> : "还没有出处"}</p>
+                    <p>{x.why}<Src ids={x.sources} /></p>
+                    {related(x, lang).map((r) => <p class="entry__links"><a href={r.href}>{r.label}</a></p>)}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </>
+      );
+    })}
+  </article>
+</Site>

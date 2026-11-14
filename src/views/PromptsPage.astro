@@ -1,0 +1,23 @@
+---
+// 提示词库：每条一节，带复制按钮。锚点 #<id>。
+import Site from "../layouts/Site.astro";
+import Copy from "../components/Copy.astro";
+import { PROMPTS } from "../data/prompts.js";
+import { related, langOf } from "../data/nav.js";
+const lang = langOf(Astro.url.pathname);
+const headings = PROMPTS.map((x) => ({ slug: x.id, text: x.title, depth: 2 }));
+---
+<Site title="提示词库" description="让 AI 帮你做 GEO 的现成提示词：复制，把尖括号里的换成你的情况。" headings={headings}>
+  <article class="xxd-prose">
+    <h1>提示词库</h1>
+    <p>复制下面的话，把尖括号里的换成你自己的情况，发给 AI。</p>
+    {PROMPTS.map((x) => (
+      <section class="entry" id={x.id}>
+        <div class="entry__head"><h2 class="entry__title">{x.title}</h2>{x.sample && <span class="sample-tag entry__meta">示例</span>}</div>
+        <p>{x.use}</p>
+        <Copy id={`prompt-${x.id}`} title="复制这段提示词" code={x.prompt} />
+        {related(x, lang).map((r) => <p class="entry__links"><a href={r.href}>{r.label}</a></p>)}
+      </section>
+    ))}
+  </article>
+</Site>

@@ -1,0 +1,32 @@
+---
+// 平台目录：海外、国内两组卡片。每张卡片三件事：从哪里找答案、派哪些爬虫、爬虫跑不跑 JavaScript。
+import Site from "../layouts/Site.astro";
+import { PLATFORMS, REGIONS, JS_LABEL } from "../data/platforms.js";
+import { link, langOf } from "../data/nav.js";
+const lang = langOf(Astro.url.pathname);
+const headings = Object.entries(REGIONS).map(([k, r]) => ({ slug: k, text: r.title, depth: 2 }));
+---
+<Site title="平台" description="ChatGPT、Perplexity、Google AI Overviews、豆包、DeepSeek……各家 AI 从哪里找答案、派什么爬虫。" headings={headings}>
+  <article class="xxd-prose">
+    <h1>平台：各家 AI 怎么找答案</h1>
+    <p>每家 AI 找资料的地方不一样，派来的爬虫也不一样。先找到你的用户常用的那几家，点进去看具体怎么做。</p>
+    {Object.entries(REGIONS).map(([k, r]) => (
+      <>
+        <h2 id={k}>{r.title}</h2>
+        <ul class="entries entries--grid">
+          {PLATFORMS.filter((p) => p.region === k).map((p) => (
+            <li class="entry">
+              <div class="entry__head"><h3 class="entry__title"><a href={link(`/platforms/${p.slug}/`, lang)}>{p.name}</a></h3>{p.sample && <span class="sample-tag entry__meta">示例</span>}</div>
+              <p class="entry__meta">{p.vendor}</p>
+              <dl class="entry__facts">
+                <div><dt>找答案</dt><dd>{p.retrieval}</dd></div>
+                <div><dt>爬虫</dt><dd>{p.crawlers.length ? p.crawlers.map((c) => c.ua).join("、") : "还没查清"}</dd></div>
+                <div><dt>跑 JS</dt><dd>{JS_LABEL(p.js)}</dd></div>
+              </dl>
+            </li>
+          ))}
+        </ul>
+      </>
+    ))}
+  </article>
+</Site>

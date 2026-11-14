@@ -1,0 +1,51 @@
+---
+// 出处：全站引用的资料，按证据等级分组，每条锚点 #<id>。下面列出站内哪里用到了它（证据表、平台、工具）。
+import Site from "../layouts/Site.astro";
+import { SOURCES, GRADES } from "../data/sources.js";
+import { TACTICS } from "../data/tactics.js";
+import { PLATFORMS } from "../data/platforms.js";
+import { TOOLS, toolId } from "../data/tools.js";
+import { link, langOf } from "../data/nav.js";
+const lang = langOf(Astro.url.pathname);
+const list = Object.entries(SOURCES).map(([id, s]) => ({ id, ...s })).sort((a, b) => b.date.localeCompare(a.date));
+const citedBy = (id) => [
+  ...TACTICS.filter((x) => x.sources.includes(id)).map((x) => ({ href: link(`/evidence/#${x.id}`, lang), label: x.title })),
+  ...PLATFORMS.filter((x) => x.sources.includes(id)).map((x) => ({ href: link(`/platforms/${x.slug}/`, lang), label: x.name })),
+  ...TOOLS.filter((x) => x.sources.includes(id)).map((x) => ({ href: link(`/tools/#${toolId(x.name)}`, lang), label: x.name })),
+];
+const headings = [{ slug: "grades", text: "证据等级怎么分", depth: 2 }, ...Object.entries(GRADES).map(([g, x]) => ({ slug: `grade-${g}`, text: `${g} · ${x.label}`, depth: 2 }))];
+---
+<Site title="出处" description="GEO 实战手册引用的全部资料，按证据等级排。" headings={headings}>
+  <article class="xxd-prose">
+    <h1>出处</h1>
+    <p>网站上每条结论后面的小方块，点进来就是这里。方块里的字母是证据等级。</p>
+    <h2 id="grades">证据等级怎么分</h2>
+    <table>
+      <thead><tr><th>等级</th><th>什么样的资料</th></tr></thead>
+      <tbody>{Object.entries(GRADES).map(([g, x]) => <tr><td><span class="grade" data-grade={g}>{g}</span></td><td>{x.desc}</td></tr>)}</tbody>
+    </table>
+    {Object.entries(GRADES).map(([g, x]) => {
+      const items = list.filter((s) => s.grade === g);
+      return (
+        <>
+          <h2 id={`grade-${g}`}>{g} · {x.label}</h2>
+          {items.length === 0 ? <p class="entry__meta">还没有这个等级的出处。</p> : (
+            <ul class="entries">
+              {items.map((s) => {
+                const by = citedBy(s.id);
+                return (
+                  <li class="entry" id={s.id}>
+                    <div class="entry__head"><span class="grade" data-grade={s.grade}>{s.grade}</span><h3 class="entry__title"><a href={s.url} rel="noopener">{s.title}</a></h3>{s.sample && <span class="sample-tag entry__meta">示例</span>}</div>
+                    <p class="entry__meta">{s.publisher} · {s.date} · {s.kind}</p>
+                    <p>{s.note}</p>
+                    {by.length > 0 && <p class="entry__links">用在：{by.map((b, i) => <>{i > 0 && "、"}<a href={b.href}>{b.label}</a></>)}</p>}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </>
+      );
+    })}
+  </article>
+</Site>
