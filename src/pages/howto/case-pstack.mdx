@@ -95,7 +95,7 @@ curl -s $P | grep -oE '<time[^>]*>' | head -3`} />
 
 这还是推断。要在后台确认是哪条规则，见下面第 1 步。
 
-**robots.txt 只有注释。** 线上那份 24 行，全是 Cloudflare 内容信号政策的说明 <Src ids="03-S16" />。里面没有一条 `User-agent` 或 `Sitemap`。仓库里也没有 `public/robots.txt`。爬虫照样能抓，只是找不到 sitemap。
+**robots.txt 只有注释。** 线上那份 24 行，全是 Cloudflare 内容信号政策的说明 <Src ids="21-S1 03-S16" />。里面没有一条 `User-agent` 或 `Sitemap`。仓库里也没有 `public/robots.txt`。爬虫照样能抓，只是找不到 sitemap。
 
 **没有 sitemap。** 搜索引擎只能顺着链接一页页找。Bing 说它至少每天回看一次 sitemap，新鲜度会影响 AI 回答 <Src ids="03-S43" />。
 

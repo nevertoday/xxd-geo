@@ -1,0 +1,26 @@
+page	claim	ids	verdict	evidence	fix
+src/pages/guide/5-mentions.mdx	Profound 测到的 Reddit 份额从约 7% 跌到约 1%，又回到约 3%	04-s2	PARTIAL	research/04-content-offsite.md:56 (S2 row in 2.3 table is labelled ChatGPT); :63 gives the all-engine aggregate as 3.11%	Scope missing: the 7%->1%->3% swing is ChatGPT's Reddit share, not Reddit's overall share (overall is 3.11%). Fix: Profound 测到 ChatGPT 引用里的 Reddit 份额从约 7% 跌到约 1%，又回到约 3%
+src/pages/guide/5-mentions.mdx	Google 的垃圾政策管买卖链接和借高权重站发文	04-s18	SUPPORTED	research/04-content-offsite.md:368 (Google link and parasite-SEO policies [S18]), :214 (site reputation abuse [S18]), :562 source row	
+src/pages/guide/0-how-ai-answers.mdx	检索结果能解释 32% 的引用差异，页面本身的属性只解释 2.8%	01-s12	SUPPORTED	research/01-foundations.md:14, :626	
+src/pages/howto/prompt-collection.mdx	GitHub 对字节的 Bytespider 整站禁止	14-s4	SUPPORTED	research/14-products-extra.md:8 (Bytespider 整站禁止), :17	
+src/pages/howto/case-pstack.mdx	Training 由你决定	03-s18	SUPPORTED	research/03-technical.md:100, :305 (Search/Agent/Training each settable; Training 是你的取舍), :1226	
+src/pages/guide/2-indexed.mdx	- Applebot： robots.txt 没写它时，按 Googlebot 的规则执行	02-s38	SUPPORTED	research/02-platforms.md:15, :368, :814	
+src/pages/howto/content-site.mdx	44.2% 的引用来自页面前 30% 的文字	04-s11	SUPPORTED	research/04-content-offsite.md:15, :85, :555	
+src/pages/howto/cloudflare-bots.mdx	这条规则要放在所有拦截规则之前	02-s33	SUPPORTED	research/02-platforms.md:163, :542 (Perplexity WAF rule: Skip, 放在拦截规则之前), :809	
+src/pages/howto/open-source.mdx	用 Starlight 的话，有插件能自动生成 llms.txt	03-s56	SUPPORTED	research/03-technical.md:282, :926, :1264	
+src/pages/guide/4-citable.mdx	只换年份是 Lily Ray 记录的风险特征	04-s20	SUPPORTED	research/04-content-offsite.md:17 (标题加 2026 / 人工刷新日期 是受损站共同特征), :346, :564 (grade C, not fetched)	
+src/pages/guide/5-mentions.mdx	付费内容在 Muck Rack 的统计里只占 0.3% 的引用	04-s26	SUPPORTED	research/04-content-offsite.md:11, :33, :368, :570	
+src/pages/howto/chrome-extension.mdx	之后 Google 搜索表现掉了 29% 到 49%，因果没证实	04-s20	SUPPORTED	research/04-content-offsite.md:207 (7 SaaS sites, Sistrix visibility -29% to -49% in Jan 2026, cause unproven), :564 (grade C, not fetched)	Optional precision: the drop is in Sistrix visibility (a third-party Google visibility index), not Google's own data
+src/pages/howto/mini-program.mdx	另一条是 2026 年上线的「小程序 AI 开发模式」	07-s31 07-s34	SUPPORTED	research/07-china.md:17 (2026 年新上线 [S34][S35][S36]), :164, :645	
+src/pages/guide/5-mentions.mdx	自己写的、赞助的内容和大多数博客评测也不算	04-s33	SUPPORTED	research/04-content-offsite.md:151 (自建内容、赞助内容、大多数博客评测都不算 [S33]), :577	
+src/pages/howto/mini-program.mdx	爬虫访问小程序页面时，UA 是 mpcrawler，场景值是 1129	07-s31	SUPPORTED	research/07-china.md:470 (UA mpcrawler, 场景值 1129 [S31]), :642	
+src/pages/guide/4-citable.mdx	还是 Indig 那 18,012 次引用	04-s11	SUPPORTED	research/04-content-offsite.md:15, :85-90, :555	
+src/pages/start/2-check.mdx	挡了 OAI-SearchBot，就不会出现在 ChatGPT 的搜索回答里	02-s1	SUPPORTED	research/02-platforms.md:398 (挡了就不会出现在对应 AI 的搜索回答里 [S1]), :736, :777	
+src/pages/howto/astro.mdx	多半是 Cloudflare 的托管 robots.txt 在前面插了内容	03-s17	SUPPORTED	research/03-technical.md:102 (managed robots.txt inserted in front of your robots.txt [S17]), :1225	'多半' is the handbook's diagnosis, which is a reasonable inference from S17
+src/pages/guide/2-indexed.mdx	乱写会让搜索引擎不再信你的 lastmod	03-s42 03-s43	SUPPORTED	research/03-technical.md:122 (Google uses lastmod only if consistently and verifiably accurate [S42]), :123 (Bing: do not set lastmod to generation time [S43]), :1182	Wording is an inference: Google's line implies inaccurate lastmod gets ignored, it does not literally say 'stop trusting'
+src/pages/howto/saas.mdx	2026-09-15 以后接入的新域名，在有广告的页面上默认会挡「Agent」类访问	03-s18	SUPPORTED	research/03-technical.md:100, :107 (ChatGPT-User/Claude-User blocked by default on ad pages for new domains after 2026-09-15 [S18]), :1226	
+src/pages/guide/4-citable.mdx	「No, we don't.」	03-s40	SUPPORTED	Quote not in research/03-technical.md body (03-S40 at :251 only covers E-E-A-T/bylines); same URL is research/06-ai-workflows-myths.md S8 (:689) which quotes it at :44 and :588	Source supports it (same Google page). Better id: 06-S8, whose dossier entry records the 'No, we don't.' quote
+src/pages/guide/4-citable.mdx	同一个问题每次的回答都不同	06-s38	PARTIAL	research/06-ai-workflows-myths.md:15, :148 (same brand list < 1%, same order < 0.1%; Bose/Sony etc still appear in 55%-77% of answers), :719	Slightly overstated: answers are not always different, the same list recurs < 1% of the time and top brands recur in most runs. Fix: 同一个问题几乎每次给出的推荐清单都不同
+src/pages/howto/cloudflare-bots.mdx	Content-signal 是 Cloudflare 提出的自愿信号，没有强制力	03-s16	SUPPORTED	research/03-technical.md:97, :341, :1180, :1224	
+src/pages/guide/3-readable.mdx	OpenAI 说 ChatGPT Atlas 靠 ARIA 标签理解页面上能点的东西	03-s6	SUPPORTED	research/03-technical.md:19, :289, :1214	
+src/pages/guide/3-readable.mdx	但 Lily Ray 记录的掉流量网站里，「人工刷新日期」是共同特征之一	04-s20	SUPPORTED	research/04-content-offsite.md:17, :512 (人工刷新日期 listed as common feature of affected sites [S20]), :564 (grade C, not fetched)	
