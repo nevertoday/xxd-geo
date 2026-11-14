@@ -38,9 +38,7 @@ const MANUAL = {};
 /** @type {Record<string, Source>} */
 export const SOURCES = { ...GENERATED, ...MANUAL };
 /** 正文和数据里写的出处 id 换成真正的 id：不分大小写，重复的编号指向第一次出现的那条 */
-// 删掉的示例出处指向同一链接的调研稿编号。tools.js 还在用 google-ai-features，换掉后删这一行。
-const RETIRED = { "google-ai-features": "01-s30" };
-export const canon = (id) => { const k = id.toLowerCase(); return ALIAS[k] ?? RETIRED[k] ?? k; };
+export const canon = (id) => { const k = id.toLowerCase(); return ALIAS[k] ?? k; };
 export const sourceOf = (id) => SOURCES[canon(id)];
 
 /** 一组出处里最强的等级（A 最强，X 最弱）。没有出处返回 null。 */

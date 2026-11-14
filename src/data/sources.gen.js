@@ -3728,6 +3728,26 @@ export const GENERATED = {
   "grade": "A",
   "note": "主流 AI 爬虫可抓、Crawl-delay 1；禁 /tree/、/blame/、/raw/、/commits/；整站禁 Bytespider"
  },
+ "17-s1": {
+  "title": "国内 AI 网页版的域名和 referrer 策略（curl 请求首页）",
+  "publisher": "本手册",
+  "date": "2026-11-14",
+  "url": "",
+  "kind": "案例",
+  "grade": "C",
+  "note": "豆包 www.doubao.com、Kimi www.kimi.com、元宝 yuanbao.tencent.com、DeepSeek chat.deepseek.com、千问 www.qianwen.com 和 qianwen.aliyun.com、文心 wenxin.baidu.com；秘塔和智谱清言首页声明 no-referrer；只看了首页",
+  "where": "无（research/17-measure-extra.md，命令在同一文件）"
+ },
+ "17-s2": {
+  "title": "自建追踪器 geo-track.mjs 的假数据测试",
+  "publisher": "本手册",
+  "date": "2026-11-14",
+  "url": "",
+  "kind": "案例",
+  "grade": "C",
+  "note": "按四家文档格式伪造响应，入库、错误记录、按周按引擎的提及率和引用率都对；没有用真实 Key 调用",
+  "where": "无（research/tracker/geo-track.test.mjs）"
+ },
  "21-s1": {
   "title": "pstack.xiaoxiaodong.ai 实测记录：用 curl 换 User-Agent 请求 robots.txt、sitemap 和 /guide/0-what/",
   "publisher": "本站",
