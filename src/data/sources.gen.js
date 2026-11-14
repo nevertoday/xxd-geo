@@ -3728,6 +3728,46 @@ export const GENERATED = {
   "grade": "A",
   "note": "主流 AI 爬虫可抓、Crawl-delay 1；禁 /tree/、/blame/、/raw/、/commits/；整站禁 Bytespider"
  },
+ "15-s1": {
+  "title": "5. How to promote your launch (and what to avoid)",
+  "publisher": "Product Hunt Help Center",
+  "date": "2026-11-14",
+  "url": "https://help.producthunt.com/en/articles/17734384-5-how-to-promote-your-launch-and-what-to-avoid",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "Never ask for upvotes；不办和点赞挂钩的抽奖；不买赞和评论；不用假号或小号；违规可能撤下发布、封号",
+  "seen": "原文"
+ },
+ "15-s2": {
+  "title": "Federal Trade Commission Announces Final Rule Banning Fake Reviews and Testimonials",
+  "publisher": "美国联邦贸易委员会（FTC）",
+  "date": "2024-08-14",
+  "url": "https://www.ftc.gov/news-events/news/press-releases/2024/08/federal-trade-commission-announces-final-rule-banning-fake-reviews-testimonials",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "禁止虚构评论（含 AI 生成）、以特定好评或差评为条件给报酬、内部人员不披露关系写评论；可对明知违规者寻求民事罚款",
+  "seen": "原文"
+ },
+ "15-s3": {
+  "title": "关于 V2EX",
+  "publisher": "V2EX",
+  "date": "2026-11-14",
+  "url": "https://www.v2ex.com/about",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "鼓励分享自己在做的东西；「请不要把 AI 生成的内容发送到这里」；教别人做事要是自己做过并且做得好的",
+  "seen": "原文"
+ },
+ "15-s4": {
+  "title": "Matrix 社区 FAQ",
+  "publisher": "少数派",
+  "date": "2021-03-19",
+  "url": "https://sspai.com/post/65521",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "明显软文倾向或不合规推广链接的文章会被屏蔽为仅自己可见；广告推广评论删除；可禁言 3 到 30 天或永久；不影响阅读的自荐可以接受",
+  "seen": "原文"
+ },
  "17-s1": {
   "title": "国内 AI 网页版的域名和 referrer 策略（curl 请求首页）",
   "publisher": "本手册",
