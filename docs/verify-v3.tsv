@@ -1,0 +1,13 @@
+page	claim	ids	verdict	evidence	change
+src/pages/guide/2-indexed.mdx	Google 不在 IndexNow 里，Google 这边靠 sitemap	03-S42	PARTIAL	research/03-technical.md:1250 S42 是 Google sitemap 文档，没说 Google 不在 IndexNow；参与方名单见 research/21-extra.md:13 S5	前半句补 id 21-S5：Google 不在 IndexNow 里 <Src 21-S5>，Google 这边靠 sitemap <Src 03-S42>
+src/pages/guide/7-measure.mdx	一个产品每月约 $15 到 $50	05-S68	PARTIAL	research/05-measurement-tools.md:771-775 这是按 30 个问题×3 次×4 个引擎×每周一次、全用便宜配置的估算；用旗舰模型每月多约 $45	按 30 个问题、4 个 AI、每题 3 次、每周一轮估算。全用便宜模型时，一个产品每月约 $15 到 $50。
+src/pages/guide/7-measure.mdx	想把提及率的误差压到正负 10 个百分点，约要 96 次回答。正负 5 个点，约要 384 次	05-S68	PARTIAL	research/05-measurement-tools.md:272 96 次和 384 次只在提及率 50% 时成立，20% 时是 61 和 246 次	先看单个问题。提及率在一半左右时，想把误差压到正负 10 个百分点，约要 96 次回答。正负 5 个点，约要 384 次。
+src/pages/guide/7-measure.mdx	同一个问题的几次回答彼此相关，真实误差会比这个大	05-S68	PARTIAL	research/05-measurement-tools.md:274 原稿标明是推断，不是 S68 的计算结果	句末加「这是推断。」
+src/pages/guide/7-measure.mdx	各家工具的综合分算法不公开、互不相同，只能在同一个工具里看趋势	05-S1	UNSUPPORTED	research/05-measurement-tools.md:920 是调研稿自己的归纳；打开 https://sparktoro.com/blog/new-research-ais-are-highly-inconsistent-when-recommending-brands-or-products-marketers-should-take-care-when-tracking-ai-visibility/ 原文只要求工具方公开方法（shows their math），没说算法互不相同或只能同工具比	SparkToro 建议，只用肯公开统计方法的工具。
+src/pages/howto/astro.mdx	它对 AI 搜索引用没有可测的作用，主要读者是编程 Agent	03-S30 03-S3	PARTIAL	research/03-technical.md:15,179 S30 测的是请求量（97% 零请求，AI 检索爬虫占 1.1%），没测对引用的作用	AI 搜索的爬虫几乎不读它，主要读者是编程 Agent
+src/pages/howto/indexnow.mdx	状态码 4xx 及以上的响应不会上报	03-S25	PARTIAL	research/03-technical.md:63 写「大于 4xx」；打开 https://developers.cloudflare.com/cache/about/crawler-hints/ 原文是 greater than 4xx，没说 4xx 本身	状态码大于 4xx 的响应不会上报
+src/pages/howto/open-source.mdx	被 AI 引用的文字里，44.2% 来自页面前 30%	04-S11	PARTIAL	research/04-content-offsite.md:15,85 数据只来自 18,012 次 ChatGPT 引用	ChatGPT 引用的文字里，44.2% 来自页面前 30%
+src/pages/howto/open-source.mdx	对比和榜单是 AI 最常引用的一类内容	04-S6	PARTIAL	research/04-content-offsite.md:76 S6 只统计 ChatGPT 来源里的 best 榜单（43.8%），没统计对比页	榜单是 ChatGPT 最常引用的一类页面
+src/pages/howto/open-source.mdx	外链多、Reddit 上有讨论的产品，更常被 AI 想起来	06-S47	PARTIAL	research/01-foundations.md:327、research/06-ai-workflows-myths.md:112 相关性只在 Perplexity 上测到（r=+0.319、+0.395）	外链多、Reddit 上有讨论的产品，在 Perplexity 里更常被提到
+src/pages/howto/open-source.mdx	微软的建议里写了跨平台表述要一致	06-S25	UNSUPPORTED	research/06-ai-workflows-myths.md:66,706 S25 的建议是文字、图片、视频对同一实体表述一致（跨格式），不是跨平台；02-platforms.md:144 同	微软也建议，文字、图片、视频说到同一个产品时，说法要一致
+TOTAL	141 句		SUPPORTED 130; PARTIAL 9; UNSUPPORTED 2; CANNOT_CHECK 0		
