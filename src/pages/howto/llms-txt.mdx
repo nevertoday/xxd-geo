@@ -57,7 +57,7 @@ llms.txt 是放在网站根目录的一个 Markdown 文件，给大模型一份�
 
 这是 Evil Martians 2026 年 9 到 10 月的日志 <Src ids="03-S3" />。Claude Code 请求时带 `Accept: text/markdown` 请求头。另一次测试发现 Cursor、OpenCode 也带这个头 <Src ids="03-S4" />。
 
-Ahrefs 的数据里也是这样：读 llms.txt 的，主要是 Agent 和 Agent 用的基础设施。它们只在有链接或指令指过去时才去读 <Src ids="03-S30" />。
+Ahrefs 的数据里也是这样。AI 类的请求里，Agent 和 Agent 用的基础设施最多，占全部请求的 10.5%。它们只在有链接或指令指过去时才去读 <Src ids="03-S30" />。
 
 Chrome 的 Lighthouse 在 2026-05 加了一个实验性的「Agentic Browsing」类别，会检查 llms.txt。没有这个文件记为「不适用」，不算失败 <Src ids="03-S64" />。它衡量的是 Agent 用起来顺不顺，和搜索排名无关。
 
