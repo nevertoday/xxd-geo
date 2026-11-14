@@ -1,8 +1,180 @@
 ---
 layout: ../../layouts/Lesson.astro
 lesson: 2
-tldr: "在几个 AI 里问同一组问题，记下它提没提你"
-description: "10 分钟看看 AI 现在怎么说你的产品：在几个 AI 里问同一组问题，记下它提没提你"
+tldr: "拿到一张表：6 个 AI 里，谁提到了你、引用了哪个网址、说错了什么"
+description: "10 分钟看看 AI 现在怎么说你的产品：用一组填空问题去问 ChatGPT、Perplexity、Google AI Mode、Copilot、豆包和 DeepSeek，记成一张表，再用 1 分钟查网站的技术底子"
 ---
+import Src from "../../components/Src.astro";
+import Callout from "../../components/Callout.astro";
+import Copy from "../../components/Copy.astro";
+import Q from "../../components/Q.astro";
 
-正文编写中。
+这一课做完，你手上有一张表，记着 6 个 AI 现在怎么说你的产品。做完第 3 课一个月后，你要拿它来对比。
+
+问一轮大约 10 分钟。推荐类问题再补问两遍，再加 10 分钟。最后用 1 分钟查一下网站。
+
+## 先填好 8 个问题
+
+把下面这组问题复制到记事本里，换掉尖括号里的内容。
+
+<Copy id="question-set" title="8 个问题，中英文各 4 个" code={`Z1 按名字问：<产品名> 是什么？好用吗？
+Z2 按品类问：有什么好用的 <中文品类>？推荐几个。
+Z3 按问题问：我想 <要解决的问题>，有什么工具能做到？
+Z4 和竞品比：<产品名> 和 <竞品名> 哪个好？
+
+E1 by name: What is <product name>? Is it any good?
+E2 by category: What are the best <category in English>?
+E3 by problem: How can I <problem in English>? Recommend a few tools.
+E4 vs competitor: <product name> vs <competitor>: which one should I use?`} />
+
+下面是一个 Chrome 插件填好的样子。BookmarkMD 是本书编的例子。
+
+```text
+Z2 按品类问：有什么好用的导出书签的 Chrome 插件？推荐几个。
+Z3 按问题问：我想把 Chrome 书签导进 Obsidian，有什么工具能做到？
+E2 by category: What are the best Chrome extensions for exporting bookmarks?
+E3 by problem: How can I move my Chrome bookmarks into Obsidian? Recommend a few tools.
+```
+
+<Callout type="ok">
+记事本里有 8 个问题，没有尖括号了。Z2、Z3、E2、E3 这 4 个问题里没有你的产品名。
+</Callout>
+
+不带产品名的问题最要紧。用户找工具时就这么问，小产品也正是在这类问题里消失的。Product Hunt 那项研究里，按名字问认得 99.4%，按品类问只剩 3.32% <Src ids="01-S16" />。
+
+## 在 6 个 AI 里各问一遍
+
+中文问题问国内的两个，英文问题问海外的四个：
+
+- **中文 Z1 到 Z4：** [豆包](https://www.doubao.com/)、[DeepSeek](https://chat.deepseek.com/)。DeepSeek 先打开「联网搜索」。
+- **英文 E1 到 E4：** [ChatGPT](https://chatgpt.com/)、[Perplexity](https://www.perplexity.ai/)、Google 搜索里的 AI Mode、[Copilot](https://copilot.microsoft.com/)。
+
+每问一个问题，都新开一个对话。这样上一个回答不会影响下一个。
+
+为什么是这 6 个：
+
+- **用的人最多。** 豆包 2026 年一季度月活 3.45 亿，DeepSeek 1.27 亿 <Src ids="02-S58" />。SE Ranking 的统计里，AI 带来的访问 74.78% 来自 ChatGPT <Src ids="01-S51" />。
+- **各家从不同的地方找答案。** AI Mode 用 Google 的索引 <Src ids="01-S28" />。Copilot 用 Bing 的 <Src ids="02-S20" />。Perplexity 有自己的爬虫 <Src ids="02-S33" />。一个 AI 提到你，不代表别家也会。
+
+<Callout type="ok">
+每个回答里能看到它推荐的产品名。多数 AI 还会在句子后面或页面旁边列出来源链接。
+</Callout>
+
+## 把结果记进一张表
+
+新建一个文件 `geo-baseline.csv`，把下面这行表头粘进去。用 Numbers、Excel 或 Google 表格打开都行。
+
+<Copy id="csv-header" title="geo-baseline.csv 的第一行" code={`日期,AI,问题,第几遍,提到我了吗,引用的网址,说错了什么`} />
+
+每问一次记一行：
+
+- **提到我了吗：** 写「是」或「否」。
+- **引用的网址：** 它引用了你的网站，就写你那一页的网址。没引用你，就写它引用的前两个网址。
+- **说错了什么：** 价格、功能、平台说错了，原样抄下来。没提到你就空着。
+
+下面是示意，不是真实记录：
+
+```text
+日期,AI,问题,第几遍,提到我了吗,引用的网址,说错了什么
+2026-11-14,ChatGPT,E2,1,否,https://<某评测站>/best-bookmark-extensions/,
+2026-11-14,ChatGPT,E1,1,是,https://<你的域名>/,说要登录账号，其实不用
+2026-11-14,豆包,Z3,1,否,https://<某问答站>/question/123,
+```
+
+<Callout type="ok">
+每个 AI 下面有 4 行，一共 24 行。每行都填了「是」或「否」。
+</Callout>
+
+「引用的网址」这一栏以后很有用。AI 常引用的那些别人的页面，就是你以后该争取被提到的地方。做法在 [让别人提到你](/guide/5-mentions/)。
+
+## 推荐类问题再问两遍
+
+Z2、Z3、E2、E3 这 4 个问题，在同样的 AI 里新开对话，再问两遍。每次照样记一行，「第几遍」写 2 和 3。
+
+<Callout type="ok">
+表里一共 48 行。看推荐类问题时，你能说出「这个问题 3 遍里提到我几遍」。
+</Callout>
+
+为什么要重复问：AI 的推荐每次都在变。SparkToro 做了 2,961 次提问。同一个问题重复问，ChatGPT 和 Google AI 给出同一份品牌清单的概率不到 1% <Src ids="06-S38" />。所以只问一遍，提到了也可能是运气。一篇预印本主张，AI 里提不提你要按多次提问的分布来算 <Src ids="01-S20" />。
+
+3 遍是你今天能接受的最少次数。以后正式追踪时，每个问题问 5 遍以上，见 [定一组固定问题](/howto/prompt-set/)。
+
+## 交给 AI 做
+
+问完以后，把回答原文贴给 ChatGPT 或 Claude，让它帮你填表。用 [提示词库里的「把 AI 回答整理成追踪表」](/prompts/#tally)。
+
+拿到结果后，抽 3 行自己对一下原文。看「提到我了吗」填得对不对。
+
+## 用 1 分钟查网站的技术底子
+
+AI 在回答里提不提你，先要它能读到你的网站。在终端里跑下面三行。要 Node 18 以上，用 `node --version` 看一下。
+
+<Copy id="probe" title="在终端里跑，换成你的网址" lang="bash" code={`curl -sO https://raw.githubusercontent.com/nevertoday/xxd-geo/main/skills/geo-audit/scripts/probe.mjs
+node probe.mjs https://<你的域名>/ > probe.json
+node -e 'const s=require("./probe.json").summary; console.log("被挡的爬虫：" + ([...s.blockedByRobots, ...s.blockedByHttp].join("、") || "没有")); console.log("sitemap：" + (s.sitemapFound || "没找到")); console.log("正文字数：" + s.textLength)'`} />
+
+`probe.mjs` 是本书配的体检脚本。它只发 GET 请求，一共二十次左右。
+
+<Callout type="ok">
+终端里打出三行。2026-11-14 对 pstack 教程站跑的结果是这样 <Src ids="21-S1" />：
+
+```text
+被挡的爬虫：GPTBot 403、ClaudeBot 403、PerplexityBot 403、Bytespider 403
+sitemap：没找到
+正文字数：2469
+```
+</Callout>
+
+三行各看一件事：
+
+- **被挡的爬虫。** 这一行里出现下面任何一个名字，就要修：OAI-SearchBot、Claude-SearchBot、PerplexityBot、ChatGPT-User、Googlebot、bingbot。挡了 OAI-SearchBot，就不会出现在 ChatGPT 的搜索回答里 <Src ids="02-S1" />。只有 GPTBot、ClaudeBot 这类训练爬虫被挡，不影响搜索里的展示 <Src ids="02-S1 02-S25" />。
+- **sitemap。** sitemap 是列出你全站网址的文件，搜索引擎靠它找页面。写着「没找到」，第 3 课第 2 件事要补上。
+- **正文字数。** 这是不执行 JavaScript 时能读到的字数。GPTBot、ClaudeBot、PerplexityBot 都不执行 JavaScript <Src ids="02-S43" />。这个数比你页面上看到的字少很多，说明正文是浏览器里才画出来的。
+
+<Callout type="warn">
+脚本是从你的电脑假装成爬虫发请求。403 说明网站按名字拦了它。200 也不保证真爬虫能进，Cloudflare 这类服务还会核对真爬虫的 IP <Src ids="03-S8" />。
+</Callout>
+
+## 把表和三行结果存好
+
+把 `geo-baseline.csv` 改名，加上今天的日期，比如 `geo-baseline-2026-11-14.csv`。三行结果也粘到同一个文件夹的 `probe-2026-11-14.txt` 里。
+
+<Callout type="ok">
+文件夹里有两个带日期的文件。第 3 课最后一件事要用到它们。
+</Callout>
+
+下一课：[第一周先做这五件事](/start/3-first-week/)。
+
+## 不对怎么办
+
+<Q q="按名字问，AI 也说不知道我的产品">
+它的搜索还没找到你的网站。先看上面三行里有没有被挡的搜索爬虫，再做第 3 课前两件事。ChatGPT 没联网的话，在问题后面加一句「请联网搜索并给出来源」。
+</Q>
+
+<Q q="同一个问题问 3 遍，3 次答案都不一样">
+这很正常，AI 的推荐几乎每次都变 <Src ids="06-S38" />。照实记下来。要看的是 3 遍里提到你几遍，不是某一次排第几。
+</Q>
+
+<Q q="AI 引用的全是别人的网站，没有我的">
+把这些网址都记下来。小产品被点名，主要靠被它引用的第三方页面提到 <Src ids="01-S12" />。以后去争取这些页面，见 [让别人提到你](/guide/5-mentions/)。
+</Q>
+
+<Q q="AI 说的价格或功能是旧的">
+在「说错了什么」里原样抄下来。第 3 课第 3 件事会改产品页的第一段。新页面被收录后，联网的回答就会读到新的说法。
+</Q>
+
+<Q q="我在的地区用不了 Google AI Mode">
+换成 [Gemini](https://gemini.google.com/)。它也用 Google 搜索找资料 <Src ids="02-S15" />。在表里的「AI」一栏写 Gemini，下次复查也用它。
+</Q>
+
+<Q q="我的产品只做中文用户，或者只做海外用户">
+只问那一半。只做中文就只问 Z1 到 Z4，只做海外就只问 E1 到 E4。
+</Q>
+
+<Q q="脚本下载失败，或者我没有装 Node">
+[让 AI 给网站做 GEO 体检](/howto/ai-audit/) 那篇有一段只用 curl 的命令，macOS 自带的终端就能跑。
+</Q>
+
+<Q q="三行里所有爬虫都被挡了">
+整站的防护在拦所有脚本请求。网站在 Cloudflare 上的话，先看 Bot Fight Mode 有没有开着 <Src ids="21-S2" />。步骤见 [Cloudflare 别把 AI 爬虫挡在门外](/howto/cloudflare-bots/)。
+</Q>
