@@ -31,7 +31,7 @@ export const t = (x, key, lang) => (lang === "zh" ? x[key] : x[lang]?.[key] ?? x
 // 新手入门：给第一次听说 GEO 的人。三课，一条路走到底。
 export const LESSONS = [
   { n: 1, slug: "1-why", ready: true, title: "GEO 是什么，为什么现在要做", minutes: "5 分钟", sum: "AI 回答里提不提你，正在变成新的流量入口" },
-  { n: 2, slug: "2-check", ready: true, title: "10 分钟看看 AI 现在怎么说你的产品", minutes: "10 分钟", sum: "在几个 AI 里问同一组问题，记下它提没提你" },
+  { n: 2, slug: "2-check", ready: true, title: "20 分钟看看 AI 现在怎么说你的产品", minutes: "20 分钟", sum: "在几个 AI 里问同一组问题，记下它提没提你" },
   { n: 3, slug: "3-first-week", ready: true, title: "第一周先做这五件事", minutes: "读 5 分钟，做一周", sum: "先做投入小、有证据的几件事" },
 ];
 export const lessonHref = (s, lang = "zh") => link(`/start/${s.slug}/`, lang);
