@@ -2,8 +2,168 @@
 layout: ../../layouts/HowTo.astro
 slug: indexnow
 step: 2
-tldr: "IndexNow：新页面主动推给搜索引擎"
-description: "IndexNow：新页面主动推给搜索引擎"
+tldr: "每次部署后，自动把改过的页面推给 Bing 等搜索引擎"
+description: "IndexNow 接入步骤：生成 key、放 key 文件、部署后只推 lastmod 有变化的网址，或用 Cloudflare Crawler Hints 零代码接入"
+time: "20 分钟"
+for: "经常更新的静态站和内容站，尤其是 Astro 加 Cloudflare"
 ---
+import Src from "../../components/Src.astro";
+import Callout from "../../components/Callout.astro";
+import Copy from "../../components/Copy.astro";
+import Q from "../../components/Q.astro";
 
-正文编写中。
+export const indexnowScript = `// scripts/indexnow.mjs  用法：INDEXNOW_KEY=<你的 key> SITE_URL=https://<你的域名> node scripts/indexnow.mjs
+import { readFileSync, readdirSync } from 'node:fs';
+
+const SITE = process.env.SITE_URL;
+const KEY = process.env.INDEXNOW_KEY;
+const DAYS = Number(process.env.INDEXNOW_DAYS ?? 2);
+const since = Date.now() - DAYS * 24 * 60 * 60 * 1000;
+
+if (!SITE || !KEY) {
+  console.error('需要设置 SITE_URL 和 INDEXNOW_KEY');
+  process.exit(1);
+}
+
+const urls = [];
+for (const file of readdirSync('dist').filter((f) => /^sitemap-\\d+\\.xml$/.test(f))) {
+  const xml = readFileSync(\`dist/\${file}\`, 'utf8');
+  for (const block of xml.split('<url>').slice(1)) {
+    const loc = block.match(/<loc>([^<]+)<\\/loc>/)?.[1];
+    const lastmod = block.match(/<lastmod>([^<]+)<\\/lastmod>/)?.[1];
+    if (loc && lastmod && Date.parse(lastmod) >= since) urls.push(loc);
+  }
+}
+
+if (urls.length === 0) {
+  console.log(\`IndexNow：最近 \${DAYS} 天没有 lastmod 变化的页面，不用推\`);
+  process.exit(0);
+}
+
+const res = await fetch('https://api.indexnow.org/indexnow', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json; charset=utf-8' },
+  body: JSON.stringify({
+    host: new URL(SITE).host,
+    key: KEY,
+    keyLocation: \`\${SITE}/\${KEY}.txt\`,
+    urlList: urls.slice(0, 10000),
+  }),
+});
+console.log(\`IndexNow：提交了 \${urls.length} 个网址，HTTP \${res.status}\`);
+for (const u of urls) console.log('  ' + u);
+if (res.status !== 200 && res.status !== 202) process.exit(1);`;
+
+IndexNow 让你在页面变化时主动通知搜索引擎，不用等它下次来抓。做完后，每次部署都会自动把改过的页面推给 Bing。
+
+## 先知道它推给了谁
+
+截至 2026-11，参与 IndexNow 的有 Bing、Yandex、Seznam、Naver、Yep、Internet Archive 和 Amazonbot <Src ids="21-S5" />。没有 Google <Src ids="21-S5" />。参与方必须把收到的网址分享给其他参与方，所以推给一家就够了 <Src ids="03-S49" />。
+
+对 GEO 来说，它主要是推给 Bing。Copilot 用 Bing 索引 <Src ids="02-S20" />。Bing 在 AI Performance 的公告里，把 IndexNow 列为让 AI 引用你最新页面的第一条建议 <Src ids="03-S45" />。
+
+<Callout type="warn">
+推送不保证收录。Microsoft 说 IndexNow 能提高被重新抓取的概率，但不保证日期 <Src ids="02-S20" />。返回 200 也只代表收到了 <Src ids="03-S48" />。
+</Callout>
+
+## 第一步：生成一个 key，放进网站根目录
+
+<Copy id="indexnow-key" title="在项目根目录跑（Astro 的 public/ 会原样复制到网站根目录）" code={`KEY=$(openssl rand -hex 16)
+echo "$KEY" > "public/$KEY.txt"
+echo "你的 key 是：$KEY"`} />
+
+key 要 8 到 128 位，只能有字母、数字和短横线 <Src ids="03-S48" />。key 文件只能验证它所在路径下的网址，所以放在根目录 <Src ids="03-S48" />。
+
+部署后确认它能打开：
+
+<Copy id="indexnow-key-check" title="把 key 换成上一步输出的那串" code={`curl -s https://<你的域名>/<你的 key>.txt`} />
+
+<Callout type="ok">
+输出就是那一串 key，没有别的内容。
+</Callout>
+
+## 第二步：手动推一个网址试试
+
+<Copy id="indexnow-get" title="推一个网址" code={`curl -s -o /dev/null -w "%{http_code}\\n" "https://api.indexnow.org/indexnow?url=https://<你的域名>/<某个页面>/&key=<你的 key>"`} />
+
+返回码的意思 <Src ids="03-S48" />：
+
+- **200：** 已提交。
+- **202：** 已收到，key 还在验证。第一次用常见。
+- **403：** key 无效，多半是 key 文件打不开。
+- **422：** 网址不属于这个域名。
+- **429：** 推得太频繁。
+
+## 第三步：部署后只推改过的页面
+
+一次最多 10,000 个网址 <Src ids="03-S48" />。但别每次把全站都推一遍，只推真变了的。下面的脚本读构建出来的 sitemap，只推 `lastmod` 在最近两天内的网址。
+
+<Copy id="indexnow-script" title="scripts/indexnow.mjs" lang="js" code={indexnowScript} />
+
+<Callout type="warn">
+这个脚本依赖真实的 `lastmod`。如果你的 sitemap 每次都用构建时间，它会把全站都推一遍。先按 [让 AI 搜得到](/guide/2-indexed/) 把 `lastmod` 改对。Bing 也明确反对把 `lastmod` 写成生成时间 <Src ids="03-S43" />。
+</Callout>
+
+把它接到部署命令后面：
+
+<Copy id="indexnow-package" title="package.json 里的 scripts" lang="json" code={`"deploy": "astro build && wrangler deploy && node scripts/indexnow.mjs"`} />
+
+<Copy id="indexnow-run" title="部署时带上两个环境变量" code={`SITE_URL=https://<你的域名> INDEXNOW_KEY=<你的 key> npm run deploy`} />
+
+<Callout type="ok">
+最后几行是「IndexNow：提交了 N 个网址，HTTP 200」或 `HTTP 202`，下面列出推了哪些网址。没有改动时，它会说「不用推」。
+</Callout>
+
+本站用一份假的 sitemap 跑过这个脚本。只有 `lastmod` 在两天内的网址被提交，没有 `lastmod` 的被跳过。网络请求是用假的 `fetch` 拦下来的，没有真的推送 <Src ids="21-S8" />。
+
+## 不想写代码：打开 Cloudflare 的 Crawler Hints
+
+路径：域名下的 **Caching** → **Configuration**，打开 **Crawler Hints**，所有套餐都能用 <Src ids="03-S25" />。
+
+它在缓存 MISS 时，自动把网址推给 IndexNow <Src ids="03-S25" />。状态码 4xx 及以上的响应不会上报 <Src ids="03-S25" />。
+
+<Callout type="warn">
+Crawler Hints 靠缓存 MISS 触发。部署在 Workers 静态资源上的站，它是否生效还没查清。保险起见，两样都做：打开它，也跑上面的脚本。
+</Callout>
+
+## 推完怎么看效果
+
+到 Bing Webmaster Tools 里看页面有没有被收录。几天后，再看 AI Performance 里新页面有没有被引用 <Src ids="02-S21" />。做法见 [让 AI 搜得到](/guide/2-indexed/)。
+
+## 交给 AI 做
+
+<Copy id="indexnow-prompt" title="发给 Claude Code" code={`这是一个 Astro 静态站，部署在 Cloudflare。请帮我接入 IndexNow：
+1. 用 openssl rand -hex 16 生成 key，写进 public/<key>.txt，内容只有 key 本身。
+2. 新建 scripts/indexnow.mjs：读取 dist/sitemap-*.xml，只提交 lastmod 在最近 2 天内的网址，POST 到 https://api.indexnow.org/indexnow。SITE_URL 和 INDEXNOW_KEY 从环境变量读。
+3. 在 package.json 的 deploy 命令最后加上 node scripts/indexnow.mjs。
+4. 先检查 sitemap 的 lastmod 是不是全站同一个时间。是的话先停下告诉我，不要继续。
+5. 跑 npm run build。不要真的部署，不要真的推送，不要启动开发服务器。
+6. 用一个假的 fetch 跑一遍脚本，把它打算提交的网址列表贴给我。`} />
+
+检查它的结果：
+
+- **key 文件里只有 key。** 没有换行以外的任何字符。
+- **提交列表很短。** 只有最近改过的页面，不是全站。
+- **它没有真的推送。** 第 5 条写明了，确认它照做了。
+
+## 卡住了？
+
+<Q q="返回 403">
+key 文件打不开，或者内容和 key 不一致 <Src ids="03-S48" />。用 `curl -s https://<你的域名>/<你的 key>.txt` 看一下。Cloudflare 的防护拦了这个文件也会这样。
+</Q>
+
+<Q q="返回 422">
+网址不属于你提交的域名 <Src ids="03-S48" />。检查 `SITE_URL` 和 sitemap 里的地址是否一致，包括 `www` 和协议。
+</Q>
+
+<Q q="每次部署都推了全站">
+你的 `lastmod` 是构建时间。按 [让 AI 搜得到](/guide/2-indexed/) 改成页面自己的日期。
+</Q>
+
+<Q q="推了很多天，Bing 还是没收录">
+推送只是通知，收不收由 Bing 决定 <Src ids="02-S20" />。先在 Bing Webmaster Tools 里确认站点已验证、sitemap 已提交，再看网址检查里有没有报错。
+</Q>
+
+<Q q="Google 能用 IndexNow 吗">
+不能，Google 不在参与方里 <Src ids="21-S5" />。Google 那边靠 sitemap <Src ids="03-S42" />。
+</Q>

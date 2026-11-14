@@ -2,8 +2,274 @@
 layout: ../../layouts/HowTo.astro
 slug: robots-txt
 step: 1
-tldr: "robots.txt：放行哪些 AI 爬虫"
-description: "robots.txt：放行哪些 AI 爬虫"
+tldr: "一份照抄能用的 robots.txt，再用脚本确认每个爬虫的结果"
+description: "robots.txt 怎么写才能被 AI 搜索引用：放行搜索和用户触发的 AI 爬虫，训练爬虫自己选，附检查脚本"
+time: "20 分钟"
+for: "所有自己有域名的网站：教程站、产品官网、会员站的公开页"
 ---
+import Src from "../../components/Src.astro";
+import Callout from "../../components/Callout.astro";
+import Copy from "../../components/Copy.astro";
+import Q from "../../components/Q.astro";
 
-正文编写中。
+export const robotsTemplate = `# =====================================================================
+# robots.txt：放行搜索和用户触发的 AI 爬虫，训练类由你决定
+# 爬虫名截至 2026-11，会变，以各家官方文档为准。
+#
+# 一个爬虫只听「最具体匹配它的那一组」。写了专门组的爬虫，
+# 不再读 User-agent: * 组。所以不想被抓的路径，每组都要写一遍。
+# =====================================================================
+
+# ---- 0. 默认组：下面没点名的爬虫都走这一组 ----
+User-agent: *
+Allow: /
+# 后台、草稿、会员页这类路径写在这里，下面每组也照抄一遍：
+# Disallow: /admin/
+
+# ---- 1. 传统搜索引擎：AI Overviews、Copilot、Brave、Siri 都靠它们 ----
+# Googlebot：Google 搜索，AI Overviews 和 AI Mode 用同一份索引。
+#            Brave 只抓 Googlebot 能抓的页面，Claude 又用 Brave 搜索。
+# Bingbot：Bing 和 Copilot。
+# Applebot：Spotlight、Siri、Safari 搜索。
+# Baiduspider：百度搜索。
+User-agent: Googlebot
+User-agent: Bingbot
+User-agent: Applebot
+User-agent: Baiduspider
+Allow: /
+
+# ---- 2. AI 搜索索引：决定你能不能出现在 AI 搜索回答里 ----
+# OAI-SearchBot：ChatGPT 搜索。挡了就不会出现在 ChatGPT 搜索回答里。
+# Claude-SearchBot：Claude 的搜索索引。
+# PerplexityBot：Perplexity 搜索结果，官方说不用于训练。
+# MistralAI-Index：Mistral 搜索索引，官方说不用于训练。
+# meta-webindexer：Meta AI 搜索。
+# DuckAssistBot：DuckDuckGo 的 AI 回答，不用于训练。
+User-agent: OAI-SearchBot
+User-agent: Claude-SearchBot
+User-agent: PerplexityBot
+User-agent: MistralAI-Index
+User-agent: meta-webindexer
+User-agent: DuckAssistBot
+Allow: /
+
+# ---- 3. 用户触发：用户在对话里问到或贴出你的链接时现场读 ----
+# 多数官方写明 robots.txt「可能不适用」，写在这里是表态。
+User-agent: ChatGPT-User
+User-agent: Claude-User
+User-agent: Perplexity-User
+User-agent: MistralAI-User
+Allow: /
+
+# ---- 4. Google-Extended：单独决定，它不只管训练 ----
+# 同时管 Gemini 训练和 Gemini 应用里的实时引用，不影响 AI Overviews。
+# 想出现在 Gemini 应用的引用里，就要允许它（训练也一并允许）。
+# 只要 Google 搜索、不要 Gemini：把下面改成 Disallow: /
+User-agent: Google-Extended
+Allow: /
+
+# ---- 5. 训练类：二选一 ----
+# 选项 A，允许训练：什么都不用写，它们走默认组。
+# 选项 B，禁止训练、保留 AI 搜索：取消下面两段的注释。
+#
+# 跨厂商训练令牌。Anthropic 已执行，Microsoft 2027-02-01 起，
+# Google 2027 年，OpenAI 未定。
+# User-agent: __usage_ai-training
+# Disallow: /
+#
+# 各家自己的训练爬虫和令牌，跨厂商令牌全面生效前不要删：
+# GPTBot（OpenAI）、ClaudeBot（Anthropic）、Applebot-Extended（Apple）、
+# MistralAI-Training（Mistral）、meta-externalagent（Meta）、CCBot（Common Crawl）。
+# User-agent: GPTBot
+# User-agent: ClaudeBot
+# User-agent: Applebot-Extended
+# User-agent: MistralAI-Training
+# User-agent: meta-externalagent
+# User-agent: CCBot
+# Disallow: /
+
+# ---- 6. 站点地图 ----
+Sitemap: https://<你的域名>/sitemap-index.xml`;
+export const uaScript = `#!/usr/bin/env bash
+# 用法：bash check-ai-ua.sh https://<你的域名>/<某个内页>/
+URL="$1"
+if [ -z "$URL" ]; then echo "用法：bash check-ai-ua.sh <要测的网址>"; exit 1; fi
+
+while IFS='|' read -r name ua; do
+  [ -z "$name" ] && continue
+  code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 -A "$ua" "$URL")
+  printf '%-18s %s\\n' "$name" "$code"
+done <<'LIST'
+Browser|Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36
+Googlebot|Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)
+bingbot|Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)
+Applebot|Mozilla/5.0 (compatible; Applebot/0.1; +http://www.apple.com/go/applebot)
+OAI-SearchBot|Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; OAI-SearchBot/1.4; +https://openai.com/searchbot
+ChatGPT-User|Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot
+GPTBot|Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; GPTBot/1.4; +https://openai.com/gptbot
+Claude-SearchBot|Mozilla/5.0 (compatible; Claude-SearchBot/1.0)
+Claude-User|Mozilla/5.0 (compatible; Claude-User/1.0)
+ClaudeBot|Mozilla/5.0 (compatible; ClaudeBot/1.0)
+PerplexityBot|Mozilla/5.0 (compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot)
+Perplexity-User|Mozilla/5.0 (compatible; Perplexity-User/1.0; +https://perplexity.ai/perplexity-user)
+MistralAI-Index|Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; MistralAI-Index/1.0; +https://docs.mistral.ai/robots)
+meta-webindexer|meta-webindexer/1.1
+DuckAssistBot|DuckAssistBot/1.2; (+http://duckduckgo.com/duckassistbot.html)
+Bytespider|Mozilla/5.0 (compatible; Bytespider; spider-feedback@bytedance.com)
+LIST`;
+export const robotsCheck = `# 用法：python3 robots_check.py https://<你的域名> /<某个内页>/
+import sys, urllib.request, urllib.robotparser
+site, path = sys.argv[1].rstrip("/"), sys.argv[2]
+# 自己下载 robots.txt：Python 默认的 UA 常被 CDN 拦成 403，robotparser 会因此把所有爬虫判成 BLOCK
+req = urllib.request.Request(site + "/robots.txt", headers={"User-Agent": "Mozilla/5.0 robots-check"})
+try:
+    lines = urllib.request.urlopen(req, timeout=15).read().decode("utf-8", "replace").splitlines()
+except urllib.error.HTTPError as e:
+    sys.exit(f"robots.txt 返回 {e.code}。404 表示没有 robots.txt，等于全部允许。")
+rp = urllib.robotparser.RobotFileParser()
+rp.parse(lines)
+for ua in ["Googlebot", "Bingbot", "Applebot", "Baiduspider",
+           "OAI-SearchBot", "Claude-SearchBot", "PerplexityBot", "MistralAI-Index", "meta-webindexer", "DuckAssistBot",
+           "ChatGPT-User", "Claude-User", "Perplexity-User", "MistralAI-User",
+           "Google-Extended", "GPTBot", "ClaudeBot", "Applebot-Extended", "MistralAI-Training",
+           "meta-externalagent", "CCBot", "Bytespider"]:
+    print(f"{ua:20} {'allow' if rp.can_fetch(ua, site + path) else 'BLOCK'}")`;
+
+这篇给你一份完整的 robots.txt，和两个检查脚本。照抄后改两处：你的域名，和训练类选哪一边。
+
+## 第一步：复制这份模板
+
+<Copy id="robots-template" title="public/robots.txt（Astro 站放在 public/ 下，构建后就在根目录）" code={robotsTemplate} />
+
+每组的依据：
+
+- **传统搜索全部放行。** AI Overviews 和 AI Mode 用 Google 的索引 <Src ids="02-S9" />，Copilot 用 Bing 的 <Src ids="02-S20" />。Brave 只抓 Googlebot 能抓的页面 <Src ids="02-S32" />，Claude 又用 Brave 搜索 <Src ids="02-S30" />。
+- **AI 搜索索引全部放行。** 挡了 OAI-SearchBot 就不会出现在 ChatGPT 搜索回答里 <Src ids="02-S1" />。Anthropic、Perplexity、Mistral、Meta、DuckDuckGo 的文档结构相同 <Src ids="02-S25 02-S33 02-S39 02-S37 02-S40" />。
+- **用户触发放行。** 多数写明 robots.txt 可能不适用 <Src ids="02-S1 02-S33" />。Anthropic 说挡了 Claude-User 会降低用户主动查询时的可见度 <Src ids="02-S25" />。
+- **训练类自己选。** 各家都写明，关掉训练不影响搜索展示 <Src ids="02-S1 02-S25" />。放行训练能不能让模型记住你，还没有可靠数据。
+
+一组里写多个 `User-agent:` 行、共用规则，是 RFC 9309 定义的写法 <Src ids="02-S27" />。
+
+<Callout type="warn">
+写了专门组的爬虫，不再读 `User-agent: *` 组。你在 `*` 组里写的 `Disallow: /admin/`，对 Googlebot、OAI-SearchBot 都不生效。私有路径要在每一组里都写一遍。
+</Callout>
+
+## 第二步：想清楚 Google-Extended
+
+<mark>Google-Extended 不是单纯的训练开关。</mark>它同时管 Gemini 训练，和 Gemini 应用里的实时引用 <Src ids="02-S15" />。挡了它，你就不在 Gemini 应用的引用里。它不影响 Google 搜索，也不影响 AI Overviews <Src ids="02-S15" />。
+
+一项 SIGIR 2026 的研究看到：挡了 Google-Extended 的网站，在 Gemini 里一次都没被引用 <Src ids="01-S18" />。
+
+还有一个新坑。2026-10-30 出现了跨厂商的训练令牌 `__usage_ai-training` <Src ids="02-S27" />。Google 计划 2027 年支持它 <Src ids="02-S15" />。到时候，如果你用它退出训练，又没单独写 Google-Extended，Google 会当作你挡了 Google-Extended <Src ids="02-S14" />。单独允许了 Google-Extended 的网站，仍能在 Gemini 应用里被引用 <Src ids="02-S14" />。
+
+所以模板里第 4 段单独写了 `User-agent: Google-Extended` 和 `Allow: /`。选了「禁止训练」也别删它，除非你确实不想出现在 Gemini 里。
+
+关于 `__usage_ai-training` 还要知道 <Src ids="02-S27" />：
+
+- **`*` 组不算。** IETF 草案规定 `User-agent: *` 不能被解释成匹配这个令牌。
+- **没写就是没表态。** 不是同意，也不是拒绝。
+- **它不管抓取。** 想限制抓取，仍要写各爬虫自己的组。
+- **只是草案。** 个人提交的 Internet-Draft，没有正式标准地位，2027-05-03 到期。
+
+各家什么时候执行（截至 2026-11）：Anthropic 已开始，Microsoft 2027-02-01 起，Google 2027 年，OpenAI 只说未来几个月 <Src ids="02-S28 02-S29" />。Anthropic 的规则是：写了 ClaudeBot 组就以它为准 <Src ids="02-S25" />。
+
+## 第三步：部署后看线上返回的那份
+
+<Copy id="robots-live" title="在终端里跑" code={`curl -s https://<你的域名>/robots.txt`} />
+
+<Callout type="ok">
+输出和你写的一样。如果前面多出一段 `# BEGIN Cloudflare Managed content`，那是 Cloudflare 的托管 robots.txt 插进来的。
+</Callout>
+
+托管 robots.txt 会对 GPTBot、ClaudeBot、Google-Extended、Applebot-Extended、meta-externalagent、CCBot、Bytespider、Amazonbot 写 `Disallow: /` <Src ids="03-S17" />。你的站原本没有 robots.txt 时，它会替你生成一份 <Src ids="03-S17" />。两份规则叠在一起时谁说了算，各家解析器可能不同。最稳的是关掉托管功能，只留你自己的，位置见 [Cloudflare 的 How-to](/howto/cloudflare-bots/)。
+
+## 第四步：用脚本检查每个爬虫的结果
+
+先用 Python 按你的 robots.txt 推一遍，看每个爬虫是允许还是挡住。
+
+<Copy id="robots-check" title="robots_check.py，只用标准库" lang="python" code={robotsCheck} />
+
+<Copy id="robots-check-run" title="运行" code={`python3 robots_check.py https://<你的域名> /<某个内页>/`} />
+
+<Callout type="ok">
+用了上面的模板、训练选 A，每一行都是 `allow`。选了 B，GPTBot、ClaudeBot、Applebot-Extended、MistralAI-Training、meta-externalagent、CCBot 是 `BLOCK`，其余是 `allow`。
+</Callout>
+
+<Callout type="warn">
+别让 robotparser 自己去下载 robots.txt。Python 默认的 UA 是 `Python-urllib`，本站测 pstack 站时它拿到 403，robotparser 因此把所有爬虫判成 BLOCK <Src ids="21-S6" />。上面的脚本自己带 UA 下载，就是为了绕开这个坑。
+</Callout>
+
+Python 的 robotparser 会让 `__usage_ai-training` 落到 `*` 组。这和 IETF 草案的规定相反 <Src ids="02-S27" />，所以脚本里没测它。
+
+再用 curl 换 UA，看服务器实际回什么。这一步测的是 CDN 和防火墙，和 robots.txt 无关。
+
+<Copy id="ua-script" title="check-ai-ua.sh，macOS 自带的 bash 就能跑" code={uaScript} />
+
+<Copy id="ua-script-run" title="运行" code={`bash check-ai-ua.sh https://<你的域名>/<某个内页>/`} />
+
+<Callout type="ok">
+第一行「Browser」是对照组，应该是 200。搜索类和用户触发类也应该都是 200。
+</Callout>
+
+本站 2026-11-14 用这个脚本测 pstack 站，GPTBot、ClaudeBot、PerplexityBot、Bytespider 是 403，其余都是 200 <Src ids="21-S1 21-S6" />。它的 robots.txt 里一条规则都没有 <Src ids="21-S1" />，所以 403 来自 Cloudflare。怎么查见 [Cloudflare 别把 AI 爬虫挡在门外](/howto/cloudflare-bots/)。
+
+脚本里 OpenAI、Perplexity、Mistral、DuckDuckGo 的 UA 抄自官方文档 <Src ids="02-S1 02-S33 02-S39 02-S40" />。Anthropic 没给完整 UA，Claude 系列是按惯例拼的，只用来测「按 UA 拦截」的规则。
+
+<Callout type="warn">
+伪造 UA 测不出按 IP 验证的规则 <Src ids="02-S33" />。拿到 200 也不保证真爬虫能进。真爬虫来没来，看 [访问日志](/howto/crawler-logs/)。
+</Callout>
+
+## 改完要等多久
+
+- **OpenAI：** 搜索系统约 24 小时 <Src ids="02-S1" />。
+- **Meta：** 最多缓存 24 小时 <Src ids="02-S37" />。
+- **DuckDuckGo：** 72 小时 <Src ids="02-S40" />。
+- **Google：** 重新抓取可能要几天到几个月 <Src ids="02-S9" />。
+
+## robots.txt 管不到的事
+
+- **退出 ChatGPT 搜索：** 用 `noindex`，并让爬虫能抓到这个页面 <Src ids="03-S6" />。
+- **退出 AI Overviews 和 AI Mode：** 用 Search Console 的 Search generative AI 开关 <Src ids="02-S11" />。
+- **Bing 的 grounding：** 只有页面级设置，2027-02-01 起执行 <Src ids="02-S20" />。
+- **Grok 和隐身爬虫：** Grok 的抓取伪装成普通浏览器 <Src ids="02-S41" />。Cloudflare 指控 Perplexity 被挡后换了伪装爬虫 <Src ids="02-S34" />。这些只能靠防火墙。
+
+另外，Anthropic 要求每个子域名单独放一份 robots.txt <Src ids="02-S25" />。`docs.<你的域名>`、`app.<你的域名>` 都要各写一份。
+
+## 交给 AI 做
+
+<Copy id="robots-prompt" title="发给 Claude Code 或 ChatGPT" code={`你是网站运维助手。我有这些站点：
+- 主站 <你的域名>（Astro 静态站，部署在 Cloudflare）
+- 文档站 docs.<你的域名>
+- 会员站 app.<你的域名>（/dashboard/ 和 /api/ 不允许任何爬虫访问）
+
+请按下面的分类写 robots.txt，每个子域名一份，每行加中文注释：
+1. 传统搜索：Googlebot、Bingbot、Applebot、Baiduspider 允许。
+2. AI 搜索索引：OAI-SearchBot、Claude-SearchBot、PerplexityBot、MistralAI-Index、meta-webindexer、DuckAssistBot 允许。
+3. 用户触发：ChatGPT-User、Claude-User、Perplexity-User、MistralAI-User 允许。
+4. 训练：我选择【禁止 / 允许】。禁止时同时写 __usage_ai-training 和 GPTBot、ClaudeBot、Applebot-Extended、MistralAI-Training、meta-externalagent、CCBot。
+5. Google-Extended：我【需要 / 不需要】出现在 Gemini 应用的引用里。需要就单独写一组 Allow。
+
+硬性规则：
+- 写了专门组的爬虫不再读 * 组，所以每个专门组都要重复写私有路径的 Disallow。
+- 不要编造我没列出的爬虫名。你认为还该加的，单独列在最后并说明出处。
+- 最后给一张表：每个 UA 在每个子域名的根路径和 /dashboard/ 是 allow 还是 block。`} />
+
+拿到结果后，别直接信它的表。用上面的 `robots_check.py` 在每个子域名上跑一遍，逐行核对。
+
+## 卡住了？
+
+<Q q="robots_check.py 显示所有爬虫都是 BLOCK">
+先用浏览器打开 `https://<你的域名>/robots.txt`，看是不是真的写了 `Disallow: /`。没写的话，多半是 CDN 把脚本的请求拦了。确认你用的是本页的脚本，它会自己带 UA 下载。
+</Q>
+
+<Q q="改了 robots.txt，线上还是旧的">
+先看是不是缓存，`curl -sI` 看响应头里的缓存字段。再看 Cloudflare 的托管 robots.txt 是否开着，它会在前面插内容 <Src ids="03-S17" />。
+</Q>
+
+<Q q="我想挡 Bytespider，会不会影响豆包">
+没查清。ByteDance 没有官方爬虫文档，Bytespider 和豆包回答的关系不明 <Src ids="02-S65" />。GitHub 的 robots.txt 整站禁止了它 <Src ids="03-S65" />。要挡就在模板末尾加一组 `User-agent: Bytespider` 和 `Disallow: /`。
+</Q>
+
+<Q q="robots.txt 全对，curl 还是 403">
+robots.txt 不会让服务器返回 403，它只是一份请求。403 来自 CDN 或防火墙，去看 [Cloudflare 的 How-to](/howto/cloudflare-bots/)。
+</Q>
