@@ -9,6 +9,8 @@ import { TACTICS, LAYERS, VERDICTS, EFFORTS } from "../src/data/tactics.js";
 import { PLATFORMS, REGIONS, PURPOSES } from "../src/data/platforms.js";
 import { TOOLS, TOOL_KINDS } from "../src/data/tools.js";
 import { PROMPTS } from "../src/data/prompts.js";
+import { WIKI } from "../src/data/wiki.js";
+import { FAQ } from "../src/data/faq.js";
 
 const errors = [];
 const warnings = [];
@@ -64,6 +66,14 @@ for (const [file, list, key, enums] of DATA) {
     if (x.sample) samples++;
   }
 }
+
+// Wiki 和常见问题：出处 id 要存在，「相关」要指向真的条目
+const wikiSlugs = new Set(WIKI.map((w) => w.slug));
+for (const w of WIKI) {
+  cite(`wiki.js「${w.slug}」`, w.sources);
+  for (const s of w.see ?? []) if (!wikiSlugs.has(s)) bad(`wiki.js「${w.slug}」`, `see 里的「${s}」不是 Wiki 条目`);
+}
+for (const g of FAQ) for (const [q, , ids] of g.items) cite(`faq.js「${q}」`, ids);
 
 for (const id of Object.keys(SOURCES)) if (!cited.has(id)) warnings.push(`出处「${id}」还没有被任何页面或数据引用`);
 if (samples) warnings.push(`还有 ${samples} 条示例数据（sample: true）没替换`);

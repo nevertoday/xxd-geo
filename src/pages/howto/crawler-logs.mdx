@@ -17,10 +17,10 @@ import re, sys, collections
 
 GROUPS = {
     "search": ["OAI-SearchBot", "Claude-SearchBot", "PerplexityBot", "MistralAI-Index",
-               "meta-webindexer", "DuckAssistBot", "Googlebot", "bingbot", "Applebot/", "Baiduspider"],
+               "meta-webindexer", "DuckAssistBot", "Googlebot", "bingbot", "Applebot/", "Baiduspider", "Bytespider"],
     "user": ["ChatGPT-User", "Claude-User", "Perplexity-User", "MistralAI-User",
              "meta-externalfetcher", "Google-Agent", "Claude-Agent", "GeminiiOS", "Google-GeminiNotebook"],
-    "training": ["GPTBot", "ClaudeBot", "MistralAI-Training", "meta-externalagent", "CCBot", "Bytespider"],
+    "training": ["GPTBot", "ClaudeBot", "MistralAI-Training", "meta-externalagent", "CCBot"],
 }
 LINE = re.compile(r'^(\\S+) \\S+ \\S+ \\[[^\\]]+\\] "\\S+ (\\S+)[^"]*" (\\d{3}) \\S+ "[^"]*" "([^"]*)"')
 
@@ -179,8 +179,8 @@ host <上一步返回的主机名>`} />
 1. 按 UA 把请求分成：传统搜索、AI 搜索索引、用户触发、训练、其他机器人、人类。
    名单：搜索索引 OAI-SearchBot、Claude-SearchBot、PerplexityBot、MistralAI-Index、meta-webindexer、DuckAssistBot；
    用户触发 ChatGPT-User、Claude-User、Perplexity-User、MistralAI-User、meta-externalfetcher、Google-Agent；
-   训练 GPTBot、ClaudeBot、MistralAI-Training、meta-externalagent、CCBot、Bytespider；
-   传统搜索 Googlebot、bingbot、Applebot、Baiduspider。
+   训练 GPTBot、ClaudeBot、MistralAI-Training、meta-externalagent、CCBot；
+   传统搜索 Googlebot、bingbot、Applebot、Baiduspider、Bytespider（头条搜索）。
 2. 对 OAI-SearchBot、ChatGPT-User、GPTBot、PerplexityBot、Perplexity-User 的请求，下载官方 IP 列表核对真伪：
    https://openai.com/searchbot.json、https://openai.com/chatgpt-user.json、https://openai.com/gptbot.json、
    https://www.perplexity.ai/perplexitybot.json、https://www.perplexity.ai/perplexity-user.json
