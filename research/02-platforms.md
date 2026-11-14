@@ -825,7 +825,7 @@ __usage_ai-training 支持状态。只报告原文里能看到的变化，引用
 | S49 | GEO 软文怎么写更容易被 AI 引用？六大AI平台偏好与GEO发稿平台选型指南 | 凤凰网（自媒体） | 2026 | https://tech.ifeng.com/c/8w7E7F5YWtG | 营销文章（已读原文） | D | 各平台信源比例（引用新榜智汇、QuestMobile），原始报告未找到；文末推广发稿平台 |
 | S50 | 2026年汽车行业AI信源影响力指数报告 | 艾瑞咨询（经 36氪 发布） | 2026-06-15 | https://www.36kr.com/p/3853790497035271 | 大样本测评（已读原文） | B | 5 平台 PC 与 App 共 40 万次提问；各平台信源偏好差异；可能存在商业合作未披露 |
 | S51 | 五大AI平台解答汽车问题 七成以上信源来自汽车垂类媒体 | CNMO（腾讯新闻转载） | 2026-07-27 | https://news.qq.com/rain/a/20260727A03U4L00 | 新闻（已读原文） | C | 测评方法：2026-05-18 到 28，4 万问题，人工提问；垂类媒体占前 20 的 77.2% |
-| S52 | 腾讯全新搜索产品"元宝搜索"正式上线，能搜微信公众号、视频号 | 凤凰网（转 IT之家） | 11 月 11 日（年份未标，推测 2025） | https://tech.ifeng.com/c/8xxy9p18wmX | 新闻（已读原文） | C | so.qq.com；千亿级索引；覆盖公众号、视频号、学术；接入 157 个权威信源 |
+| S52 | 腾讯全新搜索产品"元宝搜索"正式上线，能搜微信公众号、视频号 | 凤凰网（转 IT之家） | 11 月 11 日（年份未标；07-S10 核实为 2026-11-11） | https://tech.ifeng.com/c/8xxy9p18wmX | 新闻（已读原文） | C | so.qq.com；千亿级索引；覆盖公众号、视频号、学术；接入 157 个权威信源 |
 | S53 | 国信证券研报（腾讯元宝相关） | 国信证券 | 2024-05-31 | https://pdf.dfcfw.com/pdf/H3_AP202405311635070432_1.pdf | 券商研报（搜索结果） | C | 元宝接入微信搜一搜和搜狗搜索；2024 年资料，可能过时 |
 | S54 | 腾讯元宝（App Store 介绍） | 腾讯 | 2025-2026 | https://apps.apple.com/cn/app/%E8%85%BE%E8%AE%AF%E5%85%83%E5%AE%9D-deepseek-r1%E6%9C%80%E6%96%B0%E6%A8%A1%E5%9E%8B%E6%8E%A5%E5%85%A5/id6480446430 | 官方应用描述（搜索结果） | A | 联网搜索公众号、视频号等腾讯生态信源 |
 | S55 | Kimi Agentic 搜索介绍 | 月之暗面 | 2026（抓取于 2026-11-14） | https://www.kimi.com/zh-cn/help/features/search | 官方文档（已读原文） | A | 100+ 可信来源；剔除低质聚合站和未证实自媒体；可检索英文、日文资料 |
@@ -837,8 +837,8 @@ __usage_ai-training 支持状态。只报告原文里能看到的变化，引用
 | S61 | 下手帮你干活直接交付结果 纳米AI超级搜索智能体发布 | 每日经济新闻 | 2025-06-12 | https://www.nbd.com.cn/articles/2025-06-12/3905483.html | 新闻（已读原文） | C | 跨平台搜索小红书、抖音、淘宝、京东、雪球等；内置 80 多款模型 |
 | S62 | AI 搜索引擎优化主要适配哪些国内主流 AI 大模型？ | 腾讯云开发者社区（个人作者） | 2026 | https://cloud.tencent.com/developer/article/2730895 | 观点文章（已读原文） | D | 抓取不等于引用；不存在保证被引用的手段；部分模型优先自有生态 |
 | S63 | DeepSeek 读取 GitHub 代码失败后编造内容 | 80aj.com（转载） | 2026-08-08 | https://www.80aj.com/2026/08/08/deepseek-github-code-hallucination/ | 个人反馈（搜索结果） | C | GitHub 链接读取失败，换 raw.githubusercontent.com 后成功；失败时未报错直接编造 |
-| S64 | Baidu blocks Google, Bing from scraping content amid demand for data used on AI projects | South China Morning Post | 2024-08 | https://scmp.com/tech/big-tech/article/3275717/baidu-blocks-google-bing-scraping-content-amid-demand-data-used-ai-projects | 新闻（搜索结果） | C | 百度百科 robots.txt 禁止 Googlebot 与 Bingbot |
-| S65 | What is Bytespider? The Web Crawler That Breaks the Rules | Pepper（厂商博客） | 2025-2026 | https://www.pepper.inc/blog/bytespider-explained/ | 厂商博客（搜索结果） | D | 多方称 Bytespider 不遵守 robots.txt，也有相反说法；无官方文档可核实 |
+| S64 | Baidu blocks Google, Bing from scraping content amid demand for data used on AI projects | South China Morning Post | 2024-08 | https://scmp.com/tech/big-tech/article/3275717/baidu-blocks-google-bing-scraping-content-amid-demand-data-used-ai-projects | 新闻（搜索结果） | X（07-S63 实测百度百科现行 robots.txt 已放行 Google、Bing） | 百度百科 robots.txt 禁止 Googlebot 与 Bingbot |
+| S65 | What is Bytespider? The Web Crawler That Breaks the Rules | Pepper（厂商博客） | 2025-2026 | https://www.pepper.inc/blog/bytespider-explained/ | 厂商博客（搜索结果） | D | 多方称 Bytespider 不遵守 robots.txt，也有相反说法；「无官方文档」已被 07-S27（头条搜索站长平台的官方爬虫页）推翻 |
 | S66 | DeepSeek 隐私政策 | DeepSeek | 2026（抓取于 2026-11-14） | https://cdn.deepseek.com/policies/zh-CN/deepseek-privacy-policy.html | 官方文档（已读原文） | A | 只说会为搜索服务接收用户输入，未说明搜索服务商 |
 | S67 | Microsoft Bing New AI Controls With AI Training From AI Search Grounding | Search Engine Roundtable | 2026-10-30 | https://seroundtable.com/microsoft-bing-ai-controls-42429.html | 行业新闻（已读原文） | C | 训练、Grounding、Limited Grounding 三设置与时间表；给出 Bing FAQ 链接 |
 | S68 | Bing Webmaster Blog RSS（含 data-nosnippet 支持等文章列表） | Microsoft Bing | 2025-10 到 2026-10 | https://blogs.bing.com/webmaster/feed | 官方博客目录（已读原文） | A | 2025-10-15 Bing 支持 data-nosnippet；IndexNow 相关文章 |

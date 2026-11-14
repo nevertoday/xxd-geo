@@ -1094,7 +1094,7 @@ export const GENERATED = {
  "02-s52": {
   "title": "腾讯全新搜索产品\"元宝搜索\"正式上线，能搜微信公众号、视频号",
   "publisher": "凤凰网（转 IT之家）",
-  "date": "2025",
+  "date": "2026-11-11",
   "url": "https://tech.ifeng.com/c/8xxy9p18wmX",
   "kind": "报道",
   "grade": "C",
@@ -1217,7 +1217,7 @@ export const GENERATED = {
   "date": "2024-08",
   "url": "https://scmp.com/tech/big-tech/article/3275717/baidu-blocks-google-bing-scraping-content-amid-demand-data-used-ai-projects",
   "kind": "报道",
-  "grade": "C",
+  "grade": "X",
   "note": "百度百科 robots.txt 禁止 Googlebot 与 Bingbot",
   "seen": "摘要"
  },
@@ -1228,7 +1228,7 @@ export const GENERATED = {
   "url": "https://www.pepper.inc/blog/bytespider-explained/",
   "kind": "观点",
   "grade": "D",
-  "note": "多方称 Bytespider 不遵守 robots.txt，也有相反说法；无官方文档可核实",
+  "note": "多方称 Bytespider 不遵守 robots.txt，也有相反说法；「无官方文档」已被 07-S27（头条搜索站长平台的官方爬虫页）推翻",
   "seen": "摘要"
  },
  "02-s66": {
@@ -3797,6 +3797,15 @@ export const GENERATED = {
   "grade": "C",
   "note": "indexnow.mjs 只提交 lastmod 在两天内的网址，跳过没有 lastmod 的条目，fetch 用假函数拦截；lastmod.mjs 按 frontmatter 生成正确的网址和 ISO 时间；页面上的代码和试跑的文件逐字一致",
   "where": "无（脚本见 /howto/indexnow/、/guide/2-indexed/、/howto/crawler-logs/）"
+ },
+ "27-s1": {
+  "title": "小程序 AI 开发模式 接入方式",
+  "publisher": "微信开放文档",
+  "date": "2026",
+  "url": "https://developers.weixin.qq.com/miniprogram/dev/ai/integration.html",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "app.json 的 agent.skills 声明 SKILL；SKILL 放独立分包并开 lazyCodeLoading；目录含 SKILL.md（最大 16000 字节）、index.js、mcp.json（最大 24000 字节）；最多 30 个 SKILL；原子接口返回 content、structuredContent，用 wx.modelContext.registerAPI 注册"
  }
 };
 /** 几份稿子引用同一个链接时，后出现的编号指向第一次出现的那条 */
