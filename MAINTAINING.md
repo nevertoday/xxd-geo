@@ -30,7 +30,7 @@ npm run build      # 输出到 dist/，最后跑内容检查
 
 在 MDX 里 import 后使用：
 
-- **`Src`**：出处小标。`<Src ids="openai-bots geo-paper" />`，每个 id 一个小方块，写着证据等级，点进 `/sources/#<id>`，悬停看标题。id 不在 `sources.js` 里，构建直接报错。
+- **`Src`**：出处小标。`<Src ids="02-S1 03-S5" />`（调研稿编号加出处表里的 S 编号，大小写都行；重复的链接用哪个编号都能解析），每个 id 一个小方块，写着证据等级，点进 `/sources/#<id>`，悬停看标题。id 不在 `sources.js` 里，构建直接报错。
 - **`Verdict`**：结论徽章。`<Verdict v="must" />`，四种：`must` 必做、`try` 值得试、`skip` 不必做、`avoid` 别做。
 - **`Callout`**：提示框，`type` 是 `ok`（你应该看到）、`warn`、`no`、`tip`。
 - **`Term`**：术语，`k` 对应 `GLOSSARY`，悬停一句话解释，点进 Wiki。
@@ -75,6 +75,10 @@ MDX 正文里不能出现裸的 `<`、`{`、`}`：占位符写在代码里，比
 - **必做**至少要有一条 A 或 B。只有 C、D 撑着的做法，最多算「值得试」。
 - 卖 GEO 工具的公司发的研究，照样能引用，`note` 里写明利益相关。
 - 资料过时了，把 `grade` 改成 `X`，`note` 写为什么，别直接删：页面上还能说明「这条别再信」。
+
+## 出处从哪来
+
+`research/NN-*.md` 是调研稿，末尾各有一张出处表。`node scripts/import-sources.mjs` 把这些表导成 `src/data/sources.gen.js`：id 是「稿子编号-s 编号」，同一个链接只留第一次出现的那条，其他编号进 `ALIAS`。改了调研稿就重跑，不要手改生成的文件。手写的出处放 `sources.js` 的 `MANUAL`。
 
 ## 检查脚本
 
