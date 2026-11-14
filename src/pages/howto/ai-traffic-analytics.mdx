@@ -2,8 +2,154 @@
 layout: ../../layouts/HowTo.astro
 slug: ai-traffic-analytics
 step: 7
-tldr: "在统计里看出 AI 带来的访问"
-description: "在统计里看出 AI 带来的访问"
+tldr: "在 GA4 等统计里单独看到 AI 带来的访问，并知道它漏了哪些"
+description: "在 GA4、Plausible、Umami、Cloudflare Web Analytics 里看出 AI 带来的访问，配一个自定义 AI 渠道，再用 Search Console 和 Bing 的 AI 报告补上平台那一侧。"
+time: "30 分钟"
+for: "所有有网站的产品：教程站、会员站、插件官网、项目文档站"
 ---
+import Src from "../../components/Src.astro";
+import Callout from "../../components/Callout.astro";
+import Copy from "../../components/Copy.astro";
+import Q from "../../components/Q.astro";
 
-正文编写中。
+export const ga4Regex = String.raw`^(.*\.)?(chatgpt\.com|chat\.openai\.com|perplexity\.ai|claude\.ai|gemini\.google\.com|copilot\.microsoft\.com|chat\.deepseek\.com|grok\.com|meta\.ai|you\.com|poe\.com|doubao\.com|kimi\.com|kimi\.moonshot\.cn|yuanbao\.tencent\.com|qianwen\.com|qianwen\.aliyun\.com|tongyi\.aliyun\.com|wenxin\.baidu\.com|metaso\.cn|chatglm\.cn)$`;
+export const utmByDay = String.raw`grep 'utm_source=chatgpt.com' access.log | awk '{print substr($4, 2, 11)}' | uniq -c`;
+export const refCount = String.raw`grep -oE '"https?://(www\.)?(chatgpt\.com|perplexity\.ai|claude\.ai|gemini\.google\.com|doubao\.com|kimi\.com|yuanbao\.tencent\.com|chat\.deepseek\.com|qianwen\.com)[^"]*"' access.log | sed -E 's#"https?://([^/"]+).*#\1#' | sort | uniq -c | sort -rn`;
+
+AI 带来的访问量通常很小，又常常认不出来。这篇先在 GA4 里把它单独拎出来，再说清它漏了什么、怎么补。
+
+## GA4：先看自带的 AI Assistant 渠道
+
+2026-05-13 起，GA4 的默认渠道组多了一个 AI Assistant。<Src ids="05-S16" />来源命中 Google 维护的 AI 助手列表时，GA4 会把 medium 设成 `ai-assistant`，归进这个渠道。<Src ids="05-S14" />完整列表 Google 没公开。<Src ids="05-S16" />
+
+它会漏掉这些：
+
+- **Perplexity、Claude、Meta AI、You.com、Poe。** 它们落在 Referral 里。<Src ids="05-S17 05-S18" />
+- **AI Overviews 和 AI Mode。** 它们算 Organic Search。<Src ids="05-S17" />
+- **手机 App 里的点击。** 常常不带来源，落进 Direct，什么规则都救不回来。<Src ids="05-S18" />
+
+## 建一个自定义渠道组补上
+
+需要属性的「编辑者」以上权限。路径来自 Google 帮助文档：<Src ids="05-S15" />
+
+1. **管理 → 数据显示 → 渠道组**，点「创建新渠道组」。它会复制一份默认渠道组，命名为 `Default + AI`。
+2. 点「添加新渠道」，命名为 `AI`。条件选「来源」，匹配方式选「匹配正则表达式」，填下面这段。
+3. 点「重新排序」，把 `AI` 拖到 Organic Search 和 Referral 上面。GA4 按顺序取第一个匹配的渠道。<Src ids="05-S15" />
+4. 保存。到「流量获取」报告里，把主维度换成 `Default + AI`。
+
+<Copy id="ga4-regex" title="来源匹配的正则（截至 2026-11）" code={ga4Regex} />
+
+<Callout type="ok">
+切到 `Default + AI` 后，能看到一行 `AI`。自定义渠道组对历史数据也生效，过去几个月的 AI 访问会一起出来。<Src ids="05-S15" />
+</Callout>
+
+几点说明：
+
+- **正则里没有 `gpt`、`google`、`openai` 这类裸词。** 它们会把别的来源也算进来。<Src ids="05-S17" />
+- **前后加了 `^` 和 `$`。** GA4 文档没说正则是整串还是部分匹配，加上后两种都对。
+- **国内域名的来历见下面「国内 AI」一节。**
+- **标准属性最多建 2 个自定义渠道组。**<Src ids="05-S15" />
+- **每季度看一次「会话来源」报告。** 有新的 AI 来源就加进正则。<Src ids="05-S17" />
+
+验证：打开 GA4 的 DebugView，从各个 AI 产品里点一次真实的引用链接，看 `session_start` 带的来源。<Src ids="05-S18" />
+
+## ChatGPT 还带不带 utm_source
+
+这件事几份资料说法不一样，按时间排：
+
+- **OpenAI 的出版商 FAQ** 说，ChatGPT 的引荐链接会带 `utm_source=chatgpt.com`。页面没写日期，调研时只读到搜索摘要。<Src ids="06-S17" />
+- **Limy 的数据**（2026-10）说，GPT-6 从 2026-10-07 起推送，链接不再带 UTM，还加了 `noreferrer`。带 UTM 的访问降了 65%，同期引用只少了 6%。<Src ids="02-S4" />Limy 是卖工具的公司。
+- **BuildMVPFast 和 Evertune**（2026-10）把它说成 10-08 到 10-15 的一周故障，之后恢复。<Src ids="05-S19 05-S20" />就算恢复后，也只有约 12% 的 ChatGPT 点击带 referrer。<Src ids="05-S19" />OpenAI 没有公开说明。<Src ids="05-S20" />
+
+Gemini 也变过。2026-09 它给引用链接加了约三周 `utm_source=gemini`，9 月 28 日前后又撤了。桌面网页版仍然带来源，iOS App 不带。<Src ids="02-S17 02-S18" />
+
+**用你自己的数据判断。** 在 GA4 探索里建一张表，行是日期，筛选「会话来源」等于 `chatgpt.com`。时间从 2026-09-01 到今天。有服务器日志的，直接数每天带 UTM 的请求：
+
+<Copy id="utm-by-day" title="nginx / Apache combined 格式，按天数带 utm_source=chatgpt.com 的请求" code={utmByDay} />
+
+- **10-07 以后一直接近 0。** Limy 的说法在你的站上成立。这时去 Direct 里看深层页面（某篇教程，不是首页）有没有同时上涨。<Src ids="02-S4" />
+- **只在 10-08 到 10-15 掉下去。** 那就是那一周的故障。
+- **一直都在。** 这两个说法你都不用管。
+
+还有一个反向的坑。有人把带 `?utm_source=chatgpt.com` 的网址贴出去，被 Google 收录了。之后 Google 自然搜索的点击也会算成 ChatGPT。<Src ids="02-S4" />来源是 chatgpt.com、referrer 却是 google.com 的会话，多半是这种。
+
+## 国内 AI：域名查到了，来源待核实
+
+调研稿没找到国内 AI 产品会带什么来源的可靠资料。本手册在 2026-11-14 用 curl 请求了各家首页。记下了网页版的域名，和页面声明的 referrer 策略。<Src ids="17-S1" />
+
+- **豆包** 在 `www.doubao.com`，**Kimi** 在 `www.kimi.com`（`kimi.moonshot.cn` 会跳过去）。
+- **元宝** 在 `yuanbao.tencent.com`，**DeepSeek** 在 `chat.deepseek.com`。
+- **千问** 在 `www.qianwen.com`，旧地址 `tongyi.aliyun.com` 跳到 `qianwen.aliyun.com`。
+- **文心** 的 `yiyan.baidu.com` 跳到 `wenxin.baidu.com`。
+- **秘塔**和**智谱清言**的首页声明了 `no-referrer`。从它们网页版点出来，大概率不带来源。
+
+这些只是首页。对话页、链接上的属性、手机 App 都没看到。所以上面的正则能认出它们，<u>但它们会不会真的带来源，状态是「待核实」</u>。
+
+自己核实：在每个产品的网页版里，让它引用你的网站，点一下链接。再去 GA4 实时报告看这次访问的来源。有日志的，用下面这行数一数：
+
+<Copy id="ref-count" title="数日志里各家 AI 作为来源出现的次数" code={refCount} />
+
+百度统计有没有 AI 渠道，本手册还没查。
+
+## Plausible、Umami、Cloudflare Web Analytics
+
+- **Plausible。** 官方说会把 ChatGPT、Claude、Perplexity、Gemini、Copilot 的来访自动归进 AI Assistants 渠道。<Src ids="05-S21" />页面没写日期，先去后台看一眼有没有这个渠道。
+- **Umami。** 有 referrer 和 UTM 报告，支持首次和末次点击归因，没有 AI 分组。<Src ids="05-S22" />在 Referrers 报告里按上面的域名筛。
+- **Cloudflare Web Analytics。** 能按 Referer、路径、国家筛。<Src ids="05-S23" />文档没说保留 UTM，靠 UTM 识别的 ChatGPT 来访可能看不全。这是推断。Astro 站部署在 Cloudflare 上的，再配一个能读 UTM 的统计更稳。
+
+## 平台那一侧：Search Console 和 Bing
+
+**Search Console 的生成式 AI 报告。** 2026-08-31 起所有站点都有。<Src ids="05-S13" />
+
+- 能看你的页面在 AI Overviews、AI Mode 里的曝光数，按页面、国家、日期看。<Src ids="05-S13" />
+- 看不到点击和查询词，两种 AI 功能也不分开。<Src ids="05-S13" />
+- 2026-11-09 到 11-11 的数据偏低，是已知故障。<Src ids="02-S19" />
+
+**Bing Webmaster Tools 的 AI Performance。** 2026-02 起免费，验证站点就能用。<Src ids="05-S24" />
+
+- 能看 Copilot 和 Bing AI 摘要的总引用数、被引页面、AI 检索时用的查询词。<Src ids="05-S24" />
+- 2026-06 加了 Citation Share 和 Compare，Compare 能比两个时间段。<Src ids="05-S25" />
+- 2026-10 加了 Topics Portfolio，列出别人被引、你没被引的查询。<Src ids="02-S22" />
+- 没有点击数据，也不覆盖 ChatGPT 和 Google。<Src ids="05-S26" />
+
+<Callout type="ok">
+Bing 的 AI Performance 里能看到一个总引用数和被引页面清单。记下今天的数字，改完页面后用 Compare 看前后 30 天。
+</Callout>
+
+## 交给 AI 做
+
+正则最容易漏东西。导出 GA4 的来源列表，让 AI 对一遍：
+
+<Copy id="regex-check" title="发给 Claude 或 ChatGPT" code={`这是我 GA4「会话来源」报告近 90 天的来源列表（导出的 CSV）：
+<粘贴>
+这是我自定义 AI 渠道用的正则：
+<粘贴上面的正则>
+请：
+1. 找出列表里看起来来自 AI 产品、但没被正则匹配的来源。
+2. 找出被正则匹配、但其实不是 AI 产品的来源。
+3. 给出修改后的正则，保持 ^(.*\\.)?(…)$ 的写法，不要用 gpt、google、openai 这类裸词。
+只根据列表里出现的值判断，不要编造域名；拿不准的单独列出来。`} />
+
+拿到结果后检查：
+
+- **它新加的每个域名，都在你导出的列表里出现过。**
+- **改完的正则贴进 GA4 前，先用一两个来源值试一下。** GA4 编辑渠道时能看到匹配预览。
+- **它说「拿不准」的来源，你自己点开看看是什么网站。**
+
+## 卡住了？
+
+<Q q="AI 渠道一直是 0">
+先确认 `AI` 排在 Referral 上面，保存后切换到了 `Default + AI`。还是 0，就去「会话来源」里搜 `chatgpt`、`perplexity`，看来源值长什么样，再改正则。
+</Q>
+
+<Q q="10 月以后 ChatGPT 来访掉了一大半">
+先按上面「ChatGPT 还带不带 utm_source」那节查。用户可能都还在，只是算进了 Direct。<Src ids="05-S19 02-S4" />同时看追踪脚本里 ChatGPT 的提及率有没有掉，没掉就是统计口径的问题。
+</Q>
+
+<Q q="AI Overviews 带来了多少点击？">
+现在看不到。生成式 AI 报告只有曝光，点击混在普通搜索里。<Src ids="05-S13 05-S16" />
+</Q>
+
+<Q q="我的站没装任何统计">
+先上一个。在 Cloudflare 上的静态站，Cloudflare Web Analytics 最省事，但它可能看不到 UTM。想认出 ChatGPT，就再加 Plausible、Umami 或 GA4。
+</Q>

@@ -2,8 +2,149 @@
 layout: ../../layouts/HowTo.astro
 slug: prompt-set
 step: 7
-tldr: "定一组固定问题"
-description: "定一组固定问题"
+tldr: "定下 20 到 40 个固定问题，以后每周拿同一组去问 AI"
+description: "给产品定一组固定问题：按名字问、按品类问、按问题问、拿竞品比，中英文分开，存成 prompts.csv，每周用同一组去测 AI 提没提你。"
+time: "1 小时"
+for: "每个产品各做一份：Chrome 插件、教程站、会员站、小程序、GitHub 仓库"
 ---
+import Src from "../../components/Src.astro";
+import Callout from "../../components/Callout.astro";
+import Copy from "../../components/Copy.astro";
+import Q from "../../components/Q.astro";
 
-正文编写中。
+export const template = `id,lang,type,prompt
+Z1,zh,name,<产品名> 是什么？好用吗？
+Z2,zh,category,有什么好用的 <中文品类>？推荐几个。
+Z3,zh,problem,我想 <要解决的问题>，有什么工具能做到？
+Z4,zh,name,<产品名> 和 <竞品名> 哪个好？
+E1,en,name,What is <product name>? Is it any good?
+E2,en,category,What are the best <category in English>?
+E3,en,problem,How can I <problem in English>? Recommend a few tools.
+E4,en,name,<product name> vs <competitor>: which one should I use?
+Z5,zh,category,有没有能<做什么>的 Chrome 插件？最好免费，不用注册
+Z6,zh,problem,我是<谁>，每天要<场景>，有什么办法省事一点？
+Z7,zh,compare,<竞品A>和<竞品B>哪个好用？
+Z8,zh,compare,有没有<竞品A>的替代品？
+E5,en,category,free <category> tool that works without an account
+E6,en,problem,i'm a <who> and need to <do what> on <platform>. what should i use?
+E7,en,compare,<Competitor A> vs <Competitor B> for <use case>
+E8,en,compare,alternatives to <Competitor A>`;
+
+export const genPrompt = `我做了一个产品，实体卡在下面。请帮我写一组用来每周测试「AI 回答里提不提我」的固定问题。
+
+要求：
+1. 下面已有的 8 条（Z1 到 Z4、E1 到 E4）原样保留，不要改字，也不要改 id。
+2. 再补 24 条，中文接着用 Z5、Z6……编号，英文接着用 E5、E6……编号。加上已有的，一共 32 条，中英文各 16 条。
+3. 每种语言的 16 条里，四类的数量是（含已有的），用 type 列标注：
+   - category（8 条）：按品类问，不出现我的产品名和域名。
+   - problem（4 条）：用户描述自己的场景或麻烦，不出现我的产品名。
+   - compare（2 条）：拿竞品互相比，或问某个竞品的替代品。可以出现竞品名，不能出现我的产品名。
+   - name（2 条）：直接问我的产品，或拿我的产品和竞品比。用来查 AI 说得对不对。已有的 Z1、Z4 就是这一类。
+4. 用真人在手机上打字的口吻，可以带预算、平台、要不要登录这类条件。
+5. 不要写「列出前 5 名」这种限定数量的问法。
+6. 英文不要直译中文，按英文用户的习惯重写。
+7. 只输出 CSV，列为 id,lang,type,prompt，不要别的说明。prompt 里有逗号就用双引号包起来。
+
+已有的 8 条：
+<粘贴第 2 课填好的 Z1 到 Z4、E1 到 E4>
+
+下面是用户的原话，从商店评论、GitHub issue、客服邮件里摘的（已去掉个人信息）：
+<粘贴 20 到 100 条>
+
+实体卡：
+<粘贴 entity.md>`;
+
+这组问题是以后每周测量的尺子。尺子一换，前后就没法比了，所以花一小时定好，之后很少改。
+
+做过 [第 2 课](/start/2-check/) 的，手上已经有 8 个问题：中文 Z1 到 Z4，英文 E1 到 E4。这一篇在它们后面接着加，编号和第 2 课的 `geo-baseline.csv` 对得上。
+
+## 先抄这个模板
+
+新建 `prompts.csv`。前 8 行就是第 2 课那 8 个问题，把你填好的版本贴进去。后面几行换掉尖括号：
+
+<Copy id="template" title="prompts.csv 模板：前 8 行同第 2 课" code={template} />
+
+四列的意思：
+
+- **`id`** 中文用 Z 开头，英文用 E 开头，接着第 2 课往后编。一旦定下就不再改。
+- **`lang`** 是 `zh` 或 `en`。
+- **`type`** 是下面四类之一。
+- **`prompt`** 是原样发给 AI 的那句话。里面有逗号，就用双引号包起来。
+
+模板是 16 条。照着每类再写几条，凑到 20 到 40 条。
+
+<Callout type="ok">
+写完的 `prompts.csv` 有 20 到 40 行。`category`、`problem`、`compare` 三类里，一次都没出现你的产品名。
+</Callout>
+
+## 四类问题各放多少
+
+- **category，按品类问，约占一半。** 「有没有能把网页存成 Markdown 的插件」。用户还不认识你时就这么问。
+- **problem，按问题问，约占四分之一。** 用户描述自己的麻烦，不提任何产品名。
+- **compare，拿竞品比，一成多。** 「A 和 B 哪个好」「A 的替代品」。这里能看出 AI 会不会顺带把你也列进去。
+- **name，按名字问，一成多。** 「你的产品收费吗」。<u>这一类不算进提及率</u>，只用来查 AI 说得对不对。
+
+第 2 课的 Z4、E4 拿你和竞品比，问题里带着你的名字，所以也标成 `name`。不带你名字的竞品对比，放进 `compare`。
+
+为什么按名字问要单独放？一项研究测了 112 个 Product Hunt 产品、2,240 个问题。<Src ids="01-S16" />按名字问时，AI 认出产品的比例是 99.4%。换成不提名字的发现型问题，只剩 3.32%。<Src ids="01-S16" />
+
+按名字问几乎总会提到你，混进来会把提及率抬得很好看。Ahrefs 也建议把品牌事实类和泛发现类问题分开报告。<Src ids="05-S9" />追踪脚本的报表默认不算 `name` 这一类。第 2 课手记的 `geo-baseline.csv` 也能一起算，脚本靠 `prompts.csv` 认出 Z1、Z4 是 `name`。见 [自己搭一个提及追踪](/howto/diy-tracker/)。
+
+## 中文和英文分开测
+
+中英文各写一份，不要互相翻译。用户在两种语言里的问法不一样，AI 引的来源也不一样。
+
+国家也要固定。SISTRIX 发现，ChatGPT 每周的被引域名换血率，在法国是 42%，在德国是 74%。<Src ids="05-S7" />OpenAI 和 Anthropic 的联网搜索都能指定用户所在国家。<Src ids="05-S34 05-S36" />英文那份配 `US`，中文那份拿去问国内的 AI。
+
+国内 AI 的 API 联网方式各家不同。可以先手动问，或用 GEO 医生这类开源工具。<Src ids="05-S59" />做法见 [国内 AI 平台怎么做](/guide/6-china/)。
+
+## 用真实用户的说法
+
+问法从这些地方摘：
+
+- **Chrome Web Store 的评论。**
+- **GitHub issue。**
+- **Reddit、V2EX、知乎上的提问。**
+- **客服邮件和用户群。**
+
+摘不到很多也没关系。SparkToro 让 142 个人各写一句「想买耳机」的问法。两两之间的相似度平均只有 0.081。<Src ids="05-S2" />但把这 142 句各问一遍，得到的品牌出现率分布，和一句话问 100 次几乎一样。<Src ids="05-S2" />意图对了，自己写的问题也能测准。
+
+同一个研究还发现，真人几乎从不在问题里限定数量。<Src ids="05-S2" />所以别写「推荐 5 个」。
+
+## 定下来就别改
+
+改一个字，那个问题的历史数据就和新数据比不了了。
+
+- **想换说法：** 加一行新 id，旧的那行留着。
+- **问题过时了：** 留着那行，在报表里不看它。
+- **出了新竞品：** 加新的 `compare` 行。
+
+每个产品存一份 `prompts.csv`，和代码放在同一个仓库里，改动有记录可查。
+
+## 交给 AI 做
+
+<Copy id="gen-prompt" title="发给 Claude 或 ChatGPT，生成 prompts.csv" code={genPrompt} />
+
+实体卡的写法见 [用 AI 做 GEO，并坚持下去](/guide/8-with-ai/)。
+
+拿到结果后检查：
+
+- **前 8 行还是第 2 课那 8 个问题。** 字和 id 都没变。
+- **数一下 type。** 每种语言是 8、4、2、2 条。
+- **搜一下你的产品名和域名。** 只应该出现在 `name` 那几行。
+- **读一遍英文。** 像英文用户自己会打的字，不像翻译腔。
+- **删掉你的产品根本做不到的问题。** 测一个你本来就不该被推荐的问题，没有意义。
+
+## 卡住了？
+
+<Q q="我的产品太小众，想不出品类问题">
+从用户要解决的麻烦写起，先写 `problem` 类。再看竞品的商店页和 README，它们自称什么品类，你就用那个词问。
+</Q>
+
+<Q q="20 个问题够不够？">
+看你要回答什么。看整体趋势，问题越多越好，Meikai 的数据说多加问题比多跑重复更值。<Src ids="05-S6" />想测某一次改动，问题要和那次改动有关，见 [做一次前后对比实验](/howto/experiment/)。
+</Q>
+
+<Q q="我有十几个产品，每个都要做一份？">
+是。按提示词数收费的商业工具，这时会很贵。自己跑脚本，成本只是 API 费用。<Src ids="05-S45" />先给最想被推荐的两三个产品做，其他的后补。
+</Q>
