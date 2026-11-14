@@ -2269,6 +2269,557 @@ export const GENERATED = {
   "note": "据摘要，大量使用自卖自夸榜单的站在 5 月核心更新中继续下滑",
   "seen": "摘要"
  },
+ "05-s1": {
+  "title": "New Research: AIs are highly inconsistent when recommending brands or products",
+  "publisher": "SparkToro（Rand Fishkin）与 Gumshoe（Patrick O'Donnell）",
+  "date": "2026-01-28",
+  "url": "https://sparktoro.com/blog/new-research-ais-are-highly-inconsistent-when-recommending-brands-or-products-marketers-should-take-care-when-tracking-ai-visibility/",
+  "kind": "案例",
+  "grade": "B",
+  "note": "600 人、12 个提示词、2,961 条回答：同名单 <1/100，同顺序约 1/1,000；出现率稳定；建议每题 60 到 100 次。Gumshoe 卖追踪工具"
+ },
+ "05-s2": {
+  "title": "Office Hours: Can You Actually Track AI Visibility?",
+  "publisher": "SparkToro",
+  "date": "2026-05-07",
+  "url": "https://sparktoro.com/blog/office-hours-can-you-actually-track-ai-visibility/",
+  "kind": "观点",
+  "grade": "C",
+  "note": "排名是噪声；142 个不同问法的可见度分布与单提示词 100 次相近；AI 访问占 2.9%、搜索 34%（桌面端）；转述 Ahrefs 4 到 23 倍转化"
+ },
+ "05-s3": {
+  "title": "Don't Measure Once: Measuring Visibility in AI Search (GEO)",
+  "publisher": "圣加仑大学（Schulte、Bleeker、Kaufmann）",
+  "date": "2026",
+  "url": "https://huggingface.co/papers/2604.07585",
+  "kind": "论文",
+  "grade": "B",
+  "note": "每天约 65% 来源更换；每题每天 7 次标准误 <0.10；10 天 <0.10、24 天 <0.05；建议 2 到 4 周滚动窗口"
+ },
+ "05-s4": {
+  "title": "Quantifying Uncertainty in AI Visibility: A Statistical Framework for Generative Search Measurement",
+  "publisher": "Ronald Sielinski",
+  "date": "2026-03-09",
+  "url": "https://arxiv.org/abs/2603.08924",
+  "kind": "论文",
+  "grade": "B",
+  "note": "引用幂律分布；bootstrap 置信区间显示很多域名差异在噪声内；单次指标「误导性精确」"
+ },
+ "05-s5": {
+  "title": "How many repetitions of a single prompt does it take to understand your AI visibility?",
+  "publisher": "Evertune",
+  "date": "2026-07-16",
+  "url": "https://www.evertune.ai/resources/insights-on-ai/how-many-repetitions-of-a-single-prompt-does-it-take-to-understand-your-ai-visibility",
+  "kind": "数据研究",
+  "grade": "B",
+  "note": "5 次误差约 ±27 点、12 次 ±12、100 次 ±6；建议 100 次。厂商卖高频采样"
+ },
+ "05-s6": {
+  "title": "How many times should you run an AI visibility prompt?",
+  "publisher": "Meikai",
+  "date": "2026-07-27",
+  "url": "https://www.meikai.ai/blog/how-many-times-run-ai-visibility-prompts",
+  "kind": "官方文档",
+  "grade": "B",
+  "note": "组合层面每天 1 次与 10 次结果相同；Copilot 需每天 3 次；优先扩提示词覆盖"
+ },
+ "05-s7": {
+  "title": "AI citation drift",
+  "publisher": "SISTRIX",
+  "date": "2026-05-01",
+  "url": "https://www.sistrix.com/blog/ai-citation-drift/",
+  "kind": "观点",
+  "grade": "B",
+  "note": "每周新进域名：ChatGPT 74%、AI Mode 56%、AI Overviews 5%；AIO 53% 提示词 17 周无变化"
+ },
+ "05-s8": {
+  "title": "AI Search Volatility",
+  "publisher": "Profound",
+  "date": "2025-07-17",
+  "url": "https://www.tryprofound.com/blog/ai-search-volatility",
+  "kind": "官方文档",
+  "grade": "B",
+  "note": "一个月漂移：AIO 59.3%、ChatGPT 54.1%、Copilot 53.4%、Perplexity 40.5%（2025 年数据）"
+ },
+ "05-s9": {
+  "title": "How Stable Are AI Citations?",
+  "publisher": "Ahrefs（Mateusz Makosiewicz、Xibeijia Guan）",
+  "date": "2026-10-29",
+  "url": "https://ahrefs.com/blog/how-stable-are-ai-citations/",
+  "kind": "观点",
+  "grade": "B",
+  "note": "ChatGPT 59% 引用次日消失、4% 撑满 20 天；75% 会回来；建议看 7 天出现天数、等 2 到 3 周"
+ },
+ "05-s10": {
+  "title": "LLM scraped AI answers vs API results",
+  "publisher": "Surfer（与 cloro）",
+  "date": "2026-08",
+  "url": "https://surfer.ai/blog/llm-scraped-ai-answers-vs-api-results/",
+  "kind": "案例",
+  "grade": "B",
+  "note": "API 与 App 品牌重合 15.5% 到 23.8%；ChatGPT API 13.8 个品牌对 App 7.9 个。Surfer 卖抓取数据"
+ },
+ "05-s11": {
+  "title": "AI Overviews vs AI Mode",
+  "publisher": "Ahrefs",
+  "date": "2025",
+  "url": "https://ahrefs.com/blog/ai-overviews-vs-ai-mode",
+  "kind": "观点",
+  "grade": "B",
+  "note": "结论语义相似 86%，引用重合 13.7%。本稿只见到搜索摘要"
+ },
+ "05-s12": {
+  "title": "AI Search Citations: How Much Do They Really Change Week to Week?",
+  "publisher": "BrightEdge",
+  "date": "",
+  "url": "https://www.brightedge.com/resources/weekly-ai-search-insights/ai-search-citations-week-to-week-changes",
+  "kind": "观点",
+  "grade": "C",
+  "note": "搜索摘要称 96.8% 被引域名周环比零变化；未打开原文，方法不明"
+ },
+ "05-s14": {
+  "title": "Traffic-source dimensions（含 Default channel group）",
+  "publisher": "Google Analytics 帮助中心",
+  "date": "2026",
+  "url": "https://support.google.com/analytics/answer/9756891?hl=en",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "AI Assistant 渠道：medium 完全等于 ai-assistant；referrer 匹配 AI 助手列表时自动设置；排在 Organic Search 后、Referral 前"
+ },
+ "05-s15": {
+  "title": "Custom channel groups",
+  "publisher": "Google Analytics 帮助中心",
+  "date": "2026-11-14",
+  "url": "https://support.google.com/analytics/answer/13051316?hl=en",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "Admin → Data display → Channel groups；标准属性 2 个自定义组；对历史数据生效；按顺序取第一个匹配"
+ },
+ "05-s16": {
+  "title": "Google Analytics Adds AI Assistant As Default Channel Group",
+  "publisher": "Search Engine Journal",
+  "date": "2026-05-14",
+  "url": "https://www.searchenginejournal.com/google-analytics-adds-ai-assistant-as-default-channel-group/574974/",
+  "kind": "报道",
+  "grade": "C",
+  "note": "2026-05-13 上线；完整列表未公开；无 referrer 仍落 Direct；Search Console 把 AI Mode 混入总数"
+ },
+ "05-s17": {
+  "title": "GA4's AI Assistant Channel Undercounts Your AI Traffic",
+  "publisher": "Search Engine Journal（Itamar Blauer）",
+  "date": "2026-07-15",
+  "url": "https://www.searchenginejournal.com/ga4s-ai-assistant-channel-undercounts-your-ai-traffic-how-to-build-one-that-doesnt/580133/",
+  "kind": "观点",
+  "grade": "C",
+  "note": "漏 Perplexity、Claude；chatgpt.com 可能落 Referral 或 Unassigned；AIO / AI Mode 算 Organic；正则勿用裸词"
+ },
+ "05-s18": {
+  "title": "AI Traffic in GA4: The Native Channel and the One You Build",
+  "publisher": "Terminus",
+  "date": "2026-07-09",
+  "url": "https://www.terminusapp.com/blog/ai-traffic-channel-in-ga4/",
+  "kind": "观点",
+  "grade": "C",
+  "note": "原生覆盖 ChatGPT、Gemini、DeepSeek、Copilot、Grok；漏 Claude、Perplexity、Meta AI、You.com、Poe；DebugView 验证法"
+ },
+ "05-s19": {
+  "title": "Missing ChatGPT Traffic in GA4? A UTM Bug Broke Referral Tracking for a Week",
+  "publisher": "BuildMVPFast",
+  "date": "2026-10",
+  "url": "https://www.buildmvpfast.com/blog/chatgpt-utm-bug-ga4-direct-traffic-2026",
+  "kind": "数据研究",
+  "grade": "C",
+  "note": "2026-10-08 到 15 UTM 和 referrer 丢失；500 页每天少约 31,000 次 ChatGPT、Direct 多约 26,000；仅约 12% 点击带 referrer"
+ },
+ "05-s20": {
+  "title": "The week without ChatGPT attribution",
+  "publisher": "Evertune",
+  "date": "2026-10",
+  "url": "https://www.evertune.ai/resources/insights-on-ai/the-week-without-chatgpt-attribution",
+  "kind": "观点",
+  "grade": "C",
+  "note": "同一事件的第二来源；OpenAI 无公开声明"
+ },
+ "05-s21": {
+  "title": "AI traffic analytics: track visits, engagement and conversions",
+  "publisher": "Plausible",
+  "date": "2026-11-14",
+  "url": "https://plausible.io/track-ai-traffic",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "自动把 ChatGPT、Claude、Perplexity、Gemini、Copilot 等归入 AI Assistants 渠道，过滤 AI 爬虫"
+ },
+ "05-s22": {
+  "title": "Attribution",
+  "publisher": "Umami 文档",
+  "date": "2026-11-14",
+  "url": "https://docs.umami.is/docs/attribution",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "显示 referrer、广告和 UTM，首次 / 末次点击模型；未提 AI 渠道"
+ },
+ "05-s23": {
+  "title": "Web Analytics dimensions",
+  "publisher": "Cloudflare 文档",
+  "date": "2026-11-14",
+  "url": "https://developers.cloudflare.com/web-analytics/data-metrics/dimensions/",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "有 Referer、Path、Country 等维度和排除机器人开关；未说明 UTM"
+ },
+ "05-s25": {
+  "title": "Bing Webmaster Tools: 4 New Reports to Know Why AI Cites Your Site",
+  "publisher": "Pasquale Pillitteri",
+  "date": "2026-06",
+  "url": "https://pasqualepillitteri.it/en/news/5220/bing-webmaster-tools-ai-citation-share-geo",
+  "kind": "观点",
+  "grade": "C",
+  "note": "2026-06-16 新增 Intents、Topics、Citation Share、Compare，全球预览、免费"
+ },
+ "05-s26": {
+  "title": "5 Ways To Use Bing Webmaster Tools AI Performance for GEO",
+  "publisher": "Similarweb",
+  "date": "2026-02-16",
+  "url": "https://aisearch.similarweb.com/blog/bing-ai-performance-tool/",
+  "kind": "观点",
+  "grade": "C",
+  "note": "Bing 报告无点击、无 API、无竞品；附 Similarweb 自家产品功能和 $99/月（厂商自述，D 级内容）"
+ },
+ "05-s28": {
+  "title": "Analyze AI traffic",
+  "publisher": "Cloudflare 文档",
+  "date": "2026-11-14",
+  "url": "https://developers.cloudflare.com/ai-crawl-control/features/analyze-ai-traffic/",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "Overview / Crawlers / Metrics 三个标签；referrals 数据仅付费套餐；CSV 和 GraphQL 导出"
+ },
+ "05-s29": {
+  "title": "The crawl-to-click gap: Cloudflare data on AI bots, training, and referrals",
+  "publisher": "Cloudflare Blog",
+  "date": "2025-08-29",
+  "url": "https://blog.cloudflare.com/crawlers-click-ai-bots-training/",
+  "kind": "官方文档",
+  "grade": "B",
+  "note": "2025-07 抓取 / 来访比：Anthropic 38,066、OpenAI 1,091、Perplexity 195、Google 5.4（2025 年数据）"
+ },
+ "05-s33": {
+  "title": "Verifying Googlebot and other Google crawlers",
+  "publisher": "Google Search Central",
+  "date": "2026-11-14",
+  "url": "https://developers.google.com/search/docs/crawling-indexing/verifying-googlebot",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "反向 + 正向 DNS 校验；五个 IP 段 JSON 文件"
+ },
+ "05-s34": {
+  "title": "Web search（tools-web-search）",
+  "publisher": "OpenAI",
+  "date": "2026-11-14",
+  "url": "https://developers.openai.com/api/docs/guides/tools-web-search",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "`web_search` 工具、`url_citation` 注释、`include` 拿全部来源、`user_location`、域名过滤；推荐 gpt-6-astra；gpt-4o-search-preview 2026-07-23 下线"
+ },
+ "05-s35": {
+  "title": "Pricing",
+  "publisher": "OpenAI",
+  "date": "2026-11-14",
+  "url": "https://developers.openai.com/api/docs/pricing",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "web search $10 / 1k 调用 + 搜索内容 token 按模型计；各模型 token 单价"
+ },
+ "05-s36": {
+  "title": "Web search tool",
+  "publisher": "Anthropic（Claude Platform 文档）",
+  "date": "2026-11-14",
+  "url": "https://platform.claude.com/docs/en/agents-and-tools/tool-use/web-search-tool",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "三个版本；max_uses、域名过滤、user_location；citations 结构；$10 / 1k 搜索；示例 usage 输入 6,039、输出 931"
+ },
+ "05-s37": {
+  "title": "Pricing",
+  "publisher": "Anthropic（Claude Platform 文档）",
+  "date": "2026-11-14",
+  "url": "https://platform.claude.com/docs/en/about-claude/pricing",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "Haiku 5.5 $0.10 / $0.50 每百万 token（10 万以内）；Sonnet 5.5 $2 / $10"
+ },
+ "05-s38": {
+  "title": "Grounding with Google Search",
+  "publisher": "Google AI Studio / Gemini API 文档",
+  "date": "2026-11-14",
+  "url": "https://aistudio.google.com/docs/google-search",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "`google_search` 工具、Interactions API、url_citation 注释；Gemini 3+ 每月 5,000 次免费后 $14 / 1k；每天默认 1,500 次"
+ },
+ "05-s39": {
+  "title": "Migrate from Sonar to the Agent API",
+  "publisher": "Perplexity 文档",
+  "date": "2026-11-14",
+  "url": "https://docs.perplexity.ai/getting-started/models/models/sonar.md",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "Sonar Chat Completions 于 2026-09-27 停止支持，改用 Agent API"
+ },
+ "05-s40": {
+  "title": "Agent API: Web Search",
+  "publisher": "Perplexity 文档",
+  "date": "2026-11-14",
+  "url": "https://docs.perplexity.ai/docs/agent-api/tools/web-search.md",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "`web_search` $2.50 / 1k，fast $1 / 1k；`search_results` 输出结构；域名过滤最多 20 个"
+ },
+ "05-s41": {
+  "title": "Agent API Models",
+  "publisher": "Perplexity 文档",
+  "date": "2026-11-14",
+  "url": "https://docs.perplexity.ai/docs/agent-api/models.md",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "perplexity/sonar $0.25 / $2.50 每百万 token"
+ },
+ "05-s42": {
+  "title": "Search & Fetch",
+  "publisher": "DeepSeek API 文档",
+  "date": "2026-11-14",
+  "url": "https://api-docs.deepseek.com/guides/search.md",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "Search / Fetch API 各 $0.75 / 1k 成功请求；Search 100 QPS"
+ },
+ "05-s44": {
+  "title": "Ahrefs Traffic Analytics",
+  "publisher": "Ahrefs",
+  "date": "2026-11-05",
+  "url": "https://ahrefs.com/blog/traffic-analytics/",
+  "kind": "观点",
+  "grade": "C",
+  "note": "例：asana.com 的 AI 来访约占 0.5%（估算）"
+ },
+ "05-s45": {
+  "title": "Pricing",
+  "publisher": "Peec AI",
+  "date": "2026-11-14",
+  "url": "https://peec.ai/pricing",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "Starter $95（50 提示词）、Pro $245、Advanced $495；可选模型含 ERNIE"
+ },
+ "05-s46": {
+  "title": "Pricing",
+  "publisher": "Profound",
+  "date": "2026-11-14",
+  "url": "https://www.tryprofound.com/pricing",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "只有试用和企业版；企业版最多 10 个引擎，含 DeepSeek、Qwen；Agent Analytics"
+ },
+ "05-s47": {
+  "title": "Profound Alternatives: 8 AI Visibility Tools After Profound's Pricing Change",
+  "publisher": "eClincher",
+  "date": "2026-10-08",
+  "url": "https://www.eclincher.com/articles/profound-alternatives-8-ai-visibility-tools-after-profounds-pricing-change",
+  "kind": "观点",
+  "grade": "D",
+  "note": "Profound 2026-09 取消 $99 / $399 自助套餐；Otterly $29、AthenaHQ $295、Scrunch $250、Semrush $99、Brand Radar $398 等。作者是竞品"
+ },
+ "05-s48": {
+  "title": "What are the plans and the pricing of OtterlyAI?",
+  "publisher": "Otterly.AI 帮助中心",
+  "date": "2026-11-14",
+  "url": "https://help.otterly.ai/pricing-of-otterlyai",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "Lite / Standard / Premium / Enterprise 的提示词数和积分；Claude 每次 3 积分"
+ },
+ "05-s49": {
+  "title": "What is the pricing for Scrunch plans?",
+  "publisher": "Scrunch",
+  "date": "2026-11-14",
+  "url": "https://scrunch.com/faqs/what-is-the-pricing-for-scrunch-plans",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "Core $250 / 月、125 个提示词、4 个引擎；企业版 9 个引擎"
+ },
+ "05-s50": {
+  "title": "Brand Radar",
+  "publisher": "Ahrefs",
+  "date": "2026-11-14",
+  "url": "https://ahrefs.com/brand-radar",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "覆盖 AIO、AI Mode、ChatGPT、Perplexity、Gemini、Copilot；5.65 亿提示词库；€47 / €179 起"
+ },
+ "05-s51": {
+  "title": "AEO Grader",
+  "publisher": "HubSpot",
+  "date": "2026-11-14",
+  "url": "https://www.hubspot.com/aeo-grader",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "免费一次性体检，五维度满分 100；持续追踪 $50 / 月"
+ },
+ "05-s52": {
+  "title": "Pricing",
+  "publisher": "Writesonic",
+  "date": "2026-11-14",
+  "url": "https://writesonic.com/pricing",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "年付 Starter $79（50 提示词）到 Growth $399；各档含 AI Bot Analytics"
+ },
+ "05-s53": {
+  "title": "AI SEO Toolkit",
+  "publisher": "Semrush",
+  "date": "2026-11-14",
+  "url": "https://www.semrush.com/ai-seo/",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "功能区：可见度总览、竞品、提示词研究、品牌认知、提示词追踪；页面无价格"
+ },
+ "05-s54": {
+  "title": "Signal Spotlight: Goodie AI",
+  "publisher": "Industry Lens",
+  "date": "2026",
+  "url": "https://industry-lens.com/reports/signal-spotlight-goodie-ai",
+  "kind": "数据研究",
+  "grade": "D",
+  "note": "称 Goodie 入门档 $399 / 月；G2 显示官方未公开价格",
+  "seen": "摘要"
+ },
+ "05-s55": {
+  "title": "elmohq/elmo",
+  "publisher": "Elmo（GitHub）",
+  "date": "2026-11-14",
+  "url": "https://github.com/elmohq/elmo",
+  "kind": "观点",
+  "grade": "C",
+  "note": "MIT，600 星；提及率 = 提到你的 run 占比；情感 100 / 50 / 0；抓真实 App"
+ },
+ "05-s56": {
+  "title": "limelit-co/open",
+  "publisher": "Limelit（GitHub）",
+  "date": "2026-11-13",
+  "url": "https://github.com/limelit-co/open",
+  "kind": "观点",
+  "grade": "C",
+  "note": "Apache-2.0，444 星，Go 单二进制，自带 Key，内置 MCP，预发布"
+ },
+ "05-s57": {
+  "title": "oneglanse/oneglanse",
+  "publisher": "OneGlanse（GitHub）",
+  "date": "2026-11-13",
+  "url": "https://github.com/oneglanse/oneglanse",
+  "kind": "观点",
+  "grade": "C",
+  "note": "MIT，258 星；用 Camoufox + Playwright 跑网页；评分是模型对文本的解读"
+ },
+ "05-s58": {
+  "title": "danishashko/geo-aeo-tracker",
+  "publisher": "GitHub",
+  "date": "2026-11-11",
+  "url": "https://github.com/danishashko/geo-aeo-tracker",
+  "kind": "观点",
+  "grade": "C",
+  "note": "MIT，328 星；Bright Data 抓 4 个引擎；README 列出 Semrush $199、AthenaHQ $295（2026-10 价格）"
+ },
+ "05-s59": {
+  "title": "Fangx-AI/geo-doctor（GEO 医生）",
+  "publisher": "GitHub",
+  "date": "2026-11-09",
+  "url": "https://github.com/Fangx-AI/geo-doctor",
+  "kind": "观点",
+  "grade": "C",
+  "note": "MIT，607 星；支持豆包、DeepSeek、千问、Kimi 等；每题问 2 次算推荐率；提醒 API 与 App 差异"
+ },
+ "05-s60": {
+  "title": "aigclink/geolook（GeoLook）",
+  "publisher": "GitHub",
+  "date": "2026-08-10",
+  "url": "https://github.com/aigclink/geolook",
+  "kind": "观点",
+  "grade": "C",
+  "note": "MIT，816 星；17 个引擎含豆包、DeepSeek、Kimi、GLM、MiniMax、秘塔；7 / 14 / 28 天复查"
+ },
+ "05-s61": {
+  "title": "yaojingang/GEORank",
+  "publisher": "GitHub",
+  "date": "2026-11-11",
+  "url": "https://github.com/yaojingang/GEORank",
+  "kind": "观点",
+  "grade": "C",
+  "note": "Apache-2.0，537 星；诊断、方案、拓词、JSON-LD / llms.txt 生成；georankhub.com"
+ },
+ "05-s62": {
+  "title": "yaojingang/GEOFlow",
+  "publisher": "GitHub",
+  "date": "2026-11-13",
+  "url": "https://github.com/yaojingang/GEOFlow",
+  "kind": "观点",
+  "grade": "C",
+  "note": "AGPL-3.0，4,132 星；GEO 内容工程和多站分发"
+ },
+ "05-s63": {
+  "title": "AnswerDotAI/llms-txt",
+  "publisher": "GitHub",
+  "date": "2026-09-24",
+  "url": "https://github.com/AnswerDotAI/llms-txt",
+  "kind": "观点",
+  "grade": "C",
+  "note": "Apache-2.0，2,687 星；llms.txt 提案"
+ },
+ "05-s64": {
+  "title": "firecrawl/llmstxt-generator",
+  "publisher": "GitHub",
+  "date": "2025-06-17",
+  "url": "https://github.com/firecrawl/llmstxt-generator",
+  "kind": "观点",
+  "grade": "C",
+  "note": "540 星；生成 llms.txt / llms-full.txt；一年多未更新"
+ },
+ "05-s65": {
+  "title": "thedaviddias/llms-txt-hub",
+  "publisher": "GitHub",
+  "date": "2026-11-14",
+  "url": "https://github.com/thedaviddias/llms-txt-hub",
+  "kind": "观点",
+  "grade": "C",
+  "note": "927 星；llms.txt 实现目录"
+ },
+ "05-s66": {
+  "title": "GEO-optim/GEO",
+  "publisher": "GitHub",
+  "date": "2025-10-30",
+  "url": "https://github.com/GEO-optim/GEO",
+  "kind": "论文",
+  "grade": "C",
+  "note": "Apache-2.0，350 星；GEO 原始论文（KDD 2024）代码"
+ },
+ "05-s67": {
+  "title": "Auriti-Labs/geo-optimizer-skill",
+  "publisher": "GitHub",
+  "date": "2026-11-14",
+  "url": "https://github.com/Auriti-Labs/geo-optimizer-skill",
+  "kind": "观点",
+  "grade": "C",
+  "note": "MIT，1,325 星；审计网站能否被各 AI 引用"
+ },
+ "05-s68": {
+  "title": "本稿实测",
+  "publisher": "本调研",
+  "date": "2026-11-14",
+  "url": "",
+  "kind": "数据研究",
+  "grade": "C",
+  "note": "下载并解析了 OpenAI、Anthropic、Perplexity、Google 的 IP 段 JSON；日志脚本和追踪器用假数据跑通；样本量和代价用公式计算；GitHub API 读取仓库元数据",
+  "where": "（本地运行，无链接）"
+ },
  "06-s3": {
   "title": "Google Search's guidance on using generative AI content on your website",
   "publisher": "Google Search Central",
@@ -2620,6 +3171,499 @@ export const GENERATED = {
   "grade": "D",
   "note": "工具功能描述可信；README 里的市场和效果数字多数无出处或误引"
  },
+ "07-s1": {
+  "title": "站点权威度分级说明",
+  "publisher": "火山引擎（豆包搜索）",
+  "date": "2026-08-21",
+  "url": "https://docs.volcengine.com/docs/networked-search/site-authority-rating-description",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "四级权威；中小企业、机构官网为「正常权威」，普通小站为「一般不权威」",
+  "seen": "原文"
+ },
+ "07-s2": {
+  "title": "豆包搜索 Custom版 API",
+  "publisher": "火山引擎",
+  "date": "2026-10-30",
+  "url": "https://docs.volcengine.com/docs/networked-search/networked-search",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "Sites、BlockHosts、AuthInfoLevel、IcpHostOnly（默认不限）；每月 500 次免费",
+  "seen": "原文"
+ },
+ "07-s3": {
+  "title": "豆包搜索 Global版 API",
+  "publisher": "火山引擎",
+  "date": "2026-09-22",
+  "url": "https://docs.volcengine.com/docs/networked-search/doubao-search-global-edition",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "有 Global 版，仅按量后付费；不支持主动权威控制",
+  "seen": "原文"
+ },
+ "07-s5": {
+  "title": "元宝搜索 产品概述",
+  "publisher": "腾讯云",
+  "date": "2026-11-06",
+  "url": "https://cloud.tencent.com/document/product/1806/121794",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "全网公开资源加腾讯新闻、搜狗百科、企鹅号；结合元宝 App 实践",
+  "seen": "原文"
+ },
+ "07-s6": {
+  "title": "元宝搜索 产品动态",
+  "publisher": "腾讯云",
+  "date": "2026-10-09",
+  "url": "https://cloud.tencent.com/document/product/1806/121792",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "2025-07-01 上线「联网搜索API」，2026-10-09 更名「元宝搜索」",
+  "seen": "原文"
+ },
+ "07-s7": {
+  "title": "元宝搜索 常见问题",
+  "publisher": "腾讯云",
+  "date": "2026-10-09",
+  "url": "https://cloud.tencent.com/document/product/1806/121804",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "因版权问题暂不支持微信公众号内容",
+  "seen": "原文"
+ },
+ "07-s8": {
+  "title": "元宝搜索 API 文档",
+  "publisher": "腾讯云",
+  "date": "2026-10-27",
+  "url": "https://cloud.tencent.com/document/product/1806/121811",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "Site 指定或排除域名；Mode 区分公开网页与权威垂直信源",
+  "seen": "原文"
+ },
+ "07-s9": {
+  "title": "元宝搜索 产品优势",
+  "publisher": "腾讯云",
+  "date": "2026-10-09",
+  "url": "https://cloud.tencent.com/document/product/1806/121795",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "千亿级别网页索引",
+  "seen": "原文"
+ },
+ "07-s12": {
+  "title": "联网搜索（大模型服务平台百炼）",
+  "publisher": "阿里云",
+  "date": "2026",
+  "url": "https://help.aliyun.com/zh/model-studio/web-search",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "search_strategy、assigned_site_list、freshness；英文场景推荐 agent；未写引擎",
+  "seen": "原文"
+ },
+ "07-s13": {
+  "title": "联网搜索（API 网关 AI 网关）",
+  "publisher": "阿里云",
+  "date": "2026",
+  "url": "https://help.aliyun.com/zh/api-gateway/ai-gateway/user-guide/networked-search/",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "搜索引擎目前仅支持夸克（阿里云信息查询服务）",
+  "seen": "原文"
+ },
+ "07-s14": {
+  "title": "DeepSeek 发布全家桶应用 API",
+  "publisher": "DeepSeek",
+  "date": "2026-11-13",
+  "url": "https://api-docs.deepseek.com/zh-cn/news/news261113",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "开放 deepseek_web_search、deepseek_read_url、Search、Fetch",
+  "seen": "原文"
+ },
+ "07-s15": {
+  "title": "网页搜索与抓取",
+  "publisher": "DeepSeek",
+  "date": "2026-11",
+  "url": "https://api-docs.deepseek.com/zh-cn/guides/search",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "自研搜索引擎；site:/lang: 语法；authority 0-4；Fetch 受站点策略影响；5 元/千次",
+  "seen": "原文"
+ },
+ "07-s16": {
+  "title": "联网工具",
+  "publisher": "DeepSeek",
+  "date": "2026-11",
+  "url": "https://api-docs.deepseek.com/zh-cn/guides/web_tools",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "引用格式；url_not_accessible、url_not_allowed 错误码；跨语言引用示例",
+  "seen": "原文"
+ },
+ "07-s18": {
+  "title": "DeepSeek API 原生接入联网搜索能力",
+  "publisher": "80aj（转 Linux.do）",
+  "date": "2026-08-05",
+  "url": "https://www.80aj.com/2026/08/05/deepseek-api-web-search/",
+  "kind": "观点",
+  "grade": "C",
+  "note": "0731 版 API 可用 web_search；已被 S14 正式化",
+  "seen": "原文"
+ },
+ "07-s20": {
+  "title": "使用联网搜索",
+  "publisher": "Kimi 开放平台",
+  "date": "2026",
+  "url": "https://platform.kimi.com/docs/guide/use-web-search.md",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "原样搜索；sites 过滤；受目标站反爬策略影响；未写引擎",
+  "seen": "原文"
+ },
+ "07-s23": {
+  "title": "普通收录 使用说明",
+  "publisher": "百度搜索资源平台",
+  "date": "2026",
+  "url": "https://ziyuan.baidu.com/linksubmit/index",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "只加快抓取，不解决收录",
+  "seen": "原文"
+ },
+ "07-s25": {
+  "title": "AI流量分析（及导航中的权威溯源入口）",
+  "publisher": "百度搜索资源平台",
+  "date": "2026",
+  "url": "https://ziyuan.baidu.com/aiflow/index",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "工具存在；未登录只显示「专业问答-小程序的生效量和点展统计」",
+  "seen": "原文"
+ },
+ "07-s26": {
+  "title": "AppBuilder 百度 AI 搜索文档目录",
+  "publisher": "百度智能云",
+  "date": "2026",
+  "url": "https://ai.baidu.com/ai-doc/AppBuilder/Emaxwwz9m",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "百度 AI 搜索、百度搜索、网页黑名单、特定 query 干预等组件",
+  "seen": "原文"
+ },
+ "07-s27": {
+  "title": "关于Bytespider",
+  "publisher": "头条搜索站长平台",
+  "date": "2026-11-14",
+  "url": "https://zhanzhang.toutiao.com/docs/intro/26899",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "Bytespider 是头条搜索爬虫；10 个 IP 段；*.bytedance.com 反向 DNS；未提 robots 与豆包"
+ },
+ "07-s28": {
+  "title": "搜狗帮助中心 站长指南",
+  "publisher": "搜狗",
+  "date": "2026",
+  "url": "https://www.sogou.com/docs/help/webmasters.htm",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "sogou spider 支持 robots，生效需几周；偏好静态网页",
+  "seen": "原文"
+ },
+ "07-s29": {
+  "title": "搜狗站长平台首页",
+  "publisher": "搜狗",
+  "date": "2026",
+  "url": "https://zhanzhang.sogou.com/",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "联系邮箱 zzpt@tencent.com；收录索引查询工具",
+  "seen": "原文"
+ },
+ "07-s30": {
+  "title": "神马站长平台服务条款",
+  "publisher": "神马搜索",
+  "date": "2020-08",
+  "url": "https://zhanzhang.sm.cn/",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "夸克、神马同为阿里业务平台",
+  "seen": "原文"
+ },
+ "07-s31": {
+  "title": "小程序搜索优化指南",
+  "publisher": "微信开放文档",
+  "date": "2026-06-16",
+  "url": "https://developers.weixin.qq.com/miniprogram/dev/framework/search/seo.html",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "mpcrawler、场景值 1129、验签头；不收录 web-view",
+  "seen": "原文"
+ },
+ "07-s32": {
+  "title": "搜一搜数据推送（submitpages）",
+  "publisher": "微信开放文档",
+  "date": "2026",
+  "url": "https://developers.weixin.qq.com/miniprogram/dev/server/API/wxsearch/api_submitpages.html",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "推送页面路径、参数和结构化数据给微信搜索"
+ },
+ "07-s33": {
+  "title": "全局配置（app.json）",
+  "publisher": "微信开放文档",
+  "date": "2026",
+  "url": "https://developers.weixin.qq.com/miniprogram/dev/reference/configuration/app.md",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "sitemapLocation 下注明「sitemap.json 已下线」",
+  "seen": "原文"
+ },
+ "07-s34": {
+  "title": "小程序 AI 开发模式（beta）接入指南",
+  "publisher": "微信开放文档",
+  "date": "2026",
+  "url": "https://developers.weixin.qq.com/miniprogram/dev/ai/guide.html",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "SKILL＝SKILL.md＋mcp.json＋原子接口；申请入口"
+ },
+ "07-s35": {
+  "title": "使用前必读（AI 能力 上线与离场须知）",
+  "publisher": "微信开放文档",
+  "date": "2026-11",
+  "url": "https://developers.weixin.qq.com/miniprogram/dev/ai/launch-and-exit/must-read.html",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "按 SKILL 描述调用；问题发生率 >20% 超标；8.0.79 以上"
+ },
+ "07-s36": {
+  "title": "SKILL 设计建议",
+  "publisher": "微信开放文档",
+  "date": "2026",
+  "url": "https://developers.weixin.qq.com/miniprogram/dev/ai/best-practices/skill.html",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "content 权重最高，其次 description 与 inputSchema.description"
+ },
+ "07-s37": {
+  "title": "AI 能力 更新日志",
+  "publisher": "微信开放文档",
+  "date": "2026-11-11",
+  "url": "https://developers.weixin.qq.com/miniprogram/dev/ai/changelog.html",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "2026-11-11 开放评测与提审；We分析新增故障排查"
+ },
+ "07-s38": {
+  "title": "China Network FAQ",
+  "publisher": "Cloudflare",
+  "date": "2026-04-16",
+  "url": "https://developers.cloudflare.com/china-network/faq/",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "需 ICP 和京东云审核；ICP 吊销后流量改走境外节点",
+  "seen": "原文"
+ },
+ "07-s39": {
+  "title": "ICP",
+  "publisher": "Cloudflare",
+  "date": "2026",
+  "url": "https://developers.cloudflare.com/china-network/concepts/icp/",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "在大陆服务器或 CDN 上托管需备案或许可证；备案 1-2 个月",
+  "seen": "原文"
+ },
+ "07-s41": {
+  "title": "AI Crawler and Agent access policies",
+  "publisher": "Cloudflare",
+  "date": "2026-11-02",
+  "url": "https://developers.cloudflare.com/bots/additional-configurations/block-ai-bots/",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "按 Search、Agent、Training 行为分别设置",
+  "seen": "原文"
+ },
+ "07-s42": {
+  "title": "robots.txt 实测（知乎、小红书、公众号、今日头条、抖音、掘金、CSDN、B 站、V2EX、少数派、百度百科、GitHub）",
+  "publisher": "本稿",
+  "date": "2026-11-14",
+  "url": "https://www.zhihu.com/robots.txt",
+  "kind": "案例",
+  "grade": "B",
+  "note": "知乎、小红书、公众号、头条对外部 AI 爬虫基本关闭；掘金、CSDN 开放；GitHub 禁 Bytespider；抖音列出 deepseekbot"
+ },
+ "07-s43": {
+  "title": "中央网信办部署开展「清朗·整治AI应用乱象」专项行动",
+  "publisher": "新华网（来源：网信中国）",
+  "date": "2026-04-30",
+  "url": "https://www.news.cn/politics/20260430/5a335918ff184d098c169c3dc0401508/c.html",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "AI 数据投毒含「使用GEO技术恶意营销」；要求信源交叉验证、标注引用链接",
+  "seen": "原文"
+ },
+ "07-s45": {
+  "title": "315晚会曝光 给AI投毒已成产业链",
+  "publisher": "光明网（来源：环球时报，央视财经）",
+  "date": "2026-03-15",
+  "url": "https://m.gmw.cn/2026-03/15/content_1304377376.htm",
+  "kind": "报道",
+  "grade": "C",
+  "note": "力擎GEO系统；两个大模型推荐虚构手环；「花个几百万投点毒」",
+  "seen": "原文"
+ },
+ "07-s47": {
+  "title": "315 晚会 AI 投毒解读",
+  "publisher": "澎湃湃客",
+  "date": "2026-03",
+  "url": "https://www.thepaper.cn/newsDetail_forward_32789174",
+  "kind": "报道",
+  "grade": "D",
+  "note": "复述节目画面；模型未点名",
+  "seen": "原文"
+ },
+ "07-s48": {
+  "title": "国内首部GEO可信传播团体标准8月11日正式发布",
+  "publisher": "新华网",
+  "date": "2026-08-12",
+  "url": "https://www.news.cn/digital/20260812/3323a47bda40437f8a42ee135670ab2f/c.html",
+  "kind": "报道",
+  "grade": "C",
+  "note": "T/CAPT 026—2026；三区分治；白帽与黑帽界线",
+  "seen": "原文"
+ },
+ "07-s49": {
+  "title": "GEO服务告别「无标可依」 行业首份团体标准公布",
+  "publisher": "证券时报（同花顺转载）",
+  "date": "2026-09-16",
+  "url": "https://news.10jqka.com.cn/20260916/c679983389.shtml",
+  "kind": "报道",
+  "grade": "C",
+  "note": "T/CAACCHINA 五项；最低样本量；禁提示词注入、隐藏文本；编委主任为秒针营销科学院院长",
+  "seen": "原文"
+ },
+ "07-s50": {
+  "title": "提及 AIIA/T 0277-2026 的 GEO 服务商文章",
+  "publisher": "凤凰网科技（服务商稿件）",
+  "date": "2026",
+  "url": "https://tech.ifeng.com/c/8wob0MycyRG",
+  "kind": "观点",
+  "grade": "D",
+  "note": "称某服务商通过信通院 GEO 服务可信评测；未见标准原文",
+  "seen": "原文"
+ },
+ "07-s51": {
+  "title": "虚构荣誉牌匾，百付科技操纵企业AI搜索排名被罚5万元",
+  "publisher": "南都N视频",
+  "date": "2026-06-25",
+  "url": "https://m.mp.oeeee.com/a/BAAFRD0000202606251615460.html",
+  "kind": "报道",
+  "grade": "C",
+  "note": "按 AI 引用的网站反向投放软文；依《反不正当竞争法》第九条罚款",
+  "seen": "原文"
+ },
+ "07-s52": {
+  "title": "厘清GEO「优化」与「投毒」边界",
+  "publisher": "第一财经（陈兵、朱家熠）",
+  "date": "2026-10-26",
+  "url": "https://www.yicai.com/news/103409872.html",
+  "kind": "观点",
+  "grade": "D",
+  "note": "正常 GEO 不当然违法；看真实性、正当性、可识别性；证据要多轮统计",
+  "seen": "原文"
+ },
+ "07-s53": {
+  "title": "北京组织百度及腾讯等8间龙头互联网企业签自律公约",
+  "publisher": "财闻",
+  "date": "2026-10",
+  "url": "https://www.caiwennews.com/article/1674742.shtml",
+  "kind": "报道",
+  "grade": "C",
+  "note": "AI 深度合成商业宣传须显著标识，禁止借 AI 制造虚假信息",
+  "seen": "摘要"
+ },
+ "07-s54": {
+  "title": "QuestMobile AI平台采信逻辑与信源偏好研究报告",
+  "publisher": "QuestMobile（36氪经授权发布）",
+  "date": "2026",
+  "url": "https://www.36kr.com/p/3825497154196353",
+  "kind": "观点",
+  "grade": "C",
+  "note": "豆包引用量大且偏抖音头条；千问偏懂车帝、大众点评；DeepSeek 偏综合站",
+  "seen": "原文"
+ },
+ "07-s55": {
+  "title": "QuestMobile 2026年AI电商与消费品类GEO研究报告",
+  "publisher": "QuestMobile（36氪经授权发布）",
+  "date": "2026",
+  "url": "https://www.36kr.com/p/3855204672574728",
+  "kind": "观点",
+  "grade": "C",
+  "note": "豆包抖音系 66.2%、文心百度 81.7%；手机品类厂商官网是补充信源",
+  "seen": "原文"
+ },
+ "07-s56": {
+  "title": "报告称豆包对抖音的引用权重飙升",
+  "publisher": "IT之家（转述新榜智汇）",
+  "date": "2026-10-27",
+  "url": "https://ithome.com/1/018/259.htm",
+  "kind": "报道",
+  "grade": "C",
+  "note": "10.79%→31.8%；关键词覆盖率 ρ=+0.149，语义相似度 +0.117",
+  "seen": "原文"
+ },
+ "07-s59": {
+  "title": "AI搜索时代2026品牌营销策略洞察：智能硬件篇",
+  "publisher": "CBNData × WhatTheyOS",
+  "date": "2026-09-16",
+  "url": "https://cbndata.com/information/295781",
+  "kind": "数据研究",
+  "grade": "D",
+  "note": "三品类近三月提问超 430 万次；WhatTheyOS 为 GEO 数据平台",
+  "seen": "原文"
+ },
+ "07-s61": {
+  "title": "Bytespider（Decoded）",
+  "publisher": "ppc.land",
+  "date": "2026",
+  "url": "https://ppc.land/bytespider/",
+  "kind": "报道",
+  "grade": "C",
+  "note": "引述官方 UA 和 IP 段；称官方说遵守 robots，本稿在官方页未见此句",
+  "seen": "原文"
+ },
+ "07-s63": {
+  "title": "Baidu blocks Google, Bing from scraping content",
+  "publisher": "South China Morning Post",
+  "date": "2024-08",
+  "url": "https://amp.scmp.com/tech/big-tech/article/3275717/baidu-blocks-google-bing-scraping-content-amid-demand-data-used-ai-projects",
+  "kind": "报道",
+  "grade": "X",
+  "note": "当前百科 robots.txt 已对 Googlebot、bingbot 开放大部分路径（S42），已过时",
+  "seen": "摘要"
+ },
+ "07-s64": {
+  "title": "受制于网络环境……离线版 Chrome 插件",
+  "publisher": "少数派",
+  "date": "",
+  "url": "https://sspai.com/post/38608",
+  "kind": "观点",
+  "grade": "C",
+  "note": "国内下载使用 Chrome 官方商店有阻碍",
+  "seen": "摘要"
+ },
+ "07-s65": {
+  "title": "GDIndex issue #206（workers.dev 被 SNI 阻断）",
+  "publisher": "GitHub 用户讨论",
+  "date": "2022",
+  "url": "https://www.github.com/maple3142/GDIndex/issues/206",
+  "kind": "观点",
+  "grade": "C",
+  "note": "workers.dev 曾被 SNI 阻断，建议绑定自有域名；可能已变化",
+  "seen": "摘要"
+ },
  "08-s1": {
   "title": "Extend Claude with skills",
   "publisher": "Anthropic（Claude Code Docs）",
@@ -2714,16 +3758,6 @@ export const GENERATED = {
   "note": "AI Crawl Control 有 Overview、Crawlers、Metrics 三个标签；在 Crawlers 的 Action 列改屏蔽；免费版只按 UA 识别，Metrics 只看 24 小时",
   "seen": "原文"
  },
- "21-s4": {
-  "title": "AI Crawler and Agent access policies（原 Block AI bots 页）",
-  "publisher": "Cloudflare",
-  "date": "2026-11-14",
-  "url": "https://developers.cloudflare.com/bots/additional-configurations/block-ai-bots/",
-  "kind": "官方文档",
-  "grade": "A",
-  "note": "路径 Security > Settings，筛 Bot traffic；Search、Agent、Training 各选 Block、Block on pages with ads、Allow；Training 另有 Disallow 加 Bot Preference Sync，兼做搜索和训练的爬虫不在边缘拦截之列",
-  "seen": "原文"
- },
  "21-s5": {
   "title": "IndexNow searchengines.json",
   "publisher": "IndexNow.org",
@@ -2789,6 +3823,13 @@ export const ALIAS = {
  "04-s16": "01-s30",
  "04-s28": "03-s63",
  "04-s44": "02-s49",
+ "05-s13": "02-s13",
+ "05-s24": "02-s21",
+ "05-s27": "03-s20",
+ "05-s30": "01-s36",
+ "05-s31": "02-s25",
+ "05-s32": "02-s33",
+ "05-s43": "01-s51",
  "06-s1": "01-s30",
  "06-s2": "01-s28",
  "06-s4": "04-s18",
@@ -2819,5 +3860,21 @@ export const ALIAS = {
  "06-s54": "01-s51",
  "06-s67": "01-s23",
  "06-s68": "01-s13",
- "06-s69": "01-s21"
+ "06-s69": "01-s21",
+ "07-s4": "02-s47",
+ "07-s10": "02-s52",
+ "07-s11": "02-s54",
+ "07-s17": "02-s66",
+ "07-s19": "02-s55",
+ "07-s21": "02-s57",
+ "07-s22": "02-s46",
+ "07-s24": "02-s46",
+ "07-s40": "03-s17",
+ "07-s44": "06-s58",
+ "07-s46": "04-s38",
+ "07-s57": "04-s42",
+ "07-s58": "02-s50",
+ "07-s60": "02-s58",
+ "07-s62": "03-s68",
+ "21-s4": "07-s41"
 };
