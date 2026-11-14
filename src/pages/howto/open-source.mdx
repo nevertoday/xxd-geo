@@ -2,8 +2,161 @@
 layout: ../../layouts/HowTo.astro
 slug: open-source
 step: 5
-tldr: "开源项目和 GitHub 仓库"
-description: "开源项目和 GitHub 仓库"
+tldr: "README 第一屏说清是什么、给谁、怎么装，再进几个第三方列表"
+description: "开源项目做 GEO：README 开头怎么写，About 和 Topics 怎么填，GitHub 让哪些 AI 爬虫进门，文档站、awesome 列表和 Show HN 怎么做。"
+time: "首次 2 小时，有大版本时再做一次"
+for: "GitHub 上的开源仓库、npm 包、命令行工具"
 ---
+import Src from "../../components/Src.astro";
+import Callout from "../../components/Callout.astro";
+import Copy from "../../components/Copy.astro";
+import Checkpoint from "../../components/Checkpoint.astro";
+import Q from "../../components/Q.astro";
 
-正文编写中。
+<Checkpoint id="howto-oss" items={[
+  "README 第一句话说清：它是什么、给谁用、解决什么问题",
+  "README 第一屏有安装命令和一个能跑的例子",
+  "README 里有一节「和 X 的区别」，只写能验证的事实",
+  "仓库 About 写了一句话描述，填了 Website，加了 5 到 15 个 Topics",
+  "重要文档能从 README 直接链到单个文件页，不只放在子目录里",
+  "有一个文档站或项目页，不开 JavaScript 也能看到正文",
+  "向 1 到 2 个相关的 awesome 列表提交过 PR",
+  "有实质新版本时，发过一次 Show HN 或 V2EX「分享创造」",
+]} />
+
+## 把 README 开头写成一张说明书
+
+仓库首页的原始 HTML 里，就有渲染好的 README <Src ids="03-S65" />。AI 读到的就是它。第一屏照这个顺序写：
+
+<Copy id="oss-readme" title="README 开头模板" lang="markdown" code={`# <项目名>
+
+<项目名> 是一个 <类别>（<语言 / 平台>），帮 <谁> <做什么>。
+
+- 适合：<场景 1>、<场景 2>
+- 不适合：<它做不到的事>
+- 许可证：MIT，免费
+
+## 安装
+
+npm install -g <包名>
+
+## 30 秒上手
+
+<一条能直接跑的命令>
+<它输出什么>
+
+## 和 <同类项目> 的区别
+
+| | <项目名> | <同类项目> |
+|---|---|---|
+| 需要联网 | 否 | 是 |
+| 输出格式 | | |
+
+文档：https://<你的域名>/docs/  更新日志：CHANGELOG.md`} />
+
+为什么这样排：
+
+- **第一句用肯定句下定义。** 被 AI 引用的文字里，44.2% 来自页面前 30% <Src ids="04-S11" />。
+- **写「不适合」。** 它让 AI 把你归到正确的类别里。按需求问时，小项目很难被想起来 <Src ids="06-S47" />。
+- **对比表只写事实。** 对比和榜单是 AI 最常引用的一类内容 <Src ids="04-S6" />。写错一格，AI 会照着说错。
+
+<Callout type="ok">
+`curl -s https://github.com/<你>/<仓库> | grep -c "<你的第一句里的几个字>"` 输出大于 0。说明这句话在原始 HTML 里。
+</Callout>
+
+## 填好 About、Website 和 Topics
+
+About 那一句会成为仓库页的 `meta description` <Src ids="03-S65" />。Topics 最多 20 个。每个不超过 50 个字符，只能用小写字母、数字和短横线 <Src ids="03-S53" />。
+
+<Copy id="oss-gh" title="用 gh 命令一次改完" lang="bash" code={`gh repo edit <你>/<仓库> \\
+  --description "<项目名> 是一个 <类别>，帮 <谁> <做什么>" \\
+  --homepage "https://<你的域名>/<项目>/" \\
+  --add-topic cli --add-topic markdown --add-topic <你的类别>`} />
+
+发到 npm 的包，`package.json` 里也写一遍。`description` 和 `keywords` 帮助在 `npm search` 里被找到 <Src ids="03-S54" />。`homepage` 指向你的项目页。
+
+<Callout type="ok">
+`curl -s https://github.com/<你>/<仓库> | grep -o '<meta name="description"[^>]*>'` 显示你刚写的 About。
+</Callout>
+
+## 弄清 GitHub 让谁进门
+
+GitHub 的 robots.txt 给主流 AI 爬虫单独写了一组规则，截至 2026-11 <Src ids="14-S4" />：
+
+- **放行。** GPTBot、OAI-SearchBot、ChatGPT-User、ClaudeBot、Claude-SearchBot、Claude-User、PerplexityBot、Perplexity-User，每次间隔 1 秒。
+- **整站禁止。** 字节的 Bytespider。
+- **禁止的路径。** `/tree/`（子目录列表）、`/blame/`、`/raw/`、`/commits/`。单个文件页 `/blob/` 没被禁止。
+
+这对你有两个影响。
+
+第一，<u>子目录里的 README 在列表页上显示，AI 爬虫读不到</u>。重要文档要从根目录 README 直接链到 `blob` 地址。或者放到你自己的文档站。
+
+第二，豆包和 Bytespider 是什么关系，没有官方文档说明。挡了它会不会影响豆包，调研里没查清。面向中文用户的项目，核心介绍要多写一份。放在自己的网站和掘金、CSDN 上。一次 1,000 次提问的小测试里，技术社区占了中文 AI 引用的 24% <Src ids="04-S45" />。
+
+npmjs.com 和 Product Hunt 对脚本访问一律返回质询页。真实的 AI 爬虫能不能进去，测不出来 <Src ids="03-S65" />。所以别把唯一的介绍放在那里。
+
+## 给项目一个自己的文档站
+
+文档站最大的 AI 读者是编程 Agent。一个网站两个月的日志里，Claude Code 的请求有 88% 拿的是 Markdown <Src ids="03-S3" />。所以文档站值得做三件事：
+
+1. 正文是服务端输出的 HTML。Astro 的设置见 [Astro 站点的 GEO 设置](/howto/astro/)。
+2. 每页有一个 `.md` 版本，再加一个 llms.txt。见 [llms.txt：要不要加](/howto/llms-txt/)。它主要服务编程 Agent，别指望它带来 ChatGPT 的引用 <Src ids="03-S30" />。
+3. 首页加 `SoftwareSourceCode` 和 `SoftwareApplication` 两段结构化数据。写法见 [JSON-LD 结构化数据](/howto/json-ld/)。
+
+用 Starlight 的话，有插件能自动生成 llms.txt <Src ids="03-S56" />。
+
+## 进 awesome 列表
+
+ChatGPT 引用的来源里，榜单类页面占 43.8%。在别人的榜单里排得靠前，和被 ChatGPT 推荐有相关 <Src ids="04-S6" />。awesome 列表是开发者圈子里的榜单。它对 AI 推荐有多大作用，没有单独的数据。
+
+做法很简单：
+
+1. 搜 `awesome <你的类别>`，挑 1 到 2 个还在维护的列表。
+2. 读它的 CONTRIBUTING，按格式加一行：项目名、链接、一句话说明。
+3. 一个 PR 只加你自己这一行，说明里写清你是作者。
+
+一项研究看了 112 个产品。外链多、Reddit 上有讨论的产品，更常被 AI 想起来 <Src ids="06-S47" />。
+
+## 发布帖：一次，有东西可试，人在场
+
+- **Show HN。** 必须是别人能上手试的东西，最好不要注册。你本人在场回复，不要让朋友去点赞 <Src ids="04-S36" />。只发着陆页不行。
+- **Reddit。** 被 AI 引用的帖子，多是有人提了具体问题，评论直接给方案 <Src ids="04-S2" />。去回答别人的问题，比发公告有用。
+- **V2EX。** 作品发「分享创造」节点 <Src ids="04-S37" />。
+
+每次只在有实质版本时发。HN 的规矩写明了主要用途是好奇心，禁止拉票 <Src ids="04-S35" />。
+
+## 交给 AI 做
+
+在仓库目录里打开 Claude Code 或 Codex，发这段：
+
+<Copy id="oss-ai" title="发给编程 Agent" code={`读这个仓库的代码、package.json 和现有 README，然后：
+1. 用一句话写出这个项目是什么：「<项目名> 是一个……，帮……做……」。写 3 个版本给我选。
+2. 按这个顺序重写 README 开头：一句话定义、适合和不适合、安装命令、一条能直接运行的例子及其输出、和同类项目的区别表、文档链接。
+3. 给出 GitHub About 的一句话描述（中英各一版）和 8 到 12 个 Topics（只用小写字母、数字、短横线）。
+4. 找出 README 里链到子目录（/tree/）的地方，改成链到具体文件（/blob/）。
+规则：区别表里关于同类项目的每一格，没有把握就写「待核实」；不要写「最好」「最快」这类没有数据的话；不要改代码。
+做完后，把例子命令真的运行一遍，贴出真实输出。`} />
+
+它交回来以后，你检查：
+
+- 例子命令的输出是真跑出来的，不是它想象的。
+- 区别表里每个「待核实」，你都去同类项目的 README 查过。
+- About 那句话和 README 第一句一致。
+
+## 卡住了？
+
+<Q q="AI 把我的项目和一个同名项目搞混了">
+在 README 第一句写清类别和语言，比如「一个 Python 命令行工具」。About、npm 的 description、项目页用同一句话。微软的建议里写了跨平台表述要一致 <Src ids="06-S25" />。
+</Q>
+
+<Q q="README 改了一个月，AI 还在说旧功能">
+不联网的回答来自训练数据，改不了，只能等下一代模型。联网的回答会读新页面。用 ChatGPT 搜索或 Perplexity 再问一次，看引用的是不是新 README。
+</Q>
+
+<Q q="Show HN 发了没人看">
+很正常。一次帖子的作用有限。把精力放回 README、文档和回答别人的问题上。下次有实质版本再发。
+</Q>
+
+<Q q="文档放在 GitHub Wiki 里行不行">
+GitHub 的 robots.txt 没有禁止 wiki 页 <Src ids="14-S4" />。但你控制不了它的结构和日期。把核心文档放在 README 链得到的文件里，或者自己的文档站上。文档站的检查见 [让 AI 爬得到](/guide/1-crawlable/)。
+</Q>

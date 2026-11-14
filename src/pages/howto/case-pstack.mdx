@@ -1,8 +1,343 @@
 ---
 layout: ../../layouts/HowTo.astro
 slug: case-pstack
-tldr: "案例：pstack 教程站做 GEO"
-description: "案例：pstack 教程站做 GEO"
+tldr: "一个真实的 Astro 教程站：体检发现了什么，按什么顺序修，怎么量修前修后"
+description: "pstack.xiaoxiaodong.ai 的 GEO 实测：PerplexityBot 被 Cloudflare 挡成 403，没有 sitemap、canonical 和 JSON-LD。附诊断、修复顺序和固定问题集。"
+time: "体检 15 分钟，修复半天，复测 2 到 6 周"
+for: "Astro 搭在 Cloudflare 上的静态教程站"
 ---
+import Src from "../../components/Src.astro";
+import Callout from "../../components/Callout.astro";
+import Copy from "../../components/Copy.astro";
+import Checkpoint from "../../components/Checkpoint.astro";
+import Q from "../../components/Q.astro";
 
-正文编写中。
+[pstack.xiaoxiaodong.ai](https://pstack.xiaoxiaodong.ai/) 是本手册作者自己的教程站。它讲 AI 编程技能包 pstack 怎么用。站点有 10 种语言，中文在根路径。站点用 Astro 静态构建，部署在 Cloudflare Workers 的静态资源上。
+
+这一页记录它的 GEO 体检、诊断和修复计划。修复上线以后，再回来补「修复之后」那一节。
+
+<Checkpoint id="howto-case-pstack" items={[
+  "修复前，用固定问题集跑完了一次基线",
+  "在 Cloudflare 后台找到了 403 的来源，PerplexityBot 改成放行",
+  "上线了 <code>public/robots.txt</code>，线上能看到 <code>Sitemap:</code> 那一行",
+  "装好 <code>@astrojs/sitemap</code>，<code>/sitemap-index.xml</code> 返回 200",
+  "每页有指向自己的 canonical，hreflang 列出了自己和 x-default",
+  "文章页有看得见的更新日期，首页和文章页有 JSON-LD",
+  "在 Bing Webmaster Tools 提交了 sitemap",
+  "上线两周后，用同一组问题复测了一次",
+]} />
+
+## 体检结果（修复前）
+
+2026-11-14 测了两次，结果一样。第一次在 13:35（UTC）<Src ids="14-S1" />，第二次在 14:22（UTC），是写这一页时复测的 <Src ids="14-S2" />。
+
+| 查什么 | 结果 | 要紧程度 |
+|---|---|---|
+| PerplexityBot | 403 | 高 |
+| robots.txt | 只有注释，没有规则 | 中 |
+| sitemap | 404 | 中 |
+| 文章日期 | 页面上没有 | 中 |
+| canonical | 没有 | 低 |
+
+用 `/guide/0-what/` 换各家 User-Agent 去请求，返回码是：
+
+- **403。** GPTBot、ClaudeBot、PerplexityBot、Bytespider。正文只有一行纯文本「Your request was blocked.」。
+- **200。** OAI-SearchBot、ChatGPT-User、Claude-SearchBot、Claude-User、Perplexity-User、Googlebot、bingbot、Baiduspider、普通 curl。
+
+做得对的地方也记下来：
+
+- **正文在原始 HTML 里。** 首页 58 KB，全是 Astro 构建好的静态 HTML。不执行 JavaScript 的 AI 爬虫也能读到 <Src ids="03-S1" />。
+- **基本的 meta 都有。** title、description、og 系列标签齐全。
+
+<Callout type="tip" title="一处更正">
+第一次的记录写着「首页只有 1 个 h2」。复测时数了两遍，是 10 个。4 个是侧边栏的分组标题，6 个是正文小节 <Src ids="14-S2" />。这一项不算问题。
+</Callout>
+
+## 你也可以这样体检自己的站
+
+把 `S` 换成你的域名，`P` 换成你的一篇文章：
+
+<Copy id="case-probe" title="体检命令" lang="bash" code={`S=https://pstack.xiaoxiaodong.ai
+P=$S/guide/0-what/
+date -u +%Y-%m-%dT%H:%M:%SZ
+
+curl -s $S/robots.txt | grep -ciE '^(user-agent|allow|disallow|sitemap)'
+for U in /sitemap-index.xml /sitemap.xml /llms.txt; do
+  echo "$U $(curl -s -o /dev/null -w '%{http_code}' $S$U)"
+done
+
+for UA in GPTBot OAI-SearchBot ChatGPT-User ClaudeBot Claude-SearchBot Claude-User \\
+          PerplexityBot Perplexity-User Bytespider Googlebot bingbot Baiduspider; do
+  echo "$UA $(curl -s -o /dev/null -w '%{http_code}' -A "Mozilla/5.0 (compatible; $UA/1.0)" $P)"
+done
+
+curl -s $P | grep -c 'application/ld+json'
+curl -s $P | grep -oE '<link[^>]+rel="(canonical|alternate)"[^>]*>'
+curl -s $P | grep -oE '<time[^>]*>' | head -3`} />
+
+<Callout type="warn">
+从你电脑上伪造 User-Agent，只能测出「按 User-Agent 拦截」的规则。Cloudflare 还会看 IP。本地 403 不等于真爬虫被挡，本地 200 也不保证真爬虫能进。最终以 Cloudflare 后台的 AI Crawl Control 记录为准 <Src ids="03-S20" />。
+</Callout>
+
+## 诊断：每一项意味着什么
+
+**PerplexityBot 被挡，最要紧。** 它是 Perplexity 的搜索索引爬虫，不用于训练 <Src ids="02-S33" />。挡了它，Perplexity 的搜索结果里就没有这个站。
+
+**GPTBot、ClaudeBot 被挡，影响小。** 它们只管训练。ChatGPT 搜索看 OAI-SearchBot，Claude 搜索看 Claude-SearchBot，这两个都是 200 <Src ids="02-S1 02-S25" />。要不要让模型拿你的内容去训练，是你自己的取舍。
+
+**Bytespider 被挡，影响不清楚。** 它和豆包回答有没有关系，没有官方文档。
+
+**403 很可能来自 Cloudflare 的 AI 爬虫拦截。** 理由有三条：
+
+1. 这个站的 `wrangler.jsonc` 只配了静态资源，没有 Worker 代码。站点自己不会返回 403。
+2. 403 的响应头是 `server: cloudflare`，正文是一行纯文本。
+3. 2025-07-01 以后，Cloudflare 给新接入的域名默认屏蔽 AI 爬虫 <Src ids="03-S14" />。
+
+这还是推断。要在后台确认是哪条规则，见下面第 1 步。
+
+**robots.txt 只有注释。** 线上那份 24 行，全是 Cloudflare 内容信号政策的说明 <Src ids="03-S16" />。里面没有一条 `User-agent` 或 `Sitemap`。仓库里也没有 `public/robots.txt`。爬虫照样能抓，只是找不到 sitemap。
+
+**没有 sitemap。** 搜索引擎只能顺着链接一页页找。Bing 说它至少每天回看一次 sitemap，新鲜度会影响 AI 回答 <Src ids="03-S43" />。
+
+**hreflang 不完整。** 中文页只列了英文版，没列自己，也没有 x-default。Google 要求每个语言版本列出自己和所有其他版本 <Src ids="03-S41" />。
+
+**没有日期，没有 JSON-LD。** AI 引用的页面平均比搜索结果新 25.7% <Src ids="03-S57" />。看不到日期，就说明不了新。JSON-LD 对引用的作用没有可靠证据 <Src ids="03-S32" />，所以排在最后。
+
+## 修复计划：按这个顺序做
+
+<Callout type="warn">
+动手之前，先跑一次下面的「固定问题集」，存下基线。修完再跑，才有前后可比。
+</Callout>
+
+### 第 1 步：在 Cloudflare 后台找出 403 的来源
+
+1. 进 Cloudflare 后台，打开这个域名的 **AI Crawl Control**，看 **Crawlers** 标签页。找到 PerplexityBot、GPTBot、ClaudeBot 的状态，把 PerplexityBot 改成 **Allow** <Src ids="03-S20" />。
+2. 打开 **Security** 下的 **Settings**，筛选 **Bot traffic**，进 **AI Crawler and Agent access policies**。Search 和 Agent 两类设为不屏蔽。Training 由你决定 <Src ids="03-S18" />。
+3. 看 **Bot Fight Mode** 有没有开。开着的话，AI 爬虫可能被质询，自定义规则也绕不过去 <Src ids="03-S8" />。
+
+后台菜单名截至 2026-11，以后可能改。<u>选「屏蔽 Training」时要小心。</u>Cloudflare 说同时做搜索和训练的爬虫也会受影响 <Src ids="03-S18" />。
+
+<Callout type="ok">
+改完重跑体检命令。PerplexityBot 那一行变成 200。几天后，AI Crawl Control 里能看到 PerplexityBot 的请求被放行。
+</Callout>
+
+细节见 [Cloudflare 别把 AI 爬虫挡在门外](/howto/cloudflare-bots/)。
+
+### 第 2 步：加 robots.txt
+
+新建 `public/robots.txt`：
+
+<Copy id="case-robots" title="public/robots.txt" code={`User-agent: *
+Allow: /
+
+Sitemap: https://pstack.xiaoxiaodong.ai/sitemap-index.xml`} />
+
+这一版允许所有爬虫，包括训练类。不想进训练数据，就在后面加一组：
+
+<Copy id="case-robots-b" title="可选：不进训练，保留 AI 搜索" code={`User-agent: GPTBot
+User-agent: ClaudeBot
+User-agent: CCBot
+Disallow: /`} />
+
+别顺手把 `Google-Extended` 也写进去。它同时管 Gemini App 里的引用，挡了就从那里消失 <Src ids="02-S14" />。各家爬虫的完整写法见 [robots.txt：放行哪些 AI 爬虫](/howto/robots-txt/)。
+
+<Callout type="ok">
+部署后 `curl -s https://pstack.xiaoxiaodong.ai/robots.txt | grep Sitemap` 有输出。如果 Cloudflare 开着托管 robots.txt，它会在你的内容前面插一段 <Src ids="03-S17" />。看一眼插了什么。
+</Callout>
+
+### 第 3 步：生成 sitemap
+
+```bash
+npx astro add sitemap
+```
+
+然后在 `astro.config.mjs` 里给它加上多语言设置：
+
+<Copy id="case-sitemap" title="astro.config.mjs" lang="js" code={`import { defineConfig } from "astro/config";
+import mdx from "@astrojs/mdx";
+import sitemap from "@astrojs/sitemap";
+
+const site = process.env.SITE_URL || "https://pstack.xiaoxiaodong.ai";
+const base = process.env.BASE_PATH || "/";
+export default defineConfig({
+  site,
+  base,
+  trailingSlash: "always",
+  integrations: [
+    mdx(),
+    sitemap({
+      filter: (page) => !page.includes("/404"),
+      i18n: {
+        defaultLocale: "zh",
+        locales: { zh: "zh-CN", en: "en", ja: "ja", ko: "ko", es: "es", pt: "pt-BR", fr: "fr", de: "de", ru: "ru", ar: "ar" },
+      },
+    }),
+  ],
+  build: { format: "directory" },
+});`} />
+
+`i18n` 会让每个网址列出它的其他语言版本 <Src ids="03-S55" />。<u>不要设全局 `lastmod`。</u>每次构建都把所有页面标成「今天更新」，Bing 明确说别这么做 <Src ids="03-S43" />。等文章有了 `updated` 字段，再按它生成 lastmod。写法见 [Astro 站点的 GEO 设置](/howto/astro/)。
+
+<Callout type="ok">
+`npm run build` 后，`dist/` 里有 `sitemap-index.xml` 和 `sitemap-0.xml`。`grep -o "<loc>" dist/sitemap-0.xml | wc -l` 比页面数少 1，少的是 404 页。
+</Callout>
+
+### 第 4 步：canonical 和完整的 hreflang
+
+在 `src/layouts/Site.astro` 里改两处。
+
+第一处，`description` 那一行下面加 canonical：
+
+```astro
+<link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)} />
+```
+
+第二处，生成 `alternates` 的那一行，去掉 `l.code !== lang &&`。这样列表里会包含当前页自己。再在输出 hreflang 的那一行后面加 x-default，指向中文版：
+
+```astro
+{alternates.length > 1 && <link rel="alternate" hreflang="x-default" href={new URL(langLinks.find((l) => l.code === "zh").href, Astro.site)} />}
+```
+
+<Callout type="ok">
+重跑体检命令的倒数第二行。中文页能看到一个 canonical，hreflang 里有 `zh-CN`、`en` 和 `x-default`。
+</Callout>
+
+### 第 5 步：加日期和 JSON-LD
+
+1. 每篇教程的 frontmatter 加 `updated: 2026-11-14`，填真正改内容的日期。
+2. `Guide.astro` 在标题下显示「最后更新」，用 `<time datetime="2026-11-14">` 包起来。
+3. 首页输出 `WebSite` 和作者的 `Person`。文章页输出 `TechArticle`，它的 `dateModified` 和页面上的日期一致 <Src ids="03-S39" />。
+
+文章页的 JSON-LD 长这样：
+
+<Copy id="case-ld" title="/guide/0-what/ 的 JSON-LD" lang="json" code={`{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "TechArticle",
+      "headline": "第 0 步：pstack 是什么",
+      "description": "pstack 是什么、改掉 AI 写代码的哪些毛病、要付出什么代价、开始前要准备什么。",
+      "inLanguage": "zh-CN",
+      "dateModified": "2026-11-14",
+      "mainEntityOfPage": "https://pstack.xiaoxiaodong.ai/guide/0-what/",
+      "author": { "@id": "https://pstack.xiaoxiaodong.ai/#author" },
+      "about": { "@type": "SoftwareApplication", "name": "pstack", "url": "https://github.com/backnotprop/pstack" }
+    },
+    {
+      "@type": "Person",
+      "@id": "https://pstack.xiaoxiaodong.ai/#author",
+      "name": "<作者名>",
+      "url": "https://github.com/nevertoday"
+    }
+  ]
+}`} />
+
+组件写法见 [JSON-LD 结构化数据](/howto/json-ld/)。
+
+### 第 6 步：交给搜索引擎
+
+1. 在 Bing Webmaster Tools 加这个站，可以从 Google Search Console 导入。提交 `https://pstack.xiaoxiaodong.ai/sitemap-index.xml`。
+2. 几周后打开 **AI Performance**。看 Copilot 等引用了哪些页面，用了哪些 grounding 查询 <Src ids="03-S45" />。
+3. Google Search Console 里同样提交 sitemap。
+4. 想让改动更快被 Bing 知道，加 [IndexNow](/howto/indexnow/)。
+
+### 第 7 步（可选）：给编程 Agent 加 llms.txt
+
+pstack 的读者本来就在用 Claude Code、Cursor 和 Codex。编程 Agent 爱读 Markdown。一个网站的日志里，Claude Code 88% 的请求拿的是 Markdown <Src ids="03-S3" />。这个站加 llms.txt 和 `.md` 版本，有现实用处。写法见 [llms.txt：要不要加](/howto/llms-txt/)。
+
+## 固定问题集：修前修后都问这 12 条
+
+<Copy id="case-prompts" title="pstack 的固定问题集" code={`按名字问
+1. pstack 是什么？
+2. What is pstack for Claude Code?
+3. poteto-mode 是什么，怎么用？
+
+按需求问
+4. 有没有什么 Claude Code 插件，能让 AI 改完代码先自己测一遍再汇报？
+5. Is there a skill pack for Claude Code that makes the agent verify its work before saying it is done?
+6. Cursor 有什么好用的技能包推荐？
+7. 我不会写代码，怎么让 AI 帮我做一个小网页又少出错？
+8. Best Claude Code plugins for a rigorous engineering workflow
+
+按任务问
+9. 怎么让 Claude Code 先写计划再改代码？
+10. How do I stop Claude Code from saying "fixed" when the bug is still there?
+
+对比着问
+11. pstack 和 superpowers 有什么区别？
+12. pstack vs superpowers for Claude Code`} />
+
+怎么问：
+
+- **平台。** 海外问 ChatGPT、Perplexity、Google AI Mode、Claude，开搜索。国内问豆包、DeepSeek、元宝，开联网。
+- **次数。** 每条在每个平台至少问 3 次。同一个问题重复问，AI 给出同一份推荐清单的概率不到 1% <Src ids="06-S38" />。所以只看出现的频率，不看排第几。
+- **记什么。** 提没提 pstack、说得对不对、引用了哪些网址。<mark>单独记一列：引用里有没有 pstack.xiaoxiaodong.ai。</mark>这次修的是这个站，GitHub 仓库被引用不算。
+
+记录格式和脚本见 [定一组固定问题](/howto/prompt-set/)。前后对比的做法见 [做一次前后对比实验](/howto/experiment/)。
+
+除了问 AI，再记三个第一方数字：
+
+- AI Crawl Control 里，最近 7 天 PerplexityBot、OAI-SearchBot、Claude-SearchBot 的请求数。
+- Bing AI Performance 里的引用次数（提交 sitemap 之后才有）。
+- 统计里来自 AI 的访问。这个数只能当下限。一家统计厂商的数据显示，2026-10 以后 ChatGPT 基本不带 `utm_source` <Src ids="02-S4" />。
+
+### 修复前的基线
+
+<Callout type="warn" title="待测">
+基线还没跑。要在第 1 步改 Cloudflare 之前跑完，结果填进下面的表。
+</Callout>
+
+| 指标 | 修复前 | 测量日期 |
+|---|---|---|
+| 提及 pstack 的比例 | 待测 | 待测 |
+| 引用本站的比例 | 待测 | 待测 |
+| Perplexity 抓取数 | 待测 | 待测 |
+
+## 修复之后（待补）
+
+<Callout type="warn" title="这一节还没写">
+修复上线后再回来填。计划在上线后第 2 周和第 6 周各复测一次。问题、平台和次数都和基线相同。
+
+到时候这里会写：
+
+- 每一步实际改了什么，哪天上线。
+- 三个数字前后各是多少。
+- 哪些没变。
+</Callout>
+
+## 交给 AI 做
+
+在 pstack 教程站的仓库里打开 Claude Code，发这段：
+
+<Copy id="case-ai" title="发给编程 Agent" code={`这是一个 Astro 静态站，部署在 Cloudflare Workers 静态资源上。请按顺序做下面几件事，每做完一件就运行 npm run build，并检查 dist/ 里的产物：
+1. 新建 public/robots.txt：User-agent: * / Allow: / 和 Sitemap: https://pstack.xiaoxiaodong.ai/sitemap-index.xml。
+2. 安装 @astrojs/sitemap，按 src/data/nav.js 里的 LANGS 配好 i18n（中文是默认语言，在根路径），过滤掉 404 页，不要设全局 lastmod。
+3. 在 src/layouts/Site.astro 里加自指的 canonical；让 hreflang 列表包含当前页自己，再加一个指向中文版的 x-default。
+4. 给 src/pages/guide/ 下每篇加 updated 字段，日期用 git log 里这个文件最后一次提交的日期；在 Guide.astro 里用 <time> 显示「最后更新」。
+5. 首页输出 WebSite 和 Person 的 JSON-LD，教程页输出 TechArticle；dateModified 和页面上显示的日期一致；JSON.stringify 之后把 < 替换成 \\u003c。
+不要启动开发服务器；如果启动了，结束前关掉，并确认端口已经释放。
+最后列出改动的文件，并贴出这些检查的真实输出：dist/robots.txt 的内容、dist/sitemap-0.xml 里 <loc> 的数量、dist/guide/0-what/index.html 里的 canonical、hreflang 和 JSON-LD。`} />
+
+它交回来以后，你检查：
+
+- 贴出来的是真实命令输出，不是它描述的样子。
+- `updated` 的日期来自 git，不是统一写成今天。
+- Cloudflare 后台那一步它做不了，要你自己去点。
+
+## 卡住了？
+
+<Q q="后台改成放行了，curl 还是 403">
+多半还有别的规则在挡。看 Security 下的 Events，按 User-Agent 筛 PerplexityBot，看是哪条规则拦的。也看一眼 Bot Fight Mode 和 WAF 自定义规则。
+</Q>
+
+<Q q="curl 是 200，后台显示真爬虫还是被挡">
+以后台为准。真爬虫从固定 IP 来，Cloudflare 会结合 IP 判断。本地伪造 User-Agent 测不出这一层 <Src ids="03-S20" />。
+</Q>
+
+<Q q="sitemap 生成了，但其他语言的页面没有互相指向">
+确认 `i18n.locales` 里的键和网址前缀一致，比如 `/en/` 对应 `en`。这个站只有中文和英文有全部页面。其他语言只有首页和新手入门，互指也只出现在这些页面上。
+</Q>
+
+<Q q="要不要把 GPTBot 和 ClaudeBot 也放行">
+它们只管训练，不影响 ChatGPT 和 Claude 的搜索回答 <Src ids="02-S1 02-S25" />。放行对推荐有没有帮助，现在没有实验证据。按你对训练的态度决定。
+</Q>
