@@ -6,6 +6,7 @@ tldr: "找到 AI 引用的别人的页面，用诚实的办法出现在那里"
 description: "让别人提到你：小产品为什么靠第三方页面被 AI 想起，各家 AI 常引哪些网站，怎么进榜单、在 Reddit 和 V2EX 等社区回答问题、做视频、处理维基百科和评论平台，哪些灰色手法会出事，以及一个人管几个产品的外部功课。"
 ---
 import Callout from "../../components/Callout.astro";
+import { PROMPT } from "../../data/prompts.js";
 import Copy from "../../components/Copy.astro";
 import Src from "../../components/Src.astro";
 import Verdict from "../../components/Verdict.astro";
@@ -230,28 +231,7 @@ tabnote,https://en.wikipedia.org/wiki/Note-taking,wiki,ignore,,2026-11-14,`} />
 
 收集来的网址交给 AI 分类，最省时间。用能联网的 Claude Code 或 ChatGPT，它可以自己打开每个网址核对。
 
-<Copy id="m-sort" title="把 AI 引用的网址分成三类" code={`我在做 <产品名> 的站外推广。下面是我把一组问题问了 ChatGPT、Perplexity、豆包等 AI 以后，回答里引用的全部网址，以及每条来自哪个问题。
-
-请逐个打开这些网址，然后输出一张 CSV，列为：
-url,domain,kind,mentions_competitors,mentions_me,action,reason,contact
-
-规则：
-1. kind 从这几种里选：list（榜单或对比文章）、review（单品评测）、thread（社区帖子）、video、wiki、news（大媒体）、vendor（某个产品的官网）、other。
-2. mentions_competitors 写这页提到的竞品名，用 | 分隔。mentions_me 填 0 或 1。我的产品名是 <产品名>，别名 <别名>。
-3. action 只能是 pitch、answer、ignore：
-   - pitch：个人或小媒体写的 list、review，提到了竞品，作者能联系上。
-   - answer：thread 类，帖子还开着能回复，或者这个版块经常出现同类问题。
-   - ignore：wiki、news、vendor，以及已经提到我、或者打不开的页面。
-4. reason 用一句话写为什么这么分。看不出页面更新时间的写「日期未知」。
-5. contact 只写页面上真的出现的作者名、联系页或社交账号。没有就写「未找到」，不要猜邮箱。
-6. 去掉重复的网址，按 action 排序，pitch 在最前。
-7. 表后另写三行：pitch、answer、ignore 各有几条。
-
-我的实体卡：
-<粘贴>
-
-网址和对应问题：
-<粘贴>`} />
+<Copy id="m-sort" title="把 AI 引用的网址分成三类" code={PROMPT["mention-sort"].prompt} />
 
 <Callout type="ok">
 拿到表后检查：每条 `pitch` 你都亲自点开过，页面里真有竞品名。`contact` 里没有 AI 编出来的邮箱。数一下三类的条数，和表后的统计一致。
@@ -259,26 +239,7 @@ url,domain,kind,mentions_competitors,mentions_me,action,reason,contact
 
 写给作者的信和社区回答，AI 只帮你挑毛病：
 
-<Copy id="m-review" title="发出去之前检查一遍" code={`下面是我准备发出去的一段文字。它是 <给榜单作者的邮件 / 在 <社区名> 某个帖子下的回答>。
-
-请按这几条检查，每条给「通过」或「要改」，要改的指出原句：
-1. 它先回答了对方的问题（或者先说了对方文章里真有的内容）吗？
-2. 有没有写明我是 <产品名> 的开发者？
-3. 产品的事实（价格、平台、功能）和我的实体卡完全一致吗？
-4. 有没有写一个真实的局限？
-5. 有没有「最好」「第一」「唯一」这类词，或者让人点赞、私信、领码的话？
-6. 读起来像推销吗？哪几句最像？
-
-只指出问题，不要替我重写全文。不要加任何实体卡里没有的事实。
-
-实体卡：
-<粘贴>
-
-原帖或原文（如果有）：
-<粘贴>
-
-我的草稿：
-<粘贴>`} />
+<Copy id="m-review" title="发出去之前检查一遍" code={PROMPT["mention-review"].prompt} />
 
 AI 不要做的：替你注册账号、发帖、回复、写评论。理由在上面的社区规则和灰色手法两节里。
 

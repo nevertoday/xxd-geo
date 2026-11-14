@@ -31,12 +31,12 @@ import { PROMPT } from "../../data/prompts.js";
 - **体检交给 geo-audit 技能。** 脚本收集事实，AI 只解释，报告不给总分。见 [让 AI 给网站做 GEO 体检](/howto/ai-audit/)。
 - **JSON-LD 让 AI 写，你逐字段对。** Google 要求结构化数据和页面可见文字一致。<Src ids="06-S1" /> 提示词里写明只用实体卡的事实，评分和评论数一律不写。见 [#jsonld](/prompts/#jsonld)。
 - **把文章改成先给答案。** 每个小标题是一个真实问法，下面第一段直接回答。标题和段落贴合问法，是同站比较里少数有效的内容因素。<Src ids="06-S46" /> 提示词见 [#answer-first](/prompts/#answer-first)。
-- **生成问题集。** 让 AI 列 40 个用户会问的问题，不含产品名的至少一半。112 个 Product Hunt 产品里，按名字问的识别率 99.4%，换成发现型问题只剩 3.32%。<Src ids="06-S47" /> 见 [定一组固定问题](/howto/prompt-set/)。
+- **生成问题集。** 让 AI 按四类（按名字、按品类、按问题、对比）列 32 个用户会问的问题，不含产品名的占一半以上。112 个 Product Hunt 产品里，按名字问的识别率 99.4%，换成发现型问题只剩 3.32%。<Src ids="06-S47" /> 见 [定一组固定问题](/howto/prompt-set/)。
 - **模拟子查询。** Google AI Mode 会把问题拆成子话题分别去搜。<Src ids="06-S9" /> AI 模拟的只是「可能的」子查询，跑 3 次取交集，再和 Bing Webmaster Tools 里的 grounding queries 对照。<Src ids="06-S25" /> 提示词见 [#fanout](/prompts/#fanout)。
 - **从 AI 回答里找差距。** 把追踪到的回答原文交给 AI 数：谁被提到、引用了哪些第三方页面。一项针对美国汽车类查询的研究里，AI 搜索引用的来源 81.9% 是第三方。同样的查询，Google 搜索结果里第三方只占 45.1%。<Src ids="06-S44" /> 那些第三方页面就是你该去争取的地方。提示词见 [#gap](/prompts/#gap)。
 - **起草诚实的对比页。** 竞品的价格和功能你自己去查，AI 只负责排版。一次分析看了 100 个 B2B 查询。69% 的情况下，AI Overviews 引用了品牌自吹的榜单，却没推荐这个品牌。<Src ids="06-S53" /> 提示词见 [#compare](/prompts/#compare)。
 - **写商店简介和 README。** 第一句固定写「X 是一个某平台上的某类工具，帮谁做什么」。Chrome Web Store 的摘要上限 132 个字符，堆关键词可能被下架。<Src ids="03-S52" /> 提示词见 [#listing](/prompts/#listing)。
-- **监测。** 让 AI 写一个每条问题跑 5 次、只算提及频率的脚本。同一个问题重复问，ChatGPT 给出同一份品牌清单的概率不到 1%。<Src ids="06-S38" /> 见 [自己搭一个提及追踪](/howto/diy-tracker/)。
+- **监测。** 用本书配的 `geo-track.mjs`，每条问题跑多遍，只算提及频率。同一个问题重复问，ChatGPT 给出同一份品牌清单的概率不到 1%。<Src ids="06-S38" /> 见 [自己搭一个提及追踪](/howto/diy-tracker/)。
 
 <Callout type="warn">
 API 跑出来的结果和网页版 ChatGPT 不一样。一项研究用 Google 搜索加 OpenAI API 去还原网页版的引用。两者合起来，只找回约四分之一。<Src ids="06-S68" /> 脚本适合看趋势，别当成真实排名。

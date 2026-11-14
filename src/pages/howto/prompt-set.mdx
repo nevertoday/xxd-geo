@@ -11,6 +11,7 @@ import Src from "../../components/Src.astro";
 import Callout from "../../components/Callout.astro";
 import Copy from "../../components/Copy.astro";
 import Q from "../../components/Q.astro";
+import { PROMPT } from "../../data/prompts.js";
 
 export const template = `id,lang,type,prompt
 Z1,zh,name,<产品名> 是什么？好用吗？
@@ -30,29 +31,6 @@ E6,en,problem,i'm a <who> and need to <do what> on <platform>. what should i use
 E7,en,compare,<Competitor A> vs <Competitor B> for <use case>
 E8,en,compare,alternatives to <Competitor A>`;
 
-export const genPrompt = `我做了一个产品，实体卡在下面。请帮我写一组用来每周测试「AI 回答里提不提我」的固定问题。
-
-要求：
-1. 下面已有的 8 条（Z1 到 Z4、E1 到 E4）原样保留，不要改字，也不要改 id。
-2. 再补 24 条，中文接着用 Z5、Z6……编号，英文接着用 E5、E6……编号。加上已有的，一共 32 条，中英文各 16 条。
-3. 每种语言的 16 条里，四类的数量是（含已有的），用 type 列标注：
-   - category（8 条）：按品类问，不出现我的产品名和域名。
-   - problem（4 条）：用户描述自己的场景或麻烦，不出现我的产品名。
-   - compare（2 条）：拿竞品互相比，或问某个竞品的替代品。可以出现竞品名，不能出现我的产品名。
-   - name（2 条）：直接问我的产品，或拿我的产品和竞品比。用来查 AI 说得对不对。已有的 Z1、Z4 就是这一类。
-4. 用真人在手机上打字的口吻，可以带预算、平台、要不要登录这类条件。
-5. 不要写「列出前 5 名」这种限定数量的问法。
-6. 英文不要直译中文，按英文用户的习惯重写。
-7. 只输出 CSV，列为 id,lang,type,prompt，不要别的说明。prompt 里有逗号就用双引号包起来。
-
-已有的 8 条：
-<粘贴第 2 课填好的 Z1 到 Z4、E1 到 E4>
-
-下面是用户的原话，从商店评论、GitHub issue、客服邮件里摘的（已去掉个人信息）：
-<粘贴 20 到 100 条>
-
-实体卡：
-<粘贴 entity.md>`;
 
 这组问题是以后每周测量的尺子。尺子一换，前后就没法比了，所以花一小时定好，之后很少改。
 
@@ -123,7 +101,7 @@ export const genPrompt = `我做了一个产品，实体卡在下面。请帮我
 
 ## 交给 AI 做
 
-<Copy id="gen-prompt" title="发给 Claude 或 ChatGPT，生成 prompts.csv" code={genPrompt} />
+<Copy id="gen-prompt" title="发给 Claude 或 ChatGPT，生成 prompts.csv" code={PROMPT["prompt-set"].prompt} />
 
 实体卡的写法见 [用 AI 做 GEO，并坚持下去](/guide/8-with-ai/)。
 
