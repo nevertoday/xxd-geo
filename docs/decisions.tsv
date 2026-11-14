@@ -1,0 +1,26 @@
+ts	phase	decision	why	evidence	result
+2026-11-14T13:30:28Z	frame	按 xxd-pstack 的骨架做 GEO 知识库，先全网调研再写	用户点名要和之前两个开源知识库一样；先调研是因为 GEO 领域说法多、证据少	../xxd-pstack/docs/MAINTAINING.md	open
+2026-11-14T13:30:29Z	frame	调研拆成 6 个方向并行，每个方向交一份带出处和证据等级的调研稿	各方向互不重叠，可以同时跑；证据等级让读者分清哪些做法有实证	research/	open
+2026-11-14T13:34:18Z	scaffold	骨架从 xxd-pstack 复制后先删掉 pstack 专属部分（技能页、技能原文、工具切换、8 种语言），再加 GEO 的数据类型	先减后加；用户要和之前的知识库一致	../xxd-pstack/src	open
+2026-11-14T13:34:18Z	scaffold	这一轮只做中文全站，保留 en 字段的写法，英文版留到下一轮	调研和中文正文已经是很大的量；先把一种语言做扎实	'-	open
+2026-11-14T13:34:18Z	scaffold	出处用一张表管：每条建议引用出处 id，脚本检查 id 都存在、等级合法	GEO 资料里营销话术多，读者需要能分清证据强弱；靠人工核对会漏	src/data/sources.js（待建）	open
+2026-11-14T13:56:11Z	scaffold	骨架完成，我自己重跑了构建：28 页，内容检查通过	不信帮手的自述，自己跑一遍	commits d2181d9..667efcd	build green
+2026-11-14T13:56:11Z	scaffold	保留帮手加的规则：标成必做的做法至少要有一条 A 或 B 级出处	这正是这本书和营销文章的区别，值得用脚本守住	scripts/check-content.mjs	kept
+2026-11-14T13:56:11Z	case	实测 pstack 站：GPTBot、ClaudeBot、PerplexityBot、Bytespider 返回 403，没有 sitemap、llms.txt、JSON-LD	给实战案例拿真实数据	research/case-pstack/findings.md	open
+2026-11-14T14:17:01Z	sources	出处表用脚本从调研稿导入，同一链接只留一条，其他编号做别名	331 行手抄会错；脚本可重跑，调研稿改了重跑即可	scripts/import-sources.mjs, 1eadee3	278 条 + 53 别名，build green
+2026-11-14T14:17:01Z	research	国内平台单独补一轮一手资料调研	三份稿子都说国内部分只找到服务商营销文章	research/07-china.md（进行中）	open
+2026-11-14T14:20:40Z	write	写作分给 8 个帮手，每人一个 git worktree、只改自己负责的文件；先开 4 个，测量、国内、证据表、新手课等调研稿齐了再开	同时构建会互相覆盖 dist/；文件不重叠，合并不会冲突	../GEO-wt/{crawl,read,withai,products}, docs/writer-contract.md	open
+2026-11-14T14:20:40Z	write	仓库里附带一个 geo-audit Agent Skill 和探测脚本，读者拿去体检自己的产品	用户要「结合 AI 怎么做」，可直接运行的工具比文字更实用；脚本也让案例数据可重跑	skills/geo-audit/（进行中）	open
+2026-11-14T14:39:38Z	write	合并 w/read、w/crawl、w/products；每次合并后重新导入出处并构建	文件不重叠，合并无冲突；构建是唯一的判据	9fb770c, c8196ae, a81beb5	294 条出处，151 条被引用，build green
+2026-11-14T14:39:38Z	case	更正 pstack 体检记录：首页 h2 是 10 个不是 1 个	我用 grep -c 按行数，整页只有一行；写手复测时发现	research/case-pstack/findings.md, a81beb5	corrected
+2026-11-14T14:42:58Z	write	合并 w/withai：geo-audit 技能、探测脚本、19 条提示词、第 8 步	我自己对 pstack 跑了探测脚本，结果和体检记录一致	skills/geo-audit/scripts/probe.mjs	4 个 403 复现，build green
+2026-11-14T14:46:15Z	write	开最后 3 个写作帮手：测量（含 tools.js）、国内（含 platforms.cn.js 和三页里的国内说法更正）、证据表 + Wiki + FAQ + 术语	05 和 07 都已提交；国内说法以 07 的一手资料为准，前面页面里的错误由国内帮手只改相关句子	../GEO-wt/{measure,china,evidence}	open
+2026-11-14T15:02:03Z	write	补派第 5 步「让别人提到你」的写作帮手	分工时漏了这一页，合并后查占位页才发现	src/pages/guide/5-mentions.mdx	open
+2026-11-14T15:02:03Z	sources	把 02 里被 07 推翻的出处改成 X 或改注：元宝搜索上线年份、百度百科屏蔽 Google、Bytespider 无官方文档	一手资料优先；出处表是正文措辞的依据	research/02-platforms.md	done
+2026-11-14T15:03:11Z	check	构建检查加上 Wiki 和 FAQ 的出处 id、Wiki 相关条目	证据表帮手只在临时脚本里查了；放进构建才会一直生效	scripts/check-content.mjs, 1515a69	故意写错 id 会报错，恢复后通过
+2026-11-14T15:15:08Z	verify	从 790 条带出处的句子里按种子抽 75 条，交给 3 个独立核查帮手对照调研稿和原文	这本书的卖点就是出处可信；写手的自述不能当证据	scripts/extract-claims.mjs, docs/claim-sample*.tsv, cb0af40	open
+2026-11-14T15:15:08Z	verify	全站跑写作规范检查：18 句超长，多数是官方原文引用或提示词，保留	引用原文不能拆；正文自己的句子都在 30 字内	lint-prose.mjs（写手的临时脚本）	accepted
+2026-11-14T15:16:39Z	write	合并 w/data2：做法 67 个、Wiki 42 条、FAQ 28 条、术语 +22、提示词 21 条；顺手改掉因此过时的 5 处正文	数据文件改了，引用它的页面要一起对上	aff9246, 3e1c16c	build green
+2026-11-14T15:16:39Z	write	问题集和第 5 步的提示词改为从 prompts.js 渲染，不在页面里另存一份	两份文本迟早会对不上，一处来源就不会	src/pages/howto/prompt-set.mdx, src/pages/guide/5-mentions.mdx	done
+2026-11-14T15:20:59Z	verify	抽查 75 句：67 对、7 部分对、1 引错；8 句已改	核查帮手对照调研稿逐句判断	docs/claim-check-{1,2,3}.tsv, edab643	8 fixed
+2026-11-14T15:20:59Z	verify	发现提取脚本漏了出处标在句号后的写法（790→975 句），修好后对全部 975 句做全量核查，7 个帮手按页面分组、在各自副本里核对并当场改	11% 的问题率推到全站约 80 句；出处可信是卖点，值得全量做	scripts/extract-claims.mjs, docs/verify-contract.md, ../GEO-wt/v1..v7	open

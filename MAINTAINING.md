@@ -86,7 +86,7 @@ MDX 正文里不能出现裸的 `<`、`{`、`}`：占位符写在代码里，比
 
 **会让构建失败的：**
 
-- 正文 `<Src>` 或 tactics / platforms / tools 里引用的出处 id 不存在。
+- 正文 `<Src>` 或 tactics / platforms / tools / wiki / faq 里引用的出处 id 不存在；Wiki 的 `see` 指向不存在的条目。
 - 出处的 `grade`、`kind`、`date`、`url` 不合规，或者 `title`、`publisher`、`note` 空着。
 - 数据里的 `layer`、`verdict`、`effort`、`region`、`purpose`、`kind` 不在允许的值里；`step`、`howto` 指向不存在的页面；id 重复。
 - 标了「必做」的做法，出处里没有 A 或 B。
@@ -94,6 +94,16 @@ MDX 正文里不能出现裸的 `<`、`{`、`}`：占位符写在代码里，比
 - `dist/` 里的站内链接指向没构建出来的页面。
 
 **只提醒的：** 从没被引用的出处、还没替换的示例数据、有了 MDX 但导航还是 `ready: false` 的页面。
+
+## 核查出处：这句话，出处里真有吗
+
+构建只能查出处 id 存不存在，查不了句子和出处对不对得上。这一步靠人或 AI 逐句核：
+
+- `node scripts/extract-claims.mjs > claims.tsv` 导出正文里每一句带 `<Src>` 的话、它的出处标题、要点和链接。加 `--sample 60 --seed <数字>` 按种子随机抽，抽样可复现。
+- 核查的做法写在 `docs/verify-contract.md`：读调研稿里这条出处的上下文，必要时打开原文，判 SUPPORTED / PARTIAL / UNSUPPORTED，有问题当场改。
+- 2026-11-14 全量核过一次：975 句里 907 句对得上，61 句说过头（多是把一个平台的数据说成所有 AI、把发布日期说成现状），7 句出处不对，都已改正。记录在 `docs/verify-v1.tsv` 到 `verify-v7.tsv`，之前的 75 句抽查在 `docs/claim-check-*.tsv`。
+- 还没逐句核过的：tactics、wiki、faq、platforms 数据文件里的文字。
+- 写新内容最常犯的错：只测了 ChatGPT 的数字写成「AI」；只说了 Gemini 应用写成「Gemini」；2025 年的默认值写成现在的默认值。写之前先看出处表那一行的范围和日期。
 
 ## 写作规矩
 
