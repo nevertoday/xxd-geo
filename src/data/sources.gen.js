@@ -2619,6 +2619,86 @@ export const GENERATED = {
   "kind": "观点",
   "grade": "D",
   "note": "工具功能描述可信；README 里的市场和效果数字多数无出处或误引"
+ },
+ "21-s1": {
+  "title": "pstack.xiaoxiaodong.ai 实测记录：用 curl 换 User-Agent 请求 robots.txt、sitemap 和 /guide/0-what/",
+  "publisher": "本站",
+  "date": "2026-11-14",
+  "url": "",
+  "kind": "案例",
+  "grade": "C",
+  "note": "GPTBot、ClaudeBot、PerplexityBot、Bytespider 返回 403，OAI-SearchBot、ChatGPT-User、Claude-SearchBot、Perplexity-User、Googlebot、bingbot 返回 200；robots.txt 只有 Cloudflare 的 content signals 注释；sitemap 404；HTML 是静态输出",
+  "where": "无（research/case-pstack/findings.md，原始文件在同目录）"
+ },
+ "21-s2": {
+  "title": "Bot Fight Mode",
+  "publisher": "Cloudflare",
+  "date": "2026-11-14",
+  "url": "https://developers.cloudflare.com/bots/get-started/bot-fight-mode/",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "开关在 Security Settings 页按 Bot traffic 筛选；WAF 自定义规则和 Page Rules 的 Skip、Bypass、Allow 都绕不过它",
+  "seen": "原文"
+ },
+ "21-s3": {
+  "title": "Get started（AI Crawl Control）",
+  "publisher": "Cloudflare",
+  "date": "2026-11-14",
+  "url": "https://developers.cloudflare.com/ai-crawl-control/get-started/",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "AI Crawl Control 有 Overview、Crawlers、Metrics 三个标签；在 Crawlers 的 Action 列改屏蔽；免费版只按 UA 识别，Metrics 只看 24 小时",
+  "seen": "原文"
+ },
+ "21-s4": {
+  "title": "AI Crawler and Agent access policies（原 Block AI bots 页）",
+  "publisher": "Cloudflare",
+  "date": "2026-11-14",
+  "url": "https://developers.cloudflare.com/bots/additional-configurations/block-ai-bots/",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "路径 Security > Settings，筛 Bot traffic；Search、Agent、Training 各选 Block、Block on pages with ads、Allow；Training 另有 Disallow 加 Bot Preference Sync，兼做搜索和训练的爬虫不在边缘拦截之列",
+  "seen": "原文"
+ },
+ "21-s5": {
+  "title": "IndexNow searchengines.json",
+  "publisher": "IndexNow.org",
+  "date": "2026-11-14",
+  "url": "https://www.indexnow.org/searchengines.json",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "参与方是 Bing、Yandex、Seznam、Naver、Yep、Internet Archive、Amazonbot；没有 Google",
+  "seen": "原文"
+ },
+ "21-s6": {
+  "title": "本站复测：robots_check.py 与 check-ai-ua.sh 在 pstack.xiaoxiaodong.ai 上的运行结果",
+  "publisher": "本站",
+  "date": "2026-11-14",
+  "url": "",
+  "kind": "案例",
+  "grade": "C",
+  "note": "用 Python-urllib 默认 UA 请求 robots.txt 返回 403，robotparser 因此把所有爬虫判成 BLOCK；改为自带 UA 下载后全部 allow；curl 换 UA 复测仍是 GPTBot、ClaudeBot、PerplexityBot、Bytespider 返回 403",
+  "where": "无（脚本见 /howto/robots-txt/）"
+ },
+ "21-s7": {
+  "title": "本站核对：OpenAI、Perplexity、DuckDuckGo 公布的爬虫 IP 列表 JSON 格式",
+  "publisher": "本站",
+  "date": "2026-11-14",
+  "url": "",
+  "kind": "案例",
+  "grade": "C",
+  "note": "openai.com/searchbot.json、gptbot.json，perplexity.ai/perplexitybot.json，duckduckgo.com/duckassistbot.json 都是 prefixes[].ipv4Prefix 格式；verify_bot_ip.py 用假日志跑通",
+  "where": "无（核对脚本见 /howto/crawler-logs/）"
+ },
+ "21-s8": {
+  "title": "本站试跑：indexnow.mjs、lastmod.mjs、ai_bot_stats.py 用假数据运行",
+  "publisher": "本站",
+  "date": "2026-11-14",
+  "url": "",
+  "kind": "案例",
+  "grade": "C",
+  "note": "indexnow.mjs 只提交 lastmod 在两天内的网址，跳过没有 lastmod 的条目，fetch 用假函数拦截；lastmod.mjs 按 frontmatter 生成正确的网址和 ISO 时间；页面上的代码和试跑的文件逐字一致",
+  "where": "无（脚本见 /howto/indexnow/、/guide/2-indexed/、/howto/crawler-logs/）"
  }
 };
 /** 几份稿子引用同一个链接时，后出现的编号指向第一次出现的那条 */
