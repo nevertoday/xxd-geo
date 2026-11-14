@@ -307,4 +307,8 @@ export const PLATFORMS = [
     ],
     sources: ["02-S32", "02-S30", "02-S31"],
   },
+  ...PLATFORMS_CN,
 ];
+
+// 国内平台单独放一个文件，按调研稿 07-china.md 整理。
+import { PLATFORMS_CN } from "./platforms.cn.js";

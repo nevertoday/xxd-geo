@@ -2,8 +2,408 @@
 layout: ../../layouts/HowTo.astro
 slug: mini-program
 step: 6
-tldr: "微信小程序"
-description: "微信小程序"
+tldr: "内容页进微信搜索，核心功能接入小微，官网补一页介绍"
+description: "微信小程序做 GEO：mpcrawler 和 web-view 的坑、submitpages 推送、sitemap.json 已下线、小程序 AI 开发模式的 SKILL.md 和 mcp.json 怎么写、问题发生率规则，以及官网和公众号该怎么介绍小程序"
+time: "首次半天，之后每次发版 15 分钟"
+for: "有内容页或工具功能的微信小程序，比如教程、提示词库、小工具"
 ---
+import Src from "../../components/Src.astro";
+import Callout from "../../components/Callout.astro";
+import Copy from "../../components/Copy.astro";
+import Checkpoint from "../../components/Checkpoint.astro";
+import Q from "../../components/Q.astro";
 
-正文编写中。
+export const detailPage = `// pages/tutorial/detail.js
+Page({
+  data: { item: null },
+  async onLoad(query) {
+    // 参数全在 URL 里（pages/tutorial/detail?id=123），爬虫直接打开也能拿到内容
+    const item = await fetchTutorial(query.id) // 换成你自己的取数函数
+    this.setData({ item })
+    wx.setNavigationBarTitle({ title: item.title })
+  },
+  onShareAppMessage() {
+    const { item } = this.data
+    return {
+      title: item.title,
+      path: '/pages/tutorial/detail?id=' + item.id,
+      imageUrl: item.cover,
+    }
+  },
+})
+
+<!-- 列表页 wxml：用 navigator 跳转，参数写在 url 里 -->
+<navigator url="/pages/tutorial/detail?id={{item.id}}">{{item.title}}</navigator>`;
+
+export const loginGuard = `// 需要登录的页面里：微信搜索的爬虫带场景值 1129，别给它弹登录
+const { scene } = wx.getEnterOptionsSync()
+if (scene !== 1129) {
+  ensureLogin() // 换成你自己的登录逻辑
+}`;
+
+export const pushScript = `// push-wxsearch.mjs：在服务器上运行，不能放进小程序前端
+// 用法：WX_ACCESS_TOKEN=... node push-wxsearch.mjs          推到审核环境
+//       WX_ACCESS_TOKEN=... WX_PUSH_ENV=prod node push-wxsearch.mjs  推到正式环境
+const TYPE = process.env.WX_PUSH_ENV === 'prod' ? 'wxsearch_cpdata' : 'wxsearch_testcpdata'
+const now = Math.floor(Date.now() / 1000)
+
+const body = {
+  pages: [{
+    path: 'pages/tutorial/detail',
+    query: 'id=123',
+    data_list: [{
+      '@type': TYPE,
+      update: 1,                 // 1 新增，3 删除；path+query 相同会覆盖更新
+      content_id: 'tutorial-123',
+      page_type: 2,              // 文档要求固定填 2
+      h5_url: 'https://<你的域名>/<同一篇教程>/',
+      title: '<20 字左右的标题>',
+      abstract: ['<一句话摘要>'],
+      mainbody: '<正文纯文本，不能带 HTML 标签>',
+      time_publish: now,
+      time_modify: now,
+    }],
+  }],
+}
+
+const url = 'https://api.weixin.qq.com/wxa/search/wxaapi_submitpages?access_token=' + process.env.WX_ACCESS_TOKEN
+const res = await fetch(url, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(body),
+})
+console.log(await res.json())`;
+
+export const appJson = `{
+  "lazyCodeLoading": "requiredComponents",
+  "subPackages": [
+    { "root": "skills", "independent": true, "pages": [] }
+  ],
+  "agent": {
+    "skills": [
+      {
+        "name": "promptSkill",
+        "description": "搜索和查看提示词",
+        "path": "skills/promptSkill"
+      }
+    ]
+  }
+}`;
+
+export const tree = `skills/promptSkill/
+├── SKILL.md      业务流程和跨接口规则，最大 16000 字节
+├── mcp.json      每个原子接口的声明，最大 24000 字节
+├── index.js      注册原子接口
+└── apis/
+    ├── searchPrompts.js
+    └── getPromptDetail.js`;
+
+export const mcpJson = `{
+  "apis": [
+    {
+      "name": "searchPrompts",
+      "description": "搜索提示词。按用途关键词和适用工具，检索本小程序收录的提示词，返回列表。用户要某一条的全文时改调 getPromptDetail。不用于生成新的提示词。",
+      "_meta": { "ui": { "pagePath": "pages/prompt/list" } },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "keyword": {
+            "type": "string",
+            "description": "用途关键词，例如『海报』『周报』『小红书封面』。用户没说用途时不要填，接口会返回热门提示词。"
+          },
+          "tool": {
+            "type": "string",
+            "description": "适用的 AI 工具，例如『即梦』『Midjourney』『ChatGPT』。用户没提工具时不要填。"
+          }
+        }
+      },
+      "outputSchema": {}
+    },
+    {
+      "name": "getPromptDetail",
+      "description": "查看一条提示词的全文和用法。只在已经拿到 promptId 时调用。",
+      "_meta": { "ui": { "pagePath": "pages/prompt/detail" } },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "promptId": {
+            "type": "string",
+            "description": "提示词唯一标识，取自 searchPrompts 返回的 promptId 原值。不要从用户的话里推断，也不要用示例值。上下文里没有 promptId 时，先调 searchPrompts。"
+          }
+        },
+        "required": ["promptId"]
+      },
+      "outputSchema": {}
+    }
+  ]
+}`;
+
+export const indexJs = `// skills/promptSkill/index.js
+const searchPrompts = require('./apis/searchPrompts')
+const getPromptDetail = require('./apis/getPromptDetail')
+
+const skill = wx.modelContext.createSkill('/skills/promptSkill')
+// 名字要和 mcp.json 里的 name 完全一致，包括大小写
+skill.registerAPI('searchPrompts', searchPrompts)
+skill.registerAPI('getPromptDetail', getPromptDetail)`;
+
+export const apiJs = `// skills/promptSkill/apis/searchPrompts.js
+async function searchPrompts({ keyword, tool }) {
+  const list = await queryPrompts({ keyword, tool }) // 换成你自己的取数：wx.request 或云函数
+
+  if (list.length === 0) {
+    return {
+      isError: false,
+      content: [{ type: 'text', text:
+        '没有找到相关提示词，已附上热门提示词。' +
+        '请先告诉用户没找到，再引导用户从热门提示词里挑一条。' +
+        '不要用相同关键词再调本接口。' }],
+      structuredContent: { items: await queryPrompts({}) },
+    }
+  }
+
+  return {
+    isError: false,
+    content: [{ type: 'text', text:
+      '找到 ' + list.length + ' 条提示词。请展示列表卡片，并用一句话请用户选一条查看全文。' }],
+    structuredContent: {
+      items: list.map((p) => ({ promptId: p.id, title: p.title, tool: p.tool })),
+    },
+  }
+}
+
+module.exports = searchPrompts`;
+
+export const skillMd = `# 提示词查找
+
+## 业务流程
+
+- 用户说了用途（如「做海报的提示词」）→ searchPrompts（填 keyword）→ 用户选一条 → getPromptDetail
+- 用户没说用途（如「有什么好用的提示词」）→ searchPrompts（不填参数）→ 用户选一条 → getPromptDetail
+- 用户说「上次那个」→ 上下文没有 promptId 时，先调 searchPrompts，请用户确认是哪一条
+
+## 接口依赖
+
+- getPromptDetail：需要 searchPrompts 返回的 promptId
+
+## 业务约束
+
+- promptId 只能取自 searchPrompts 的返回，不要编造。
+- getPromptDetail 调用成功之前，不要对用户说「已为你找到全文」。`;
+
+export const siteBlock = `## 微信小程序：<小程序名>
+
+<小程序名> 是一个微信小程序，帮 <谁> <做什么>。打开方式：微信里搜索「<小程序名>」，或扫下面的小程序码。
+
+- 能做什么：<功能 1>、<功能 2>、<功能 3>
+- 和网站的关系：小程序里的 <内容> 和本站 <栏目> 同步，网页版地址 https://<你的域名>/<栏目>/
+- 价格：<免费 / 会员 <价格>>
+- 运营主体：<公司名或个人>，联系方式 <邮箱>
+- 最近更新：<YYYY-MM-DD>，<这次改了什么>`;
+
+export const auditPrompt = `你是微信小程序代码审查助手。请检查我的小程序项目（当前目录），只读代码，不要改文件。
+逐项列出：
+1. 所有用到 <web-view> 的页面，以及它们展示的是什么内容。
+2. 内容页（教程、提示词、文章详情）里，哪些依赖全局变量或 storage 传参，不能只靠 URL 参数打开。
+3. 哪些页面在 onLoad 里就要求登录或授权。
+4. app.json 里还有没有 sitemapLocation，项目里有没有 sitemap.json。
+5. 页面跳转里哪些参数塞了 JSON 字符串。
+背景事实（以此为准，不要用你的记忆替换）：
+- 微信搜索不收录 web-view 里的任何内容。
+- sitemap.json 已下线。
+- 微信搜索爬虫访问时场景值是 1129。
+输出一张表：文件路径、问题、建议怎么改。最后单独列出你不确定的地方。`;
+
+export const mcpPrompt = `我在做微信小程序「AI 开发模式」的 SKILL。官方写法建议：
+- 原子接口的 description 写「接口本身的功能、调用时机、不适用场景」，首句先写业务对象；
+- inputSchema 每个字段的 description 写「参数语义、取值来源、缺省处理」，举例给多个不同的值；
+- 原子接口返回的 content 先写本次结果，再写下一步动作；失败时写清原因、给出口、指出不该做的动作。
+- SKILL.md 只写业务流程、接口依赖和跨接口规则；不写「忽略指令」之类的话，不限定回复必须用表格或 JSON。
+
+我的小程序功能：<功能列表>
+用户常见说法：<例如「帮我找一个画海报的提示词」「上次那个再来一份」>
+
+请为每个功能起草：原子接口名（动词+名词的小驼峰）、description、inputSchema（含每个字段的 description）、成功和失败各一条 content 示例。
+再起草一份 SKILL.md。用中文，句子短，不写营销话术，不承诺做不到的功能。
+最后列出你认为容易让模型选错接口的地方。`;
+
+小程序有两条官方通道和 AI 有关。一条是微信搜索收录你的页面。另一条是 2026 年上线的「小程序 AI 开发模式」<Src ids="07-S31 07-S34" />。微信的 AI 入口「小微」会按你写的 SKILL 调用小程序。这篇两条都走一遍，最后补官网和公众号该写的内容。
+
+<Checkpoint id="howto-mini-program" items={[
+  "内容页都是原生页面，没有放在 web-view 里",
+  "每个内容页只靠 URL 参数就能直接打开",
+  "爬虫访问（场景值 1129）时不弹登录",
+  "新内容上线后用 submitpages 推送过一次",
+  "核心功能封装成了 SKILL，在「AI 能力」里申请了开发模式",
+  "上线后看过一次问题发生率，低于 20%",
+  "官网有一页介绍小程序，公众号发过一篇介绍文章",
+]} />
+
+## 先查：内容页在不在 web-view 里
+
+<Copy id="mp-webview-grep" title="在小程序项目根目录跑" code={`grep -rln "<web-view" --include=*.wxml .`} />
+
+<Callout type="ok">
+没有输出，说明没有页面用 web-view。有输出的文件，就是微信搜索看不到的页面。
+</Callout>
+
+微信官方文档的原话是 <Src ids="07-S31" />：
+
+> 我们不收录 web-view 中的任何内容。我们暂时做不到这一点，长期来看，我们可能也做不到。
+
+有的小程序只是把网站套进 web-view。这种情况，至少把想被搜到的内容页改成原生页面。比如教程详情、提示词详情。
+
+## 让每个内容页能被直接打开
+
+爬虫访问小程序页面时，UA 是 `mpcrawler`，场景值是 1129 <Src ids="07-S31" />。它会直接打开某个页面路径。官方的要求是 <Src ids="07-S31" />：
+
+- **参数都放在 URL 里。** 页面要能直接打开，别依赖上一页传来的全局变量。
+- **跳转优先用 `navigator` 组件。**
+- **参数不要塞 JSON。**
+- **必要时才要求登录授权。**
+
+<Copy id="mp-detail" title="内容页的写法" lang="js" code={detailPage} />
+
+`wx.setNavigationBarTitle` 设标题，`onShareAppMessage` 设分享标题和缩略图 <Src ids="07-S31" />。页面里有 video 或 audio 的，补上 `poster` 或 `poster-for-crawler` <Src ids="07-S31" />。
+
+需要登录的页面，给爬虫让路。下面是一种写法（示意，场景值 1129 来自官方文档 <Src ids="07-S31" />）：
+
+<Copy id="mp-login-guard" title="爬虫来时不弹登录" lang="js" code={loginGuard} />
+
+你的服务端也能认出它。爬虫的请求带 `X-WXApp-Crawler-Timestamp`、`X-WXApp-Crawler-Nonce`、`X-WXApp-Crawler-Signature` 三个请求头 <Src ids="07-S31" />。按文档验签通过，再给它看免登录的内容。只看 UA 容易被冒充。
+
+## sitemap.json 已经下线
+
+小程序全局配置文档在 `sitemapLocation` 下写着「sitemap.json 已下线」<Src ids="07-S33" />。很多中文教程还在教 `sitemap.json` 的 `rules`，那些已经过时。
+
+<Copy id="mp-sitemap-grep" title="看看项目里还有没有" code={`grep -n "sitemapLocation" app.json; ls sitemap.json 2>/dev/null`} />
+
+有的话，留着也不起作用。后台是否还有别的「页面收录」开关，没找到官方说明。
+
+## 新内容上线后，推给微信搜索
+
+`submitpages` 接口把页面路径、参数和正文推给微信搜索 <Src ids="07-S32" />。文档说「推送的内容将会被用于微信搜索结果展示」。它只能在服务器上调，不能在小程序前端调，也不支持第三方平台调用 <Src ids="07-S32" />。
+
+<Copy id="mp-push" title="push-wxsearch.mjs（Node 18 以上）" lang="js" code={pushScript} />
+
+字段都按官方文档填 <Src ids="07-S32" />：
+
+- **先推审核环境。** `wxsearch_testcpdata` 只用来审核和校验格式，不在搜索结果里展示。确认无误再推 `wxsearch_cpdata`。
+- **`path` 以 `pages/` 开头。** `path` 加 `query` 唯一确定一个页面，相同就覆盖更新。
+- **`mainbody` 写纯文本。** 不能带 HTML 标签。
+- **`h5_url` 推荐填。** 页面在你网站上有对应网页，就填那个网址。
+
+`access_token` 按官方文档在服务器上用 AppID 和 AppSecret 换 <Src ids="07-S32" />。
+
+<Callout type="ok">
+返回里 `errcode` 是 0。0 表示成功是微信接口的通用约定，这个接口的文档只写了「错误码」。
+</Callout>
+
+## 让小微调用你的小程序：AI 开发模式
+
+这是国内少有的、有官方规则可依的「让 AI 推荐我」通道。用户在微信的小微入口提问，平台会「根据开发者SKILL的描述调用」你的小程序 <Src ids="07-S35" />。SKILL 没覆盖的需求，交给小微的「AI页面交互模式」<Src ids="07-S35" />。
+
+谁能用到（截至 2026-11）：iOS 和 Android 微信 8.0.79 及以上、有小微入口的用户 <Src ids="07-S35" />。2026-11-11 起开放微信评测和代码提审 <Src ids="07-S37" />。
+
+### 第一步：申请开发模式
+
+在「微信公众平台 - 基础功能 - AI 能力」里，接入模式选「开发模式」。也可以在「微信开发者助手 - 管理 - 微信AI管理」里申请 <Src ids="07-S34" />。开发要装微信开发者工具的 Nightly 版本 <Src ids="07-S34" />。
+
+### 第二步：在 app.json 里声明 SKILL
+
+SKILL 必须放在独立分包里，并且全局开 `lazyCodeLoading` <Src ids="27-S1" />。一个小程序最多声明 30 个 SKILL <Src ids="27-S1" />。
+
+<Copy id="mp-app-json" title="app.json（只列新增的部分）" lang="json" code={appJson} />
+
+<Copy id="mp-tree" title="一个 SKILL 的目录" code={tree} />
+
+`SKILL.md` 只支持单文件，不能引用别的 md <Src ids="27-S1" />。`mcp.json` 算长度时不计 `outputSchema` 和空白 <Src ids="27-S1" />。
+
+### 第三步：写 mcp.json
+
+下面以提示词合集为例。<mark>模型最看重的是原子接口返回的 `content`，其次是 `mcp.json` 里的两种 description，`SKILL.md` 排第三。</mark><Src ids="07-S36" />
+
+<Copy id="mp-mcp" title="skills/promptSkill/mcp.json" lang="json" code={mcpJson} />
+
+这些写法都来自官方的 SKILL 设计建议 <Src ids="07-S36" />：
+
+- **接口名用「动词+名词」。** `searchPrompts` 比 `search` 好。
+- **`description` 首句写业务对象。** 再写调用时机和不适用的场景。
+- **字段举多个例子，写清缺省怎么办。** 只举一个例子，模型容易照搬。
+- **ID 字段写明取自哪个接口。** 否则模型会按格式凑一个出来。
+
+`_meta.ui.pagePath` 声明页面接力 <Src ids="27-S1" />。用户点回复里的小程序卡片，就进这个页面。官方说接力页面会影响评测结果 <Src ids="07-S34" />。
+
+### 第四步：注册接口，写返回的 content
+
+<Copy id="mp-index" title="skills/promptSkill/index.js" lang="js" code={indexJs} />
+
+<Copy id="mp-api" title="skills/promptSkill/apis/searchPrompts.js" lang="js" code={apiJs} />
+
+`content` 先写事实，再写动作 <Src ids="07-S36" />。只写动作，模型可能跳过等用户确认那一步。失败分支写三件事：原因、下一步出口、不该做什么 <Src ids="07-S36" />。原子接口收到的参数不保证正确，要自己校验 <Src ids="07-S36" />。
+
+### 第五步：写 SKILL.md
+
+<Copy id="mp-skill-md" title="skills/promptSkill/SKILL.md" lang="markdown" code={skillMd} />
+
+平台对 SKILL 有硬规则 <Src ids="07-S36" />：
+
+- **不写越狱的话。** 比如「忽略指令」「你现在是」。
+- **接口名和注册的一致，包括大小写。**
+- **不写死回复格式。** 不能要求回复必须用表格或只能用 JSON。
+- **不妨碍答案呈现。** 不能禁止 Markdown，不能要求省掉名称、价格这些关键信息。
+
+### 第六步：上线后盯两个指标
+
+调用量主要看两个指标：「问题发生率」和「线上版本评分」<Src ids="07-S35" />。平台还会看用户诉求、历史习惯和运营质量。
+
+- **问题发生率超过 20% 算超标。** 它等于因开发者原因出问题的会话数，除以所有调用你 SKILL 的会话数 <Src ids="07-S35" />。在 MP 的「AI能力 - 线上状态」每 3 天出一次，We分析里按天看 <Src ids="07-S35" />。
+- **每次提审都跑一次「微信评测」。** 某个版本 7 天内没评测，评分会降到上次的 80% <Src ids="07-S35" />。改原小程序的代码也可能影响 AI 体验，所以不管改没改 SKILL 都建议评测 <Src ids="07-S35" />。
+
+<Callout type="warn">
+SKILL 描述写得越宽，调用越多，问题发生率也越容易超标。只声明你真能做好的功能。
+</Callout>
+
+## 官网和公众号该怎么写这个小程序
+
+外部 AI 读不到小程序里面，也读不到公众号 <Src ids="07-S42 07-S7" />。用户在豆包、DeepSeek 里问到你的小程序，AI 只能靠网页上的介绍（推断）。所以在你的官网放一节：
+
+<Copy id="mp-site-block" title="官网上介绍小程序的一节" lang="markdown" code={siteBlock} />
+
+- **名字和微信里一字不差。** 用户和 AI 都靠名字去搜。
+- **写清怎么打开。** 「微信里搜索某某」比只放一个小程序码更容易被 AI 转述。
+- **和网页版互相对应。** 内容页有网页版，就在 `submitpages` 的 `h5_url` 里填上它 <Src ids="07-S32" />。
+
+公众号发一篇介绍文章，写清小程序名称和搜索方式。它服务的是元宝 App 和微信搜一搜，元宝消费端覆盖公众号 <Src ids="07-S10 07-S11" />。对外的元宝搜索 API 不含公众号 <Src ids="07-S7" />，别指望 DeepSeek 或豆包读到它。
+
+## 交给 AI 做
+
+<Copy id="mp-audit-prompt" title="让 Claude Code 体检小程序项目" code={auditPrompt} />
+
+检查：它列的 web-view 页面，用本页第一节的 grep 命令对一遍，数量要一致。
+
+<Copy id="mp-mcp-prompt" title="起草 mcp.json 和 SKILL.md" code={mcpPrompt} />
+
+检查：每个接口名在 `mcp.json`、`index.js`、`SKILL.md` 三处拼写一致。每个字段的例子不止一个。
+
+## 卡住了？
+
+<Q q="submitpages 返回了错误码">
+先确认是在服务器上调的，前端调用不行 <Src ids="07-S32" />。再确认 `access_token` 没过期。用第三方平台代开发的小程序，这个接口不支持 <Src ids="07-S32" />。
+</Q>
+
+<Q q="推送成功了，微信里还是搜不到">
+看 `@type` 是不是还停在 `wxsearch_testcpdata`，审核环境的数据不展示 <Src ids="07-S32" />。再检查那个页面是不是 web-view，能不能只靠 URL 参数打开 <Src ids="07-S31" />。
+</Q>
+
+<Q q="旧教程让我配 sitemap.json 的 rules">
+已经下线了 <Src ids="07-S33" />。照旧教程配不会有效果。
+</Q>
+
+<Q q="小微从来不调用我的 SKILL">
+先确认测试用的手机是 8.0.79 以上，并且有小微入口 <Src ids="07-S35" />。再看 MP 后台的问题发生率和线上版本评分 <Src ids="07-S35" />。最后检查 `description` 首句是不是写清了业务对象 <Src ids="07-S36" />。
+</Q>
+
+<Q q="豆包、DeepSeek 能读到我小程序里的内容吗">
+没有找到任何官方说明。稳妥的做法是在官网放网页版内容和一节介绍，见上面「官网和公众号」那一节。国内 AI 怎么找资料见 [国内 AI 平台怎么做](/guide/6-china/)。
+</Q>
