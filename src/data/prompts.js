@@ -186,21 +186,32 @@ B. 浏览器里 document.body.innerText 的结果：
   },
   {
     id: "prompt-set",
-    title: "生成一组用户会问 AI 的问题",
-    use: "每个产品做一次，存成 prompts.csv，之后每周拿它去问。拿到结果先查：不含产品名的发现型问题至少占一半。",
+    title: "生成一组每周测量用的固定问题",
+    use: "做完第 2 课后，每个产品做一次，存成 prompts.csv。拿到结果先查：前 8 行还是第 2 课的 Z1 到 Z4、E1 到 E4；每种语言 category、problem、compare、name 是 8、4、2、2 条；产品名只出现在 name 那几行。",
     howto: "prompt-set",
-    prompt: `我做了一个产品，实体卡在下面。请模拟 5 类真实用户（比如：<刚用 Chrome 的学生、做跨境电商的运营、写技术博客的程序员、只说中文的用户、只说英文的用户>），列出他们会在 ChatGPT、Perplexity、豆包、DeepSeek 里问的问题。
+    prompt: `我做了一个产品，实体卡在下面。请帮我写一组用来每周测试「AI 回答里提不提我」的固定问题。
 
 要求：
-- 一共 40 条，中文 20 条、英文 20 条。
-- 分三类并标注：A 按名字问（含产品名）、B 发现型（不含产品名，只描述需求）、C 对比型（和具体竞品比）。B 类至少占一半。
-- 用口语，像真人打字，可以长，可以带预算、系统、要不要登录这类条件。
-- 每条标注意图：了解 / 选型 / 解决问题 / 购买。
-- 写成完整问句，不要写成关键词。
-输出 CSV：id,lang,type,intent,persona,prompt
+1. 下面已有的 8 条（Z1 到 Z4、E1 到 E4）原样保留，不要改字，也不要改 id。
+2. 再补 24 条，中文接着用 Z5、Z6……编号，英文接着用 E5、E6……编号。加上已有的，一共 32 条，中英文各 16 条。
+3. 每种语言的 16 条里，四类的数量是（含已有的），用 type 列标注：
+   - category（8 条）：按品类问，不出现我的产品名和域名。
+   - problem（4 条）：用户描述自己的场景或麻烦，不出现我的产品名。
+   - compare（2 条）：拿竞品互相比，或问某个竞品的替代品。可以出现竞品名，不能出现我的产品名。
+   - name（2 条）：直接问我的产品，或拿我的产品和竞品比。用来查 AI 说得对不对。已有的 Z1、Z4 就是这一类。
+4. 用真人在手机上打字的口吻，可以带预算、平台、要不要登录这类条件。
+5. 不要写「列出前 5 名」这种限定数量的问法。
+6. 英文不要直译中文，按英文用户的习惯重写。
+7. 只输出 CSV，列为 id,lang,type,prompt，不要别的说明。prompt 里有逗号就用双引号包起来。
+
+已有的 8 条：
+<粘贴第 2 课填好的 Z1 到 Z4、E1 到 E4>
+
+下面是用户的原话，从商店评论、GitHub issue、客服邮件里摘的（已去掉个人信息）：
+<粘贴 20 到 100 条>
 
 实体卡：
-<粘贴>`,
+<粘贴 entity.md>`,
   },
   {
     id: "fanout",
@@ -223,14 +234,20 @@ B. 浏览器里 document.body.innerText 的结果：
   {
     id: "tally",
     title: "把 AI 回答整理成追踪表",
-    use: "每周问完一轮，把各平台的回答原文贴进来。拿到结果先查：抽 3 条回答，自己对一下 mentioned 和 cited_urls 填得对不对。",
+    use: "每问完一轮，把各平台的回答原文贴进来，结果直接接在 geo-baseline.csv 后面。拿到结果先查：抽 3 行对一下原文，「提到我了吗」和「引用的网址」填得对不对。",
     howto: "diy-tracker",
-    prompt: `下面是我把同一组问题问了 ChatGPT、Perplexity、豆包、DeepSeek 的回答原文。
-请输出 CSV，列为：date,engine,prompt,mentioned,description_correct,cited_urls
-- mentioned：回答里提到我的产品写 1，没提写 0。我的产品名是 <产品名>，别名有 <别名>。
-- description_correct：提到时，描述和这句话一致写 1，不一致写 0，没提到留空：<一句话定义>
-- cited_urls：回答引用的网址，用 | 分隔。
+    prompt: `下面是我把同一组问题问了几个 AI 的回答原文。每段回答前面标了问题编号（Z1 到 Z4、E1 到 E4 这样）、AI 的名字和第几遍。
+请按回答逐条输出 CSV，第一行是表头，和我的 geo-baseline.csv 完全一致：
+日期,AI,问题,第几遍,提到我了吗,引用的网址,说错了什么
+- 日期：写 <今天的日期>，格式 2026-11-14。
+- 问题：只写编号，比如 Z2，不要抄问题原文。
+- 提到我了吗：回答里提到我的产品写「是」，没提写「否」。我的产品名是 <产品名>，别名有 <别名>。
+- 引用的网址：引用了我的网站，就写我那一页的网址；没引用我，写它引用的前两个网址，用空格分隔。
+- 说错了什么：提到我时，和下面的实体卡对不上的地方原样摘录；没说错或没提到就空着。
 只根据回答文本判断，不要推测。不要算「排第几」。
+
+实体卡：
+<粘贴>
 
 回答原文：
 <粘贴>`,
@@ -254,6 +271,60 @@ B. 浏览器里 document.body.innerText 的结果：
 <粘贴>
 
 回答原文：
+<粘贴>`,
+  },
+  {
+    id: "mention-sort",
+    title: "把 AI 引用的网址分成三类",
+    use: "收集完 AI 在发现型问题里引用的网址后用，交给能联网的 Claude Code 或 ChatGPT。拿到结果先查：每条 pitch 你都亲自点开过，页面里真有竞品名；contact 里没有 AI 编出来的邮箱。",
+    step: 5,
+    prompt: `我在做 <产品名> 的站外推广。下面是我把一组问题问了 ChatGPT、Perplexity、豆包等 AI 以后，回答里引用的全部网址，以及每条来自哪个问题。
+
+请逐个打开这些网址，然后输出一张 CSV，列为：
+url,domain,kind,mentions_competitors,mentions_me,action,reason,contact
+
+规则：
+1. kind 从这几种里选：list（榜单或对比文章）、review（单品评测）、thread（社区帖子）、video、wiki、news（大媒体）、vendor（某个产品的官网）、other。
+2. mentions_competitors 写这页提到的竞品名，用 | 分隔。mentions_me 填 0 或 1。我的产品名是 <产品名>，别名 <别名>。
+3. action 只能是 pitch、answer、ignore：
+   - pitch：个人或小媒体写的 list、review，提到了竞品，作者能联系上。
+   - answer：thread 类，帖子还开着能回复，或者这个版块经常出现同类问题。
+   - ignore：wiki、news、vendor，以及已经提到我、或者打不开的页面。
+4. reason 用一句话写为什么这么分。看不出页面更新时间的写「日期未知」。
+5. contact 只写页面上真的出现的作者名、联系页或社交账号。没有就写「未找到」，不要猜邮箱。
+6. 去掉重复的网址，按 action 排序，pitch 在最前。
+7. 表后另写三行：pitch、answer、ignore 各有几条。
+
+我的实体卡：
+<粘贴>
+
+网址和对应问题：
+<粘贴>`,
+  },
+  {
+    id: "mention-review",
+    title: "发给作者或社区之前检查一遍",
+    use: "给榜单作者写信、在社区回答之前用。AI 只挑毛病，不替你重写。拿到结果先查：它指出的每个问题都能在你的草稿里找到原句。",
+    step: 5,
+    prompt: `下面是我准备发出去的一段文字。它是 <给榜单作者的邮件 / 在 <社区名> 某个帖子下的回答>。
+
+请按这几条检查，每条给「通过」或「要改」，要改的指出原句：
+1. 它先回答了对方的问题（或者先说了对方文章里真有的内容）吗？
+2. 有没有写明我是 <产品名> 的开发者？
+3. 产品的事实（价格、平台、功能）和我的实体卡完全一致吗？
+4. 有没有写一个真实的局限？
+5. 有没有「最好」「第一」「唯一」这类词，或者让人点赞、私信、领码的话？
+6. 读起来像推销吗？哪几句最像？
+
+只指出问题，不要替我重写全文。不要加任何实体卡里没有的事实。
+
+实体卡：
+<粘贴>
+
+原帖或原文（如果有）：
+<粘贴>
+
+我的草稿：
 <粘贴>`,
   },
   {
@@ -296,17 +367,23 @@ B. 浏览器里 document.body.innerText 的结果：
   },
   {
     id: "tracker",
-    title: "让 AI 写一个重复采样的监测脚本",
-    use: "手动问嫌累时用。拿到结果先查：脚本每条问题跑多次、只算提及频率、API key 从环境变量读。",
+    title: "把现成的追踪脚本 geo-track.mjs 跑起来",
+    use: "手动问嫌累时用。脚本是本书配的，只用假数据测过。拿到结果先查：AI 没有改写脚本；报表里只有提及率和引用率，没有名次；API key 只在环境变量里。",
     howto: "diy-tracker",
-    prompt: `写一个 Node.js 脚本：
-- 读取 prompts.csv（列：id,lang,type,intent,persona,prompt），对每条问题调用 <OpenAI Responses API 并开启 web search / Perplexity API>，每条跑 5 次。
-- 每次保存原始回答、引用网址列表、时间戳、模型名到 results.jsonl。
-- 另写一个 analyze 脚本：对每条问题算「提到我的次数 / 总次数」，按平台和问题类型（A/B/C）汇总，列出被引用最多的 20 个域名。
-- 品牌匹配支持别名：<别名列表>。
-- 不要计算「排第几」。
-- API key 从环境变量读。请求之间加间隔，避免超限。
-API 参数以官方文档为准，在代码旁注明你参考的文档链接。`,
+    prompt: `帮我在本机搭一个每周跑一次的 AI 提及追踪。不要自己写脚本，用现成的 geo-track.mjs：
+https://raw.githubusercontent.com/nevertoday/xxd-geo/main/research/tracker/geo-track.mjs
+
+1. 新建 ~/geo 目录，下载 geo-track.mjs，把我的 prompts.csv 放进去。它的列是 id,lang,type,prompt，type 是 name、category、problem、compare 之一。
+2. 确认 node --version 是 22.13 或更新。脚本用自带的 node:sqlite，不用 npm install。
+3. API key 用环境变量传：<ANTHROPIC_API_KEY、PERPLEXITY_API_KEY>，不要写进任何文件。
+4. 先只留 2 个问题，跑一次：
+   node geo-track.mjs run prompts.csv --engines <anthropic,perplexity> --reps 1 --country US
+   每条请求应该打一行，比如「anthropic Z2 0 1834 chars, 4 urls」。
+5. 跑通后换回完整的 prompts.csv，改成 --reps 3 再跑一轮，然后出报表：
+   node geo-track.mjs report --brand "<产品名>" --alias "<别名>" --domain <你的域名> --prompts prompts.csv --csv <geo-baseline-日期.csv>
+6. 加一条 crontab：每周一早上 9 点在 ~/geo 里跑第 5 步的 run 命令，输出追加到 run.log。
+
+不要改 geo-track.mjs 本身。哪一步报错，把完整输出贴给我，不要绕过去。`,
   },
   {
     id: "logs",
