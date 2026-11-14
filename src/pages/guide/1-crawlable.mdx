@@ -44,7 +44,7 @@ import Checkpoint from "../../components/Checkpoint.astro";
 **训练类，你自己决定。** 挡了训练爬虫，各家都写明不影响搜索展示 <Src ids="02-S1 02-S25" />。放行能不能让模型记住你，还没有可靠数据。
 
 <Callout type="warn">
-Google-Extended 不只管训练。它同时管 Gemini 应用里的实时引用。挡了它，你就从 Gemini 的引用里消失 <Src ids="02-S14 02-S15" />。它不影响 AI Overviews <Src ids="02-S15" />。
+Google-Extended 不只管训练。它同时管 Gemini 应用里的实时引用。挡了它，你就从 Gemini 应用的引用里消失 <Src ids="02-S14 02-S15" />。它不影响 AI Overviews <Src ids="02-S15" />。
 </Callout>
 
 完整的模板和逐个爬虫的说明，见 [robots.txt：放行哪些 AI 爬虫](/howto/robots-txt/)。
@@ -106,7 +106,7 @@ Astro 默认输出静态 HTML。pstack 首页的 58 KB 就是服务端直接给�
 
 AI 爬虫常拿着过期或猜出来的网址来。Vercel 的数据里，ChatGPT 有 34.82% 的抓取打到 404 <Src ids="02-S43" />。Googlebot 只有 8.22% <Src ids="02-S43" />。
 
-改网址时一律 301 到新地址。删掉的页面返回真正的 404，别返回 200 加「页面不存在」<Src ids="03-S1" />。
+改网址时一律 301 到新地址。Vercel 也建议维护好重定向 <Src ids="03-S1" />。
 
 ## 最后，看真爬虫有没有来
 
@@ -144,7 +144,7 @@ curl 只是模拟。真爬虫来没来、拿到什么状态码，要看日志。
 </Q>
 
 <Q q="robots.txt 里有我没写过的内容">
-多半是 Cloudflare 托管 robots.txt 插进来的。它会对 GPTBot、ClaudeBot、Google-Extended 等写 `Disallow: /` <Src ids="03-S17" />。挡 Google-Extended 会让你退出 Gemini 的引用 <Src ids="02-S15" />。要不要关，见 [Cloudflare 的 How-to](/howto/cloudflare-bots/)。
+多半是 Cloudflare 托管 robots.txt 插进来的。它会对 GPTBot、ClaudeBot、Google-Extended 等写 `Disallow: /` <Src ids="03-S17" />。挡 Google-Extended 会让你退出 Gemini 应用的引用 <Src ids="02-S15" />。要不要关，见 [Cloudflare 的 How-to](/howto/cloudflare-bots/)。
 </Q>
 
 <Q q="curl 测出来训练爬虫 403，搜索爬虫 200">

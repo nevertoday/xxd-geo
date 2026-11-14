@@ -120,7 +120,7 @@ Perplexity 的文档给了写法：UA 匹配加官方 IP 段匹配，动作选 *
 <Copy id="cf-waf-expr" title="WAF 自定义规则表达式（把 IP 段换成官方列表里的）" code={`(http.user_agent contains "PerplexityBot" and ip.src in {<perplexitybot.json 里的 IP 段>})
 or (http.user_agent contains "Perplexity-User" and ip.src in {<perplexity-user.json 里的 IP 段>})`} />
 
-IP 列表在 `https://www.perplexity.ai/perplexitybot.json` 和 `https://www.perplexity.ai/perplexity-user.json` <Src ids="02-S33" />。只按 UA 放行容易被冒充，各家都建议 UA 加 IP 一起验证 <Src ids="03-S8" />。别忘了，这条规则跳不过 Bot Fight Mode <Src ids="21-S2" />。
+IP 列表在 `https://www.perplexity.ai/perplexitybot.json` 和 `https://www.perplexity.ai/perplexity-user.json` <Src ids="02-S33" />。Perplexity 的文档建议把 UA 匹配和 IP 验证一起用，别只按 UA 放行 <Src ids="03-S8" />。别忘了，这条规则跳不过 Bot Fight Mode <Src ids="21-S2" />。
 
 ## 交给 AI 做
 
@@ -156,7 +156,7 @@ Cloudflare 的菜单常改名。它以前叫 Configure AI bot policies <Src ids=
 </Q>
 
 <Q q="curl 是 200，AI Crawl Control 里真爬虫却是 403">
-真爬虫还会按 IP 和签名验证，从你电脑伪造 UA 测不出来 <Src ids="02-S33" />。以 AI Crawl Control 的 Metrics 为准 <Src ids="21-S3" />。
+真爬虫来自官方公布的 IP 段，放行规则也按 UA 加 IP 判断 <Src ids="02-S33" />。从你电脑伪造 UA，IP 对不上，测出来的不一定准。以 AI Crawl Control 的 Metrics 为准 <Src ids="21-S3" />。
 </Q>
 
 <Q q="AI Crawl Control 里一个爬虫都没有">

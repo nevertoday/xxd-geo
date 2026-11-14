@@ -76,7 +76,7 @@ Codex 里把 `/` 换成 `$`。Cursor 里直接说「用 geo-audit 体检 `https:
 GPTBot、ClaudeBot 被挡不算毛病。它们只管训练，和搜索引用是分开的开关。<Src ids="06-S16 06-S20" /> 例外是 Google-Extended：挡了它，也会退出 Gemini App 的引用。<Src ids="02-S14 02-S15" />
 
 <Callout type="warn">
-脚本是从你电脑伪造 User-Agent 发请求的。403 说明网站有按 UA 拦截的规则。200 不保证真爬虫能进，因为 Cloudflare 还会核对 IP。<Src ids="03-S8" /> 真实记录去 Cloudflare 的 AI Crawl Control 看。<Src ids="03-S20" />
+脚本是从你电脑伪造 User-Agent 发请求的。403 说明网站有按 UA 拦截的规则。200 也不保证真爬虫能进。Bot Fight Mode 开着时，真爬虫仍可能被质询。<Src ids="03-S8" /> 真实记录去 Cloudflare 的 AI Crawl Control 看。<Src ids="03-S20" />
 </Callout>
 
 **第二，修复清单的顺序。** 排在前面的是「被挡」和「不能被收录」。Google 的 AI 功能只引用已经进了索引、能显示摘要的页面。<Src ids="06-S1" /> 这两项不过关，后面的内容写得再好也用不上。
@@ -173,7 +173,7 @@ curl -s -A "$BROWSER" $SITE/ > home.html
 </Q>
 
 <Q q="全都是 200，可 AI 还是不提我">
-爬得到只是第一步。按名字问时，AI 几乎都认得产品。换成「有什么好用的工具」这类问题，出现率只有 3.32%。<Src ids="06-S47" /> 下一步是固定一组问题定期问，见 [定一组固定问题](/howto/prompt-set/) 和 [量出效果](/guide/7-measure/)。
+爬得到只是第一步。按名字问时，AI 几乎都认得产品。换成「有什么好用的工具」这类问题，ChatGPT 里的出现率只有 3.32%。<Src ids="06-S47" /> 下一步是固定一组问题定期问，见 [定一组固定问题](/howto/prompt-set/) 和 [量出效果](/guide/7-measure/)。
 </Q>
 
 <Q q="报告建议我加 llms.txt">

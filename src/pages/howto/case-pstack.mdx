@@ -91,7 +91,7 @@ curl -s $P | grep -oE '<time[^>]*>' | head -3`} />
 
 1. 这个站的 `wrangler.jsonc` 只配了静态资源，没有 Worker 代码。站点自己不会返回 403。
 2. 403 的响应头是 `server: cloudflare`，正文是一行纯文本。
-3. 2025-07-01 以后，Cloudflare 给新接入的域名默认屏蔽 AI 爬虫 <Src ids="03-S14" />。
+3. 2025-07-01 起，Cloudflare 给新接入的域名默认屏蔽 AI 爬虫 <Src ids="03-S14" />。2026-09-15 起，新域名的默认改成只在有广告的页面屏蔽 Training 和 Agent <Src ids="03-S18" />。
 
 这还是推断。要在后台确认是哪条规则，见下面第 1 步。
 
@@ -101,7 +101,7 @@ curl -s $P | grep -oE '<time[^>]*>' | head -3`} />
 
 **hreflang 不完整。** 中文页只列了英文版，没列自己，也没有 x-default。Google 要求每个语言版本列出自己和所有其他版本 <Src ids="03-S41" />。
 
-**没有日期，没有 JSON-LD。** AI 引用的页面平均比搜索结果新 25.7% <Src ids="03-S57" />。看不到日期，就说明不了新。JSON-LD 对引用的作用没有可靠证据 <Src ids="03-S32" />，所以排在最后。
+**没有日期，没有 JSON-LD。** ChatGPT、Perplexity 等 AI 助手引用的页面，平均比自然搜索结果新 25.7% <Src ids="03-S57" />。Google AI Overviews 例外。看不到日期，就说明不了新。JSON-LD 对引用的作用没有可靠证据 <Src ids="03-S32" />，所以排在最后。
 
 ## 修复计划：按这个顺序做
 
@@ -243,7 +243,7 @@ export default defineConfig({
 
 ### 第 7 步（可选）：给编程 Agent 加 llms.txt
 
-pstack 的读者本来就在用 Claude Code、Cursor 和 Codex。编程 Agent 爱读 Markdown。一个网站的日志里，Claude Code 88% 的请求拿的是 Markdown <Src ids="03-S3" />。这个站加 llms.txt 和 `.md` 版本，有现实用处。写法见 [llms.txt：要不要加](/howto/llms-txt/)。
+pstack 的读者本来就在用 Claude Code、Cursor 和 Codex。编程 Agent 爱读 Markdown。一个网站的日志里，编程 Agent 的请求 88% 拿的是 Markdown。这些 Markdown 请求 94% 来自 Claude Code <Src ids="03-S3" />。这个站加 llms.txt 和 `.md` 版本，有现实用处。写法见 [llms.txt：要不要加](/howto/llms-txt/)。
 
 ## 固定问题集：修前修后都问这 12 条
 
@@ -270,7 +270,7 @@ pstack 的读者本来就在用 Claude Code、Cursor 和 Codex。编程 Agent �
 怎么问：
 
 - **平台。** 海外问 ChatGPT、Perplexity、Google AI Mode、Claude，开搜索。国内问豆包、DeepSeek、元宝，开联网。
-- **次数。** 每条在每个平台至少问 3 次。同一个问题重复问，AI 给出同一份推荐清单的概率不到 1% <Src ids="06-S38" />。所以只看出现的频率，不看排第几。
+- **次数。** 每条在每个平台至少问 3 次。同一个问题重复问，ChatGPT 和 Google AI 给出同一份推荐清单的概率不到 1% <Src ids="06-S38" />。所以只看出现的频率，不看排第几。
 - **记什么。** 提没提 pstack、说得对不对、引用了哪些网址。<mark>单独记一列：引用里有没有 pstack.xiaoxiaodong.ai。</mark>这次修的是这个站，GitHub 仓库被引用不算。
 
 记录格式和脚本见 [定一组固定问题](/howto/prompt-set/)。前后对比的做法见 [做一次前后对比实验](/howto/experiment/)。
@@ -331,7 +331,7 @@ pstack 的读者本来就在用 Claude Code、Cursor 和 Codex。编程 Agent �
 </Q>
 
 <Q q="curl 是 200，后台显示真爬虫还是被挡">
-以后台为准。真爬虫从固定 IP 来，Cloudflare 会结合 IP 判断。本地伪造 User-Agent 测不出这一层 <Src ids="03-S20" />。
+以后台为准。Cloudflare 免费版只按 User-Agent 识别 AI 爬虫。付费版还会用 Bot Management 的检测结果，本地伪造 User-Agent 测不出这一层 <Src ids="21-S3" />。
 </Q>
 
 <Q q="sitemap 生成了，但其他语言的页面没有互相指向">
