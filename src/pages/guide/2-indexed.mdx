@@ -1,8 +1,200 @@
 ---
 layout: ../../layouts/Guide.astro
 step: 2
-tldr: "进 Bing 和 Google 的索引，新页面主动推送"
-description: "让 AI 搜得到：进 Bing 和 Google 的索引，新页面主动推送"
+tldr: "站点进了 Bing 和 Google 的索引，新页面一发布就推过去"
+description: "让 AI 搜得到：验证 Bing Webmaster Tools 和 Google Search Console，写真实的 sitemap lastmod，用 IndexNow 推新页面"
 ---
+import Src from "../../components/Src.astro";
+import Callout from "../../components/Callout.astro";
+import Copy from "../../components/Copy.astro";
+import Q from "../../components/Q.astro";
+import Checkpoint from "../../components/Checkpoint.astro";
 
-正文编写中。
+export const lastmodCode = `// scripts/lastmod.mjs
+import { readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+
+export function buildLastmodMap(site, dir = 'src/content/docs') {
+  const map = new Map();
+  for (const file of readdirSync(dir, { recursive: true })) {
+    if (!/\\.mdx?$/.test(file)) continue;
+    const fm = readFileSync(join(dir, file), 'utf8').match(/^---\\r?\\n([\\s\\S]*?)\\r?\\n---/);
+    if (!fm) continue;
+    const pick = (key) => fm[1].match(new RegExp('^' + key + ':\\\\s*["\\']?([0-9][0-9TZ:+.\\\\-]*)', 'm'))?.[1];
+    const date = pick('updated') ?? pick('pubDate');
+    if (!date) continue;
+    const slug = file.replace(/\\\\/g, '/').replace(/(\\/index)?\\.mdx?$/, '');
+    map.set(new URL('/' + slug + '/', site).href, new Date(date).toISOString());
+  }
+  return map;
+}
+
+// astro.config.mjs
+import { defineConfig } from 'astro/config';
+import sitemap from '@astrojs/sitemap';
+import { buildLastmodMap } from './scripts/lastmod.mjs';
+
+const SITE = 'https://<你的域名>';
+const lastmod = buildLastmodMap(SITE);
+
+export default defineConfig({
+  site: SITE,
+  trailingSlash: 'always',
+  integrations: [
+    sitemap({
+      serialize(item) {
+        const date = lastmod.get(item.url);
+        if (date) item.lastmod = date;
+        return item;
+      },
+    }),
+  ],
+});`;
+
+爬虫能进门，不等于页面进了索引。这一步把你的站放进 Bing 和 Google 的索引，并让新页面尽快被收录。做完你还能在两个后台里，第一次看到 AI 有没有用你。
+
+## 为什么先做 Bing
+
+Copilot 用的就是 Bing 索引 <Src ids="02-S20" />。Microsoft 还把 grounding 服务提供给第三方，叫 Web IQ <Src ids="02-S20" />。Microsoft 自己说，它的 grounding 为几乎每个主流 AI 助手供数，这是自家说法 <Src ids="03-S47" />。
+
+ChatGPT 和 Bing 的关系说法不一：
+
+- **OpenAI 帮助中心：** 据转述写明第三方搜索提供方包括 Bing <Src ids="03-S69" />。这页调研时没能打开原文。
+- **Peec 的逆向研究：** ChatGPT 主要用自建索引，Bing 多出现在 Deep Research 里 <Src ids="02-S3" />。Peec 卖 AI 可见度工具。
+
+两边都说明 Bing 是其中一环，比重不清楚。Bing 后台能免费看到 AI 引用次数 <Src ids="02-S21" />。单凭这一点就值得做。
+
+## 在 Bing Webmaster Tools 里验证站点
+
+1. 打开 Bing Webmaster Tools，添加你的站点，按提示完成验证。
+2. 在 Sitemaps 里提交 `https://<你的域名>/sitemap-index.xml`。
+3. 打开 AI Performance 报告（截至 2026-11 是公开预览，免费）<Src ids="02-S21" />。
+
+AI Performance 能看到这些 <Src ids="02-S21" />：
+
+- **总引用次数**和每天平均被引页面数。
+- **grounding 查询词：** AI 在后台去搜你时用的词，是抽样的。
+- **每个网址的引用次数**和随时间的趋势。
+
+它覆盖 Copilot、Bing 的 AI 摘要和部分合作方 <Src ids="02-S21" />。2026-06 加了 Intents、Topics、Citation Share、Compare <Src ids="03-S46" />。2026-10 加了 Topics Portfolio，里面的 Opportunity Queries 是别人被引用、你没被引用的查询 <Src ids="02-S22" />。
+
+<Callout type="ok">
+新站刚验证时报告多半是空的。有引用后，你会看到引用数曲线和一列 grounding 查询词。
+</Callout>
+
+<Callout type="warn">
+AI Performance 只有引用次数，没有点击数据 <Src ids="03-S63" />。别拿它算流量。
+</Callout>
+
+grounding 查询词很有用。它就是第 0 步讲的 fan-out 子查询，是少数能看到它们的官方窗口 <Src ids="01-S42" />。把这些词和你的页面标题对一对，能看出缺什么页面。
+
+## 在 Google Search Console 里点三个地方
+
+AI Overviews 和 AI Mode 没有额外的技术要求。页面被索引、能带摘要显示就行 <Src ids="02-S9" />。
+
+**第一处：设置 → Search generative AI。** 确认选的是 Include，这是默认值 <Src ids="02-S11" />。选 Exclude 会把站点排除出 AI Overviews、AI Mode 和 Discover 的生成式功能，1 到 2 天生效 <Src ids="02-S11" />。子属性默认继承父属性 <Src ids="02-S11" />。这个开关 2026-08-31 全球上线（截至 2026-11）<Src ids="02-S11" />。Google 的指南把「在这个开关里是包含」列为出现的条件之一 <Src ids="02-S10" />。
+
+<Callout type="warn">
+这个开关不管训练。不想被 Gemini 训练要用 Google-Extended，但它也会让你退出 Gemini 应用的引用 <Src ids="02-S15" />。两件事别混在一起。
+</Callout>
+
+**第二处：效果 → Generative AI performance。** 这里只有展示次数，没有点击 <Src ids="02-S12" />。AI Overviews 和 AI Mode 合在一起算，按页面、国家、设备、日期分 <Src ids="02-S12" />。这些展示也算进总的 Performance 报告，别相加 <Src ids="02-S9" />。2026-11-09 到 11 日的数据偏低，是已知 bug <Src ids="02-S19" />。
+
+**第三处：网址检查。** 输入重要页面的地址，确认「已编入索引」。再看 Googlebot 拿到的 HTML 里没有误加 `nosnippet` 或 `noindex` <Src ids="02-S9" />。
+
+## 写一份 lastmod 真实的 sitemap
+
+先看你的 sitemap 在不在：
+
+<Copy id="sitemap-check" title="在终端里跑" code={`curl -s -o /dev/null -w "%{http_code}\\n" https://<你的域名>/sitemap-index.xml
+curl -s https://<你的域名>/sitemap-0.xml | grep -oE '<lastmod>[^<]+' | sort | uniq -c | sort -rn | head`} />
+
+<Callout type="ok">
+第一行输出 200。第二段每个日期前的数字很小，日期各不相同。如果所有页面都是同一个时间，那就是构建时间，不是真实更新时间。
+</Callout>
+
+pstack 站的 `/sitemap.xml` 和 `/sitemap-index.xml` 都是 404 <Src ids="21-S1" />。搜索引擎只能靠链接一页页摸过去。
+
+两家对 `lastmod` 的要求一致：
+
+- **Bing：** 用 ISO 8601，带日期和时间；别设成 sitemap 的生成时间；`changefreq` 和 `priority` 被忽略 <Src ids="03-S43" />。Bing 说新鲜度信号直接影响 AI 回答多快反映更新 <Src ids="03-S43" />。
+- **Google：** `lastmod` 只在持续准确时才用；`priority` 和 `changefreq` 直接忽略 <Src ids="03-S42" />。
+
+Astro 站用 `@astrojs/sitemap`。它的 `serialize()` 能逐条改 `lastmod` <Src ids="03-S55" />。下面这段从页面 frontmatter 的 `updated` 或 `pubDate` 取日期：
+
+<Copy id="astro-lastmod" title="scripts/lastmod.mjs 和 astro.config.mjs" lang="js" code={lastmodCode} />
+
+本站用假的 frontmatter 跑过这段，生成的网址和时间都对 <Src ids="21-S8" />。slug 到网址的对应要按你的路由改。别设全局的 `lastmod`，那正是 Bing 说不要做的 <Src ids="03-S43" />。
+
+最后在 robots.txt 末尾加一行 `Sitemap: https://<你的域名>/sitemap-index.xml`，并在两个后台各提交一次。
+
+## 新页面发布后，主动推给 Bing
+
+IndexNow 是一个推送协议。你告诉一家参与的搜索引擎「这些网址变了」，它会分享给其他参与方 <Src ids="03-S49" />。截至 2026-11，参与方有 Bing、Yandex、Seznam、Naver、Yep、Internet Archive 和 Amazonbot，没有 Google <Src ids="21-S5" />。
+
+Bing 在 AI Performance 的公告里，把 IndexNow 列为让 AI 引用你最新页面的第一条建议 <Src ids="03-S45" />。完整步骤见 [IndexNow：新页面主动推给搜索引擎](/howto/indexnow/)。
+
+Google 不在 IndexNow 里，Google 这边靠 sitemap <Src ids="03-S42" />。
+
+## Brave、Apple 跟着 Googlebot 走
+
+这两家不用单独提交，但会被 Googlebot 的规则连带：
+
+- **Brave：** 爬虫没有独立 UA，Googlebot 抓不到的页面它也不抓 <Src ids="02-S32" />。robots.txt 不能让页面从 Brave 下架，要用 `noindex` <Src ids="02-S32" />。Claude 的网页搜索用的就是 Brave <Src ids="02-S30" />。
+- **Applebot：** robots.txt 没写它时，按 Googlebot 的规则执行 <Src ids="02-S38" />。
+
+所以，挡 Googlebot 的代价比看起来大得多。
+
+## 中文站：百度只做最基本的
+
+百度搜索资源平台验证站点，提交 sitemap。新页面用 API 推送，最快 <Src ids="03-S50" />。每次最多 2,000 条，配额按站点质量浮动，重复推旧链接会浪费配额 <Src ids="03-S50" />。百度不保证收录 <Src ids="03-S50" />。
+
+豆包、元宝、DeepSeek 这些国内平台各从哪里找资料，见 [国内 AI 平台怎么做](/guide/6-china/)。
+
+<Checkpoint id="indexed" items={[
+  "Bing Webmaster Tools 已验证，sitemap 已提交",
+  "Search Console 的 Search generative AI 是 Include",
+  "sitemap 返回 200，lastmod 不是全站同一个时间",
+  "IndexNow 已接好，或者已打开 Cloudflare 的 Crawler Hints",
+]} />
+
+## 交给 AI 做
+
+让 Claude Code 帮你把 sitemap 的 `lastmod` 改成真实时间。
+
+<Copy id="lastmod-prompt" title="发给 Claude Code" code={`这是一个 Astro 静态站。请让 @astrojs/sitemap 输出真实的 lastmod：
+1. 先看页面文件在哪里（src/pages 还是 src/content），frontmatter 里有没有 updated 或 pubDate 这类日期字段。
+2. 有日期字段：在 sitemap 的 serialize() 里按页面的这个日期设置 lastmod。
+3. 没有日期字段：用 git log -1 --format=%cI -- <文件> 取每个页面文件最后一次提交的时间。
+4. 不要设全局 lastmod，不要用构建时间。
+5. 跑 npm run build，然后统计 dist/sitemap-0.xml 里每个 lastmod 出现的次数，贴给我。
+6. 确认 robots.txt 里有 Sitemap: 这一行，没有就加上。
+不要启动开发服务器。`} />
+
+检查它的结果：
+
+- **日期各不相同。** 统计结果里，同一个时间不该占绝大多数。
+- **日期对得上。** 抽两个页面，和你记得的最后修改时间比一比。
+- **网址对得上。** sitemap 里的地址和线上地址完全一致，包括结尾斜杠。
+
+## 卡住了？
+
+<Q q="Bing 的 AI Performance 一直是空的">
+先确认站点已验证、sitemap 已提交。报告只统计被引用的情况，新站和小站可能很久都没有数据。可以先看 grounding 查询词有没有出现。
+</Q>
+
+<Q q="Search Console 里找不到 Generative AI performance">
+展示次数不够多时，报告不会出现 <Src ids="01-S32" />。先看普通的 Performance 报告有没有展示。
+</Q>
+
+<Q q="Search generative AI 开关是 Exclude，可我没改过">
+子属性会继承父属性的设置 <Src ids="02-S11" />。去看域名级属性，可能是别人在那里改的。改回 Include 后等 1 到 2 天 <Src ids="02-S11" />。
+</Q>
+
+<Q q="sitemap 里所有 lastmod 都是同一天">
+这是构建时间。按上面的代码改成页面自己的日期。乱写会让搜索引擎不再信你的 lastmod <Src ids="03-S42 03-S43" />。
+</Q>
+
+<Q q="页面被 Google 收录了，ChatGPT 还是搜不到">
+ChatGPT 看的是 OAI-SearchBot，先回到第 1 步确认它没被挡 <Src ids="02-S1" />。改了 robots.txt 约 24 小时生效 <Src ids="02-S1" />。
+</Q>

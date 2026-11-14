@@ -1,8 +1,160 @@
 ---
 layout: ../../layouts/Guide.astro
 step: 1
-tldr: "robots.txt、AI 爬虫名单、不靠 JS 也能看到正文"
-description: "让 AI 爬得到：robots.txt、AI 爬虫名单、不靠 JS 也能看到正文"
+tldr: "确认 AI 的搜索爬虫能进门，正文不靠 JS 也看得到"
+description: "让 AI 爬得到：分清训练、搜索、用户触发三类 AI 爬虫，放行该放行的，检查 Cloudflare 和 JavaScript 渲染"
 ---
+import Src from "../../components/Src.astro";
+import Callout from "../../components/Callout.astro";
+import Copy from "../../components/Copy.astro";
+import Q from "../../components/Q.astro";
+import Term from "../../components/Term.astro";
+import Checkpoint from "../../components/Checkpoint.astro";
 
-正文编写中。
+这一步做完，你能确认三件事。AI 的搜索爬虫没被挡，CDN 没拦它，正文在原始 HTML 里。三件都要做，任何一件不通，后面全白做。
+
+## 先看线上的 robots.txt 到底写了什么
+
+别看仓库里的文件，看线上返回的那份。Cloudflare 的托管 robots.txt 会在前面插内容 <Src ids="03-S17" />。
+
+<Copy id="curl-robots" title="在终端里跑" code={`curl -s https://<你的域名>/robots.txt`} />
+
+<Callout type="ok">
+你会看到一段纯文本。找 `User-agent:` 和 `Disallow:` 这两种行。如果某个 AI 爬虫名下面跟着 `Disallow: /`，它就被整站挡了。
+</Callout>
+
+本站实测过 pstack 教程站。它的 robots.txt 只有 Cloudflare 自动加的 content signals 注释，一条规则都没有 <Src ids="21-S1" />。仓库里也没有 `public/robots.txt` <Src ids="21-S1" />。没有规则等于全部允许，所以 robots.txt 不是它的问题。
+
+## 分清三类 AI 爬虫，再决定放行谁
+
+各家文档都把 <Term k="AI 爬虫" /> 分成三类 <Src ids="02-S1 02-S25 02-S33 02-S37 02-S39" />：
+
+| 类别 | 例子 | 挡了会怎样 |
+| --- | --- | --- |
+| 训练 | GPTBot、ClaudeBot | 不进下一代模型 |
+| 搜索索引 | OAI-SearchBot、PerplexityBot | 搜索回答里没有你 |
+| 用户触发 | ChatGPT-User、Claude-User | 用户贴链接时读不到 |
+
+**搜索索引类，全部放行。** OpenAI 写明，挡了 OAI-SearchBot 就不会出现在 ChatGPT 搜索回答里 <Src ids="02-S1" />。Anthropic 说挡了 Claude-SearchBot 会降低搜索可见度 <Src ids="02-S25" />。Perplexity 建议放行 PerplexityBot <Src ids="02-S33" />。
+
+**用户触发类，也放行。** 它们多数写明 robots.txt「可能不适用」<Src ids="02-S1 02-S33" />。写允许主要是表个态。
+
+**传统搜索爬虫，一个都别挡。** AI Overviews 和 AI Mode 用 Googlebot 建的索引 <Src ids="02-S9" />。Copilot 用 Bing 索引 <Src ids="02-S20" />。Brave 只抓 Googlebot 能抓的页面，Claude 又用 Brave 搜索 <Src ids="02-S32 02-S30" />。Applebot 在你没写它时，照 Googlebot 的规则走 <Src ids="02-S38" />。
+
+**训练类，你自己决定。** 挡了训练爬虫，各家都写明不影响搜索展示 <Src ids="02-S1 02-S25" />。放行能不能让模型记住你，还没有可靠数据。
+
+<Callout type="warn">
+Google-Extended 不只管训练。它同时管 Gemini 应用里的实时引用。挡了它，你就从 Gemini 的引用里消失 <Src ids="02-S14 02-S15" />。它不影响 AI Overviews <Src ids="02-S15" />。
+</Callout>
+
+完整的模板和逐个爬虫的说明，见 [robots.txt：放行哪些 AI 爬虫](/howto/robots-txt/)。
+
+## 用 curl 换 UA，看服务器回什么
+
+robots.txt 写了允许，CDN 照样可能拦。Google 把「CDN 和托管设施也允许抓取」列为基本要求 <Src ids="02-S9" />。
+
+<Copy id="curl-ua-quick" title="换成你自己的一个内页地址" code={`URL="https://<你的域名>/<某个内页>/"
+for ua in GPTBot OAI-SearchBot ChatGPT-User ClaudeBot Claude-SearchBot Claude-User PerplexityBot Perplexity-User Googlebot bingbot; do
+  printf "%-18s " "$ua"
+  curl -s -o /dev/null -w "%{http_code}\\n" -A "Mozilla/5.0 (compatible; $ua)" "$URL"
+done`} />
+
+<Callout type="ok">
+每行一个爬虫名和一个状态码。搜索类和用户触发类都应该是 200。403、429 或 503 说明被拦了。
+</Callout>
+
+pstack 站的结果：GPTBot、ClaudeBot、PerplexityBot、Bytespider 拿到 403 <Src ids="21-S1" />。OAI-SearchBot、ChatGPT-User、Claude-SearchBot、Perplexity-User、Googlebot、bingbot 都是 200 <Src ids="21-S1" />。它的 robots.txt 里没有规则，所以 403 来自 Cloudflare 这一层。
+
+PerplexityBot 是搜索爬虫，不是训练爬虫 <Src ids="02-S33" />。挡了它，Perplexity 的结果里就没有这个站。原因要去后台确认，做法见 [Cloudflare 别把 AI 爬虫挡在门外](/howto/cloudflare-bots/)。
+
+<Callout type="warn">
+从你电脑伪造 UA，只能测出「按 UA 拦截」的规则。真爬虫还会按 IP 验证，本地测不出来 <Src ids="02-S33" />。拿到 200 也不保证真爬虫能进，要看后台日志。
+</Callout>
+
+## 检查 Cloudflare 的默认设置
+
+你的站在 Cloudflare 上，这一节一定要看。它的默认值改过好几次：
+
+- **2025-07-01 起：** 新接入的域名默认屏蔽 AI 爬虫 <Src ids="03-S14" />。
+- **2026-07-01 起：** 所有套餐都能按 Search、Agent、Training 三类分别设置 <Src ids="03-S18" />。
+- **2026-09-15 起：** 新域名默认在有广告的页面挡 Training 和 Agent，Search 放行 <Src ids="03-S18" />。
+
+老域名可能停在任何一种状态，必须自己去看。还有一个坑：Bot Fight Mode 开着时，WAF 自定义规则绕不过它 <Src ids="21-S2" />。
+
+具体在后台哪里点，见 [Cloudflare 别把 AI 爬虫挡在门外](/howto/cloudflare-bots/)。
+
+## 确认正文在原始 HTML 里
+
+多数 AI 爬虫不执行 JavaScript。Vercel 统计了 2024 年一个月的流量，光 GPTBot 就有 5.69 亿次抓取 <Src ids="02-S43" />。GPTBot、ClaudeBot、PerplexityBot 都不渲染 <Src ids="02-S43" />。只有用 Googlebot 设施的 Gemini 和 Applebot 会渲染 <Src ids="02-S43" />。
+
+用户实时抓取也差不多。一次测试发现 ChatGPT、Claude、Gemini、Perplexity 都只读原始 HTML <Src ids="03-S2" />。Copilot、Grok、DeepSeek 会执行 JS，但等得很短，Copilot 约 53ms <Src ids="03-S2" />。
+
+<Copy id="curl-raw-html" title="把「一句你页面上的话」换成正文里真实的句子" code={`curl -s https://<你的域名>/<某个内页>/ \\
+  | python3 -c "import sys,re; h=sys.stdin.read(); t=re.sub(r'<script.*?</script>|<style.*?</style>','',h,flags=re.S); t=re.sub(r'<[^>]+>',' ',t); print('找到了' if sys.argv[1] in t else '没找到')" "一句你页面上的话"`} />
+
+<Callout type="ok">
+输出「找到了」。产品名、一句话介绍、价格、安装步骤都应该能这样找到。
+</Callout>
+
+Astro 默认输出静态 HTML。pstack 首页的 58 KB 就是服务端直接给出的静态内容 <Src ids="21-S1" />。Vercel 的建议是：正文、元数据、导航都由服务端输出 <Src ids="02-S43" />。在 Astro 里要小心三种写法：
+
+- **`client:only` 组件：** 服务端没有任何 HTML 输出。
+- **浏览器里 `fetch` 再渲染的内容：** 价格、更新日志这类，AI 看不到。改成构建时取数据。
+- **点了才加载的选项卡：** 看不到。用 CSS 隐藏的选项卡没问题。
+
+## 让过期的链接有个去处
+
+AI 爬虫常拿着过期或猜出来的网址来。Vercel 的数据里，ChatGPT 有 34.82% 的抓取打到 404 <Src ids="02-S43" />。Googlebot 只有 8.22% <Src ids="02-S43" />。
+
+改网址时一律 301 到新地址。删掉的页面返回真正的 404，别返回 200 加「页面不存在」<Src ids="03-S1" />。
+
+## 最后，看真爬虫有没有来
+
+curl 只是模拟。真爬虫来没来、拿到什么状态码，要看日志。Cloudflare 的 AI Crawl Control 所有套餐都能用 <Src ids="03-S20" />。做法见 [从访问日志看 AI 爬虫来没来](/howto/crawler-logs/)。
+
+<Checkpoint id="crawlable" items={[
+  "线上 robots.txt 里，搜索类和用户触发类爬虫都没有 <code>Disallow: /</code>",
+  "curl 换 UA 测试，OAI-SearchBot、Claude-SearchBot、PerplexityBot 都是 200",
+  "Cloudflare 里 Search 和 Agent 两类都是放行",
+  "原始 HTML 里能找到产品名和一句话介绍",
+]} />
+
+## 交给 AI 做
+
+把下面这段发给 Claude Code，让它在你的项目里跑一遍检查。
+
+<Copy id="crawl-audit-prompt" title="发给 Claude Code" code={`请检查我的网站能不能被 AI 爬虫抓到。线上地址是 https://<你的域名>，挑一个内页 https://<你的域名>/<某个内页>/。
+请按顺序做，每一步把命令和输出贴给我：
+1. curl 线上的 robots.txt，列出每个 User-agent 组和它的 Disallow 规则。
+2. 用这些 UA 分别请求那个内页，只报状态码：GPTBot、OAI-SearchBot、ChatGPT-User、ClaudeBot、Claude-SearchBot、Claude-User、PerplexityBot、Perplexity-User、Googlebot、bingbot。Google-Extended 不用测，它不是独立爬虫。
+3. 不执行 JS 抓那个内页，去掉 script 和 style 后，看正文里有没有这句话：<一句页面上的话>。
+4. 在项目代码里找 client:only 组件和浏览器端 fetch，列出它们渲染的文字内容。
+5. 不要改任何配置，不要启动开发服务器。最后用一张表总结：哪一项通过，哪一项不通过，可能的原因。`} />
+
+拿到结果后检查：
+
+- **状态码是它真跑出来的。** 让它贴原始输出，别只看总结。
+- **它没有乱改 robots.txt。** 改不改由你决定。
+- **403 的原因它只能猜。** 真正的原因在 Cloudflare 后台，它看不到。
+
+## 卡住了？
+
+<Q q="robots.txt 返回 404">
+没有 robots.txt 等于全部允许，不会挡爬虫。但最好加一份，至少写上 sitemap 的地址。模板见 [robots.txt 的 How-to](/howto/robots-txt/)。
+</Q>
+
+<Q q="robots.txt 里有我没写过的内容">
+多半是 Cloudflare 托管 robots.txt 插进来的。它会对 GPTBot、ClaudeBot、Google-Extended 等写 `Disallow: /` <Src ids="03-S17" />。挡 Google-Extended 会让你退出 Gemini 的引用 <Src ids="02-S15" />。要不要关，见 [Cloudflare 的 How-to](/howto/cloudflare-bots/)。
+</Q>
+
+<Q q="curl 测出来训练爬虫 403，搜索爬虫 200">
+这和 pstack 站的情况一样 <Src ids="21-S1" />。如果你本来就不想被训练，可以不管。如果 PerplexityBot 也是 403，就要去 Cloudflare 后台查。
+</Q>
+
+<Q q="所有 UA 都 403，连 curl 默认的也是">
+那是整站的防护拦了自动化请求，比如 Bot Fight Mode。它用 WAF 自定义规则跳不过 <Src ids="21-S2" />。去 Security 设置里看它是否开着。
+</Q>
+
+<Q q="页面用 React 写的，原始 HTML 里几乎没有字">
+AI 爬虫看到的就是这个空壳 <Src ids="02-S43" />。改成服务端渲染或静态生成。最少也要把产品介绍、价格、安装步骤写进 HTML 模板。
+</Q>

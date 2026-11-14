@@ -2,8 +2,167 @@
 layout: ../../layouts/HowTo.astro
 slug: cloudflare-bots
 step: 1
-tldr: "Cloudflare 别把 AI 爬虫挡在门外"
-description: "Cloudflare 别把 AI 爬虫挡在门外"
+tldr: "找出 Cloudflare 里挡 AI 爬虫的那个开关，只放开你想放的"
+description: "Cloudflare 会悄悄挡 AI 爬虫：在后台哪里看 AI Crawler and Agent access policies、Bot Fight Mode、AI Crawl Control，以及 pstack 站 403 的排查实例"
+time: "15 分钟"
+for: "用 Cloudflare 做 DNS 代理或部署（Pages、Workers）的网站"
 ---
+import Src from "../../components/Src.astro";
+import Callout from "../../components/Callout.astro";
+import Copy from "../../components/Copy.astro";
+import Q from "../../components/Q.astro";
 
-正文编写中。
+robots.txt 写了允许，Cloudflare 照样可能把 AI 爬虫挡在门外。这篇告诉你去后台哪几个地方看，怎么改，改完怎么确认。后台的菜单名都是截至 2026-11 的。
+
+## 先测：哪些爬虫被挡了
+
+用 [robots.txt 那篇](/howto/robots-txt/) 里的 `check-ai-ua.sh`，对你的一个内页跑一遍。
+
+<Copy id="cf-run-ua" title="在终端里跑" code={`bash check-ai-ua.sh https://<你的域名>/<某个内页>/`} />
+
+<Callout type="ok">
+每个爬虫一行状态码。搜索类（OAI-SearchBot、Claude-SearchBot、PerplexityBot）和用户触发类（ChatGPT-User、Claude-User、Perplexity-User）都该是 200。
+</Callout>
+
+403 说明请求在 Cloudflare 这一层被拦了。robots.txt 不会让服务器返回 403。
+
+## 实例：pstack 站有四个爬虫拿到 403
+
+本站 2026-11-14 测了 pstack 教程站，结果是这样 <Src ids="21-S1 21-S6" />：
+
+- **403：** GPTBot、ClaudeBot、PerplexityBot、Bytespider。
+- **200：** OAI-SearchBot、ChatGPT-User、Claude-SearchBot、Perplexity-User、Googlebot、bingbot。
+
+它的 robots.txt 只有 Cloudflare 加的 content signals 注释，没有任何规则 <Src ids="21-S1" />。所以 403 不是 robots.txt 造成的。
+
+GPTBot、ClaudeBot、Bytespider 是训练爬虫 <Src ids="02-S1 02-S25" />。如果站长本来就不想被训练，这三个挡了没关系。
+
+PerplexityBot 不一样。它是 Perplexity 的搜索爬虫，官方说不用于训练 <Src ids="02-S33" />。挡了它，Perplexity 的结果里就没有这个站。
+
+**可能的原因（推测，要去后台确认）：** 后台把 Training 这一类设成了屏蔽。Cloudflare 又把 PerplexityBot 也算进了被屏蔽的那批。一个旁证是：2025-08 Cloudflare 指控 Perplexity 用隐身爬虫，把它移出了已验证机器人名单 <Src ids="02-S34" />。Cloudflare 的分类文档没有列出 PerplexityBot 属于哪一类 <Src ids="03-S22" />。所以这只是推测，下面三处看完才能下结论。
+
+## 第一处：AI Crawler and Agent access policies
+
+路径：域名下的 **Security** → **Settings**，筛选 **Bot traffic**，找到 **AI Crawler and Agent access policies** <Src ids="21-S4" />。它以前叫 Configure AI bot policies <Src ids="21-S4" />。
+
+这里把 AI 流量分成三类，每类单独设 <Src ids="21-S4 03-S18" />：
+
+| 类别 | 是什么 | 建议 |
+| --- | --- | --- |
+| Search | 建搜索索引或 RAG 库 | Allow |
+| Agent | 替用户实时访问 | Allow |
+| Training | 训练或微调模型 | 你决定 |
+
+每类可选 Block、Block on pages with ads、Allow <Src ids="21-S4" />。Training 还多一个 Disallow：它在 robots.txt 里写禁止，打开 Bot Preference Sync 后还会在边缘直接拦截 <Src ids="21-S4" />。
+
+<Callout type="warn">
+新域名有默认值。2025-07-01 起，新接入的域名默认屏蔽 AI 爬虫 <Src ids="03-S14" />。2026-09-15 起，新域名默认在有广告的页面挡 Training 和 Agent <Src ids="03-S18" />。教程站挂了广告，用户在 ChatGPT 里贴你的链接，就可能读不到。
+</Callout>
+
+**挡 Training 会不会连累 Googlebot？** 说法有矛盾：
+
+- **Cloudflare 更新日志：** 兼做搜索和训练的爬虫，会受「屏蔽 Training」的默认值影响 <Src ids="03-S18" />。
+- **Help Net Security 的报道：** 说得更直白，Googlebot、Applebot、BingBot 也会被挡 <Src ids="03-S19" />。
+- **Cloudflare 的设置文档：** 说兼做两类的爬虫不在 Bot Preference Sync 的边缘拦截之列 <Src ids="21-S4" />。
+
+自己验证的办法：改完后跑一遍 `check-ai-ua.sh`，看 Googlebot、bingbot、Applebot 是不是 200。再到下面第三处看真 Googlebot 拿到的状态码。pstack 站的 Googlebot 和 bingbot 都是 200 <Src ids="21-S1" />。
+
+## 第二处：Bot Fight Mode
+
+路径：同一个 **Security Settings** 页，筛选 **Bot traffic**，找到 **Bot fight mode** <Src ids="21-S2" />。
+
+<Callout type="warn">
+Bot Fight Mode 用 WAF 自定义规则和 Page Rules 都绕不过，Skip、Bypass、Allow 都没用 <Src ids="21-S2" />。Perplexity 的文档也提醒，它可能仍会拦 PerplexityBot <Src ids="03-S8" />。
+</Callout>
+
+它开着、又有 AI 爬虫被挡，先关掉它再测一次。需要例外规则，Cloudflare 建议换 Super Bot Fight Mode，它支持 Skip 规则 <Src ids="21-S2" />。
+
+## 第三处：AI Crawl Control
+
+路径：域名下的 **AI Crawl Control**。所有套餐都能用 <Src ids="03-S20" />，它以前叫 AI Audit。
+
+它有三个标签 <Src ids="21-S3" />：
+
+- **Overview：** AI 爬虫活动概况，可按日期、爬虫、路径筛选。
+- **Crawlers：** 哪些 AI 爬虫来过。**Action** 列就是放行或屏蔽的开关。
+- **Metrics：** 按爬虫、状态码、路径细分。
+
+pstack 站要做的确认：
+
+1. 在 **Crawlers** 里找 PerplexityBot 那一行，看 **Action** 是不是 Block。
+2. 在 **Metrics** 里筛 PerplexityBot，看状态码里有没有 403。
+3. 再看 GPTBot、ClaudeBot 的 **Action**，和第一处的 Training 设置对得上。
+
+<Callout type="ok">
+如果 PerplexityBot 的 Action 是 Block，推测就成立了。改成放行后，再跑一遍 `check-ai-ua.sh`，PerplexityBot 应该变成 200。
+</Callout>
+
+文档只写了在 **Action** 列选 Block <Src ids="21-S3" />。改回放行应该也在这一列，这是按文档推断的。
+
+免费版有两个限制。爬虫只按 UA 识别，Metrics 只显示最近 24 小时 <Src ids="21-S3" />。所以要隔天回来看。
+
+## 还有一处：托管 robots.txt
+
+路径同第一处：Training 选 Disallow 并打开 **Enable Bot Preference Sync**，Cloudflare 就会托管你的 robots.txt <Src ids="03-S17" />。
+
+它会在前面插一段 `# BEGIN Cloudflare Managed content`。里面写 `Content-signal: search=yes, ai-train=no, use=reference`，并对 GPTBot、ClaudeBot、Google-Extended、Applebot-Extended、meta-externalagent、CCBot、Bytespider、Amazonbot 写 `Disallow: /` <Src ids="03-S17" />。
+
+<Callout type="warn">
+托管内容里挡了 Google-Extended。它同时管 Gemini 应用的实时引用，挡了你就不在 Gemini 的引用里 <Src ids="02-S15" />。想出现在 Gemini 里，就别用托管 robots.txt，自己写一份。
+</Callout>
+
+`Content-signal` 是 Cloudflare 提出的自愿信号，没有强制力 <Src ids="03-S16" />。
+
+## 只想放行某一家：写一条 WAF 规则
+
+Perplexity 的文档给了写法：UA 匹配加官方 IP 段匹配，动作选 **Skip** <Src ids="02-S33" />。这条规则要放在所有拦截规则之前 <Src ids="02-S33" />。
+
+<Copy id="cf-waf-expr" title="WAF 自定义规则表达式（把 IP 段换成官方列表里的）" code={`(http.user_agent contains "PerplexityBot" and ip.src in {<perplexitybot.json 里的 IP 段>})
+or (http.user_agent contains "Perplexity-User" and ip.src in {<perplexity-user.json 里的 IP 段>})`} />
+
+IP 列表在 `https://www.perplexity.ai/perplexitybot.json` 和 `https://www.perplexity.ai/perplexity-user.json` <Src ids="02-S33" />。只按 UA 放行容易被冒充，各家都建议 UA 加 IP 一起验证 <Src ids="03-S8" />。别忘了，这条规则跳不过 Bot Fight Mode <Src ids="21-S2" />。
+
+## 交给 AI 做
+
+Cloudflare 后台要你自己点，AI 帮你读结果。
+
+<Copy id="cf-prompt" title="发给 Claude 或 ChatGPT" code={`我的网站 <你的域名> 在 Cloudflare 上。下面是三份材料：
+1. check-ai-ua.sh 的输出（每个爬虫名和状态码）：
+<粘贴>
+2. 线上 robots.txt 的全文：
+<粘贴>
+3. Cloudflare 后台的截图或文字：Security → Settings → Bot traffic 下 AI Crawler and Agent access policies 的三类设置、Bot fight mode 是否开着、AI Crawl Control 的 Crawlers 标签页：
+<粘贴>
+
+请做三件事：
+- 把每个返回 403 的爬虫，归到训练、搜索索引、用户触发中的一类。
+- 对每个 403，指出材料里哪一项最可能是原因。材料里看不出来的，写「材料不足」，不要猜。
+- 给出我该改的设置，只改搜索索引和用户触发这两类。训练类由我决定，不要替我改。`} />
+
+拿到结果后检查：
+
+- **它没有凭空说原因。** 每个原因都要指向你给的某一项材料。
+- **它没让你关掉全部防护。** 只该动 AI 爬虫相关的几处。
+- **改完你自己复测。** 再跑一遍 `check-ai-ua.sh`，结果以它为准。
+
+## 卡住了？
+
+<Q q="后台找不到 AI Crawler and Agent access policies">
+Cloudflare 的菜单常改名。它以前叫 Configure AI bot policies <Src ids="21-S4" />。在 Security 的设置页里搜 AI 或 bot。
+</Q>
+
+<Q q="后台全是放行，curl 还是 403">
+看 Bot Fight Mode 有没有开着 <Src ids="21-S2" />。再看你自己写过的 WAF 自定义规则里，有没有按 UA 拦截的。
+</Q>
+
+<Q q="curl 是 200，AI Crawl Control 里真爬虫却是 403">
+真爬虫还会按 IP 和签名验证，从你电脑伪造 UA 测不出来 <Src ids="02-S33" />。以 AI Crawl Control 的 Metrics 为准 <Src ids="21-S3" />。
+</Q>
+
+<Q q="AI Crawl Control 里一个爬虫都没有">
+免费版只显示最近 24 小时 <Src ids="21-S3" />。小站一天里可能真没有 AI 爬虫来。隔几天再看，或者先在 Bing 和 Google 后台提交 sitemap，见 [让 AI 搜得到](/guide/2-indexed/)。
+</Q>
+
+<Q q="改完设置，Googlebot 变成 403 了">
+多半是挡 Training 波及了兼做搜索和训练的爬虫 <Src ids="03-S18 03-S19" />。先把 Training 改回 Allow，确认 Googlebot 恢复 200。不想被训练，就在 robots.txt 里逐个挡训练爬虫，见 [robots.txt 那篇](/howto/robots-txt/)。
+</Q>

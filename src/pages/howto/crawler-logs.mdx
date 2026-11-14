@@ -2,8 +2,211 @@
 layout: ../../layouts/HowTo.astro
 slug: crawler-logs
 step: 1
-tldr: "从访问日志看 AI 爬虫来没来"
-description: "从访问日志看 AI 爬虫来没来"
+tldr: "看出哪些 AI 爬虫真来过、拿到了什么、哪些是冒充的"
+description: "从访问日志看 AI 爬虫来没来：用 Cloudflare AI Crawl Control 或原始日志统计 AI 爬虫，按官方 IP 列表验证真假"
+time: "30 分钟"
+for: "已上线的网站；有原始访问日志更好，没有就用 Cloudflare 后台"
 ---
+import Src from "../../components/Src.astro";
+import Callout from "../../components/Callout.astro";
+import Copy from "../../components/Copy.astro";
+import Q from "../../components/Q.astro";
 
-正文编写中。
+export const statsScript = `# 用法：python3 ai_bot_stats.py access.log   （nginx / Apache 的 combined 格式）
+import re, sys, collections
+
+GROUPS = {
+    "search": ["OAI-SearchBot", "Claude-SearchBot", "PerplexityBot", "MistralAI-Index",
+               "meta-webindexer", "DuckAssistBot", "Googlebot", "bingbot", "Applebot/", "Baiduspider"],
+    "user": ["ChatGPT-User", "Claude-User", "Perplexity-User", "MistralAI-User",
+             "meta-externalfetcher", "Google-Agent", "Claude-Agent", "GeminiiOS", "Google-GeminiNotebook"],
+    "training": ["GPTBot", "ClaudeBot", "MistralAI-Training", "meta-externalagent", "CCBot", "Bytespider"],
+}
+LINE = re.compile(r'^(\\S+) \\S+ \\S+ \\[[^\\]]+\\] "\\S+ (\\S+)[^"]*" (\\d{3}) \\S+ "[^"]*" "([^"]*)"')
+
+hits = collections.Counter()
+codes = collections.defaultdict(collections.Counter)
+user_paths = collections.Counter()
+missing = collections.Counter()
+ips = collections.defaultdict(set)
+
+for line in open(sys.argv[1], errors="ignore"):
+    m = LINE.match(line)
+    if not m:
+        continue
+    ip, path, code, ua = m.groups()
+    low = ua.lower()
+    for group, names in GROUPS.items():
+        name = next((n.rstrip("/") for n in names if n.lower() in low), None)
+        if name:
+            hits[(group, name)] += 1
+            codes[(group, name)][code] += 1
+            ips[name].add(ip)
+            if group == "user":
+                user_paths[path] += 1
+            if code == "404":
+                missing[path] += 1
+            break
+
+print("类别      爬虫                    次数   状态码")
+for (group, name), n in sorted(hits.items()):
+    status = " ".join(f"{c}×{k}" for c, k in codes[(group, name)].most_common())
+    print(f"{group:9} {name:22} {n:6}  {status}")
+
+print("\\n用户触发抓取读得最多的页面：")
+for p, k in user_paths.most_common(10):
+    print(f"  {k:5}  {p}")
+
+print("\\nAI 和搜索爬虫打到 404 最多的路径（考虑加 301）：")
+for p, k in missing.most_common(10):
+    print(f"  {k:5}  {p}")
+
+with open("bot_ips.txt", "w") as f:
+    for name, s in sorted(ips.items()):
+        for ip in sorted(s):
+            f.write(f"{name} {ip}\\n")
+print("\\n每个爬虫用过的 IP 写进了 bot_ips.txt，下一步拿去验证真假。")`;
+export const verifyScript = `# 用法：python3 verify_bot_ip.py bot_ips.txt
+import ipaddress, json, sys, urllib.request
+
+LISTS = {
+    "OAI-SearchBot": "https://openai.com/searchbot.json",
+    "ChatGPT-User": "https://openai.com/chatgpt-user.json",
+    "GPTBot": "https://openai.com/gptbot.json",
+    "PerplexityBot": "https://www.perplexity.ai/perplexitybot.json",
+    "Perplexity-User": "https://www.perplexity.ai/perplexity-user.json",
+    "DuckAssistBot": "https://duckduckgo.com/duckassistbot.json",
+}
+nets = {}
+for name, url in LISTS.items():
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 bot-ip-check"})
+    data = json.load(urllib.request.urlopen(req, timeout=20))
+    nets[name] = [ipaddress.ip_network(p.get("ipv4Prefix") or p.get("ipv6Prefix"))
+                  for p in data.get("prefixes", []) if p.get("ipv4Prefix") or p.get("ipv6Prefix")]
+
+for line in open(sys.argv[1]):
+    name, ip = line.split()
+    if name not in nets:
+        continue
+    addr = ipaddress.ip_address(ip)
+    ok = any(addr.version == n.version and addr in n for n in nets[name])
+    print(f"{'真' if ok else '疑似冒充'}  {name:16} {ip}")`;
+
+curl 换 UA 只是模拟。真爬虫来没来、拿到了什么状态码，要看日志。这篇给两条路：没有原始日志就看 Cloudflare 后台，有日志就跑脚本。
+
+## 没有原始日志：看 AI Crawl Control
+
+Cloudflare 的 AI Crawl Control 所有套餐都能用 <Src ids="03-S20" />。路径：域名下的 **AI Crawl Control** <Src ids="21-S3" />。
+
+1. 打开 **Crawlers** 标签。它列出来过的 AI 爬虫，和每个的放行或屏蔽状态 <Src ids="21-S3" />。
+2. 打开 **Metrics** 标签。按爬虫和状态码细分 <Src ids="21-S3" />。
+3. 打开 **Robots.txt** 标签。它列出哪些爬虫访问了 robots.txt 禁止的路径，违反了哪条，多少次 <Src ids="03-S21" />。
+
+<Callout type="ok">
+Crawlers 里能看到 OAI-SearchBot、Claude-SearchBot、PerplexityBot 这类名字，Metrics 里它们的状态码大多是 200。
+</Callout>
+
+免费版有两个限制：只按 UA 识别爬虫，Metrics 只显示最近 24 小时 <Src ids="21-S3" />。所以每隔几天看一次，截图记下来。
+
+## 有原始日志：先用一行命令数一数
+
+服务器上有 nginx 或 Apache 的访问日志，先粗看一眼：
+
+<Copy id="grep-bots" title="在服务器上跑，把 access.log 换成你的日志路径" code={`grep -oE 'GPTBot|OAI-SearchBot|ChatGPT-User|ClaudeBot|Claude-User|Claude-SearchBot|PerplexityBot|Perplexity-User|bingbot|Googlebot|Bytespider|DuckAssistBot' access.log | sort | uniq -c | sort -rn`} />
+
+<Callout type="ok">
+每行一个次数和一个爬虫名，从多到少排。新站一周里能看到 Googlebot 和 bingbot，AI 爬虫可能很少。
+</Callout>
+
+## 再用脚本分类统计
+
+下面这个脚本按三类分组，统计每个爬虫的次数和状态码。它还列出用户触发抓取最常读的页面，和打到 404 最多的路径。
+
+<Copy id="stats-script" title="ai_bot_stats.py，只用标准库" lang="python" code={statsScript} />
+
+<Copy id="stats-run" title="运行" code={`python3 ai_bot_stats.py access.log`} />
+
+<Callout type="ok">
+第一段是一张表：类别、爬虫名、次数、状态码分布，比如 `200×31 404×4`。最后一行提示它把 IP 写进了 `bot_ips.txt`。本站用一份假日志跑过，输出就是这个样子 <Src ids="21-S7" />。
+</Callout>
+
+分组名单来自各家官方文档 <Src ids="02-S1 02-S25 02-S33 02-S37 02-S39 02-S40 02-S16" />。脚本只认 combined 格式。日志格式不同，把 `LINE` 那个正则改一下，或者交给 AI 改。
+
+## 看结果时盯这三件事
+
+**搜索类爬虫来了，而且是 200。** 这说明第 1 步通了。OAI-SearchBot 是 403，ChatGPT 搜索里就没有你 <Src ids="02-S1" />。
+
+**404 多的路径，加 301。** AI 爬虫常拿着过期或猜的网址来。Vercel 的数据里 ChatGPT 有 34.82% 的抓取打到 404，Claude 是 34.16% <Src ids="02-S43" />。把常被打到的旧路径 301 到新页面。
+
+**用户触发类读得最多的页面。** ChatGPT-User、Claude-User 是用户在对话里提问或贴链接时现场来读的 <Src ids="02-S1 02-S25" />。它们读得最多的页面，很可能就是 AI 回答最常用的页面。这是推断，先把这些页面写好。
+
+ChatGPT 的点击从 2026-10 起基本不带 UTM，也不传 referrer <Src ids="02-S4" />。所以 OAI-SearchBot 和 ChatGPT-User 的请求数，可以当作 ChatGPT 关注你的一个旁证 <Src ids="02-S4" />。
+
+## 验证真假：UA 可以伪造
+
+日志里写着 GPTBot，不一定真是 OpenAI。几家公布了 IP 列表，拿来比对 <Src ids="02-S1 02-S33 02-S40" />：
+
+<Copy id="verify-script" title="verify_bot_ip.py，读上一步生成的 bot_ips.txt" lang="python" code={verifyScript} />
+
+<Copy id="verify-run" title="运行" code={`python3 verify_bot_ip.py bot_ips.txt`} />
+
+<Callout type="ok">
+每行一个「真」或「疑似冒充」，后面是爬虫名和 IP。本站 2026-11-14 核对过，这几份列表都是 `prefixes[].ipv4Prefix` 格式 <Src ids="21-S7" />。
+</Callout>
+
+列表之外的几家，这样验证：
+
+- **Applebot：** 反向 DNS 应是 `*.applebot.apple.com` <Src ids="02-S38" />。
+- **Baiduspider：** 反向 DNS 应是 `*.baidu.com` 或 `*.baidu.jp`，百度的 IP 不公开 <Src ids="02-S46" />。
+- **Google-Agent：** IP 在 Google 的 `user-triggered-agents.json` 里 <Src ids="02-S16" />。
+- **Claude-Agent：** IP 发布在 `https://claude.com/.well-known/sail` <Src ids="02-S26" />。
+
+<Copy id="rdns" title="反向 DNS，再正向确认一次" code={`host <日志里的 IP>
+host <上一步返回的主机名>`} />
+
+第二条命令解析回来的 IP，要和日志里的一样。只有反向一致、正向也一致，才算真的。
+
+<Callout type="warn">
+有些 AI 根本不报自己的名字。一次受控测试里，Grok 的抓取请求伪装成过时的 Chrome 和 iPhone Safari <Src ids="02-S41" />。ChatGPT Atlas 的 UA 和普通 Chrome 完全一样 <Src ids="02-S6" />。这些在日志里看不出来。
+</Callout>
+
+## 交给 AI 做
+
+日志格式五花八门，让 AI 改脚本最省事。
+
+<Copy id="logs-prompt" title="发给 Claude Code" code={`附件是我网站最近 30 天的访问日志（<日志格式，比如 Cloudflare Logpush JSON / nginx combined>）。
+请写一个只用标准库的 Python 脚本并运行：
+1. 按 UA 把请求分成：传统搜索、AI 搜索索引、用户触发、训练、其他机器人、人类。
+   名单：搜索索引 OAI-SearchBot、Claude-SearchBot、PerplexityBot、MistralAI-Index、meta-webindexer、DuckAssistBot；
+   用户触发 ChatGPT-User、Claude-User、Perplexity-User、MistralAI-User、meta-externalfetcher、Google-Agent；
+   训练 GPTBot、ClaudeBot、MistralAI-Training、meta-externalagent、CCBot、Bytespider；
+   传统搜索 Googlebot、bingbot、Applebot、Baiduspider。
+2. 对 OAI-SearchBot、ChatGPT-User、GPTBot、PerplexityBot、Perplexity-User 的请求，下载官方 IP 列表核对真伪：
+   https://openai.com/searchbot.json、https://openai.com/chatgpt-user.json、https://openai.com/gptbot.json、
+   https://www.perplexity.ai/perplexitybot.json、https://www.perplexity.ai/perplexity-user.json
+3. 输出：每类每天的请求数；用户触发类读得最多的 20 个网址；AI 爬虫拿到 4xx 和 5xx 最多的网址；疑似冒充的请求数。
+4. 只根据日志下结论。日志里看不出来的，直接写「看不出来」。`} />
+
+拿到结果后检查：
+
+- **抽查几行原始日志。** 和它的分类对一对，看有没有分错。
+- **疑似冒充的数量合理。** 全是冒充或全是真的，多半是 IP 列表没下载成功。
+- **它没有编爬虫名。** 分类里只应该出现你给的名单。
+
+## 卡住了？
+
+<Q q="日志里一个 AI 爬虫都没有">
+先看第 1 步：robots.txt 和 Cloudflare 有没有挡它们。都没挡，可能只是还没来。先在 Bing 和 Google 后台提交 sitemap，见 [让 AI 搜得到](/guide/2-indexed/)。
+</Q>
+
+<Q q="脚本输出是空的">
+多半是日志格式和正则对不上。打开日志看一行，确认最后一个引号里是 UA。格式不同就让 AI 改 `LINE` 那个正则。
+</Q>
+
+<Q q="GPTBot 全是「疑似冒充」">
+先确认 `verify_bot_ip.py` 能下载到 `https://openai.com/gptbot.json`。能下载，那这些请求就不是 OpenAI 发的。冒充的流量可以在防火墙里按 UA 加 IP 挡掉 <Src ids="03-S8" />。
+</Q>
+
+<Q q="静态站部署在 Cloudflare，没有访问日志">
+用上面第一节的 AI Crawl Control <Src ids="03-S20" />。它不需要你有原始日志。
+</Q>
