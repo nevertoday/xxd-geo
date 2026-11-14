@@ -2,8 +2,147 @@
 layout: ../../layouts/HowTo.astro
 slug: prompt-collection
 step: 5
-tldr: "提示词和 Skill 合集"
-description: "提示词和 Skill 合集"
+tldr: "每条提示词或 Skill 一个固定网址，写清用途、给例子、标日期"
+description: "提示词合集和 Agent Skill 合集做 GEO：每条做成能被抓取的固定页面，写清用途、例子和日期，GitHub 和会员站怎么配合。"
+time: "模板 2 小时，之后每条多花 10 分钟"
+for: "提示词库、风格合集、Agent Skill 和插件合集"
+---
+import Src from "../../components/Src.astro";
+import Callout from "../../components/Callout.astro";
+import Copy from "../../components/Copy.astro";
+import Checkpoint from "../../components/Checkpoint.astro";
+import Q from "../../components/Q.astro";
+
+<Checkpoint id="howto-prompts" items={[
+  "每条提示词或 Skill 有自己的固定网址，改名时做 301",
+  "每页第一句说清：它做什么、给谁、在哪个工具里用",
+  "每页有输入和输出的例子，样图配了文字说明",
+  "每页有看得见的发布日期和更新日期",
+  "列表页和详情页都是服务端渲染，不开 JavaScript 也能看到",
+  "GitHub README 列出每个 Skill，链到具体文件页",
+  "会员站的付费全文在登录后，公开页留了用途和样例",
+  "合集首页写清：这是什么合集、有多少条、多久更新一次",
+]} />
+
+## 一条一页，网址别变
+
+合集最常见的问题有两种。几百条挤在一个页面里，或者靠 JavaScript 翻页。AI 爬虫不执行 JavaScript <Src ids="03-S1" />，它只能看到第一屏。
+
+改成每条一个页面：
+
+- 网址用稳定的英文 slug，比如 `/prompts/watercolor-poster/`。
+- 改名不改网址。非改不可，旧网址 301 到新网址。ChatGPT 和 Claude 的爬虫，约三分之一的请求打到 404 <Src ids="03-S1" />。它们手里有很多旧链接。
+- 列表页上每条至少有名字和一句话说明，都在原始 HTML 里。
+
+## 每页写这几样
+
+<Copy id="pc-page" title="一条提示词的页面（Astro 内容集合的 Markdown）" lang="markdown" code={`---
+title: "水彩海报风格：把任意主题画成手绘水彩海报"
+description: "一段可直接复制的绘图提示词，适合做活动海报和封面，附 4 张样图。"
+tool: ["即梦", "Midjourney", "GPT Image"]
+pubDate: 2026-10-02
+updated: 2026-11-14
 ---
 
-正文编写中。
+# 水彩海报风格
+
+这是一段绘图提示词，把任意主题画成带留白的手绘水彩海报，适合做活动海报和公众号封面。
+
+- 适用工具：即梦、Midjourney、GPT Image
+- 发布：2026-10-02 · 最后更新：2026-11-14
+
+## 怎么用
+把「主题」换成你要画的东西，其余照抄。
+
+## 例子
+输入主题：秋天的咖啡馆
+输出：<样图>，图下写一句「暖橙和赭石的湿画法，主体在左下，右上留白」。
+
+## 完整提示词
+<免费的直接放这里；付费的写「会员可看」，并链到会员页>`} />
+
+为什么是这几样：
+
+- **第一句定义。** 被 AI 引用的句子，多是肯定式的说法 <Src ids="04-S11" />。「这是一段……提示词，用来……」比风格名更好懂。
+- **样图配文字。** Google 要求重要内容以文字形式存在 <Src ids="03-S10" />。AI 读不懂图，只读图下那句话。
+- **日期看得见。** 页面日期和结构化数据里的日期要一致 <Src ids="03-S39" />。AI 引用的页面平均比搜索结果新 25.7% <Src ids="03-S57" />。只在真改了内容时更新 `updated`。
+
+## GitHub 和会员站配合
+
+很多人把 Skill 放 GitHub，把提示词放会员站。两边各管一件事：
+
+- **GitHub 放可安装的东西。** README 用一张列表列出每个 Skill：名字、一句话、安装命令、链接。
+- **你的网站放说明页。** 每个 Skill 和提示词一页，写清用途、例子、日期，再链回 GitHub。
+- **名字和说明两边一样。** 微软的建议里写了各处表述要一致 <Src ids="06-S25" />。
+
+<Callout type="warn">
+GitHub 的 robots.txt 禁止爬虫读子目录列表页 `/tree/`。单个文件页 `/blob/` 不受影响 <Src ids="14-S4" />。<u>Skill 放在子目录里时，它的说明在列表页上显示，AI 爬虫读不到。</u> README 里要链到 `blob/main/<目录>/SKILL.md` 这样的文件地址。
+</Callout>
+
+<Copy id="pc-readme" title="Skill 合集的 README 列表" lang="markdown" code={`## 有哪些 Skill
+
+| Skill | 做什么 | 说明页 |
+|---|---|---|
+| [cover-style](https://github.com/<你>/<仓库>/blob/main/skills/cover-style/SKILL.md) | 把参考图拆成可复用的封面提示词 | [说明和例子](https://<你的域名>/skills/cover-style/) |
+| [chrome-publish](https://github.com/<你>/<仓库>/blob/main/skills/chrome-publish/SKILL.md) | 打包并提交 Chrome 插件到商店 | [说明和例子](https://<你的域名>/skills/chrome-publish/) |
+
+安装：<一条命令>`} />
+
+GitHub 对字节的 Bytespider 整站禁止 <Src ids="14-S4" />。它和豆包有没有关系，没有官方说明。所以中文说明页放在你自己的网站上更稳。
+
+## 付费的部分怎么放
+
+会员站的付费提示词，公开页写用途、适合谁、样图和一小段节选。完整提示词放在登录后。AI 爬虫不登录，它能引用的就是公开的那部分。这是判断，没有对照实验。
+
+别按 User-Agent 给爬虫看全文。那属于 cloaking <Src ids="03-S4" />。
+
+## 让编程 Agent 也找得到
+
+Skill 的读者里有一大群是编程 Agent。一个网站的日志里，Claude Code 的请求 88% 要的是 Markdown <Src ids="03-S3" />。可以做两件事：
+
+1. 每个说明页有一个 `.md` 版本。
+2. 根目录放一个 llms.txt，列出全部 Skill 和它们的 `.md` 地址。
+
+Agent 一般只在有链接或指令指向时才去读 llms.txt <Src ids="03-S30" />。所以在 README 里也链上它。写法见 [llms.txt：要不要加](/howto/llms-txt/)。
+
+## 别做的事
+
+- **别用 AI 一次生成几百条凑数。** Google 把大量生成、对用户没有增加价值的页面算作垃圾内容 <Src ids="04-S18" />。
+- **别编例子。** 样图和输出必须是真跑出来的。
+- **别在小红书用 AI 托管账号发合集。** 全部笔记由 AI 托管代发的账号会被封 <Src ids="04-S48" />。
+
+## 交给 AI 做
+
+在合集仓库里打开 Claude Code，发这段：
+
+<Copy id="pc-ai" title="发给编程 Agent" code={`这个仓库里每个子目录是一个 Skill（或一条提示词）。请：
+1. 逐个读每个目录里的 SKILL.md 或提示词文件，用一句话写出它做什么、给谁用、在哪个工具里用。
+2. 生成 README 里的「有哪些 Skill」表格：名字链到 GitHub 的 blob 文件地址，最后一列链到 https://<你的域名>/skills/<目录名>/。
+3. 为每个 Skill 生成一份说明页的 Markdown 草稿（frontmatter 含 title、description、pubDate、updated），正文写用途、怎么用、例子。
+4. pubDate 用 git log 里这个目录第一次提交的日期，updated 用最后一次改内容的日期。
+规则：例子一律写成 [需补充：真实输入和输出]，不要编；只读文件，不改 Skill 本身。
+最后列出说明写得不清楚、你没法用一句话概括的 Skill。`} />
+
+你要检查：
+
+- 每个一句话说明，你自己读一遍觉得准。
+- 日期是从 git 里取的，不是今天。
+- 每个 [需补充] 都换成了真实的例子。
+
+## 卡住了？
+
+<Q q="AI 只知道我的合集，叫不出里面任何一条">
+多半是因为条目没有独立页面，或者列表靠 JavaScript 加载。用 `curl -s https://<你的域名>/prompts/ | grep -c "<某条的名字>"` 看看，输出是 0 就说明它不在原始 HTML 里。
+</Q>
+
+<Q q="同一条提示词在 GitHub 和会员站上，AI 引用了 GitHub 的">
+没关系，两处都是你的。确认 GitHub 那份链到了你的说明页，名字和说明两边一样。
+</Q>
+
+<Q q="样图很多，页面很慢">
+图片用懒加载，文字说明照常写在 HTML 里。AI 读的是文字。
+</Q>
+
+<Q q="几百条老提示词都没有日期">
+用 git log 取每条第一次提交的日期作为发布日期。更新日期只在你真改过内容时写，别统一写成今天。
+</Q>
