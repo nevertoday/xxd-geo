@@ -68,7 +68,7 @@ done`} />
 改完再跑一遍第二条命令，搜索类和用户触发类都变成 200。
 </Callout>
 
-为什么做：OpenAI 写明，挡了 OAI-SearchBot 就不会出现在 ChatGPT 搜索回答里 <Src ids="02-S1" />。Anthropic 和 Perplexity 的说法一样 <Src ids="02-S25 02-S33" />。Cloudflare 从 2025-07-01 起，给新接入的域名默认屏蔽 AI 爬虫 <Src ids="03-S14" />。老域名停在什么状态，只能自己去看。
+为什么做：OpenAI 写明，挡了 OAI-SearchBot 就不会出现在 ChatGPT 搜索回答里 <Src ids="02-S1" />。Anthropic 说，挡了 Claude-SearchBot，你在搜索结果里会更难被看到 <Src ids="02-S25" />。Perplexity 建议放行 PerplexityBot，才能出现在它的结果里 <Src ids="02-S33" />。Cloudflare 从 2025-07-01 起，给新接入的域名默认屏蔽 AI 爬虫 <Src ids="03-S14" />。2026-09-15 起又改了：新域名只在有广告的页面上默认挡训练类和 Agent 类 <Src ids="03-S18" />。老域名停在什么状态，只能自己去看。
 
 训练类爬虫（GPTBot、ClaudeBot）这份模板默认放行。想挡掉它们，见 [robots.txt：放行哪些 AI 爬虫](/howto/robots-txt/)。整件事的来龙去脉见 [让 AI 爬得到](/guide/1-crawlable/)。
 
@@ -95,7 +95,7 @@ Astro 站先装上 sitemap 插件：
 两个后台的 sitemap 列表里都出现了你刚提交的地址，状态没有报错。
 </Callout>
 
-为什么做：Copilot 用的就是 Bing 的索引 <Src ids="02-S20" />。Google 的 AI Overviews 和 AI Mode 只用已经进了 Google 索引的页面 <Src ids="02-S9" />。Bing 后台还有一个免费的 AI Performance 报告，能看到你被 AI 引用了几次 <Src ids="02-S21" />。新站刚验证时它多半是空的，过几周再回来看。
+为什么做：Copilot 用的就是 Bing 的索引 <Src ids="02-S20" />。Google 的 AI Overviews 和 AI Mode 只用已经进了 Google 索引的页面 <Src ids="02-S9" />。Bing 后台还有一个免费的 AI Performance 报告，能看到你在 Copilot 和 Bing 的 AI 摘要里被引用了几次 <Src ids="02-S21" />。新站刚验证时它多半是空的，过几周再回来看。
 
 sitemap 里每页的更新时间要写真实的，Google 和 Bing 都这么要求 <Src ids="03-S42 03-S43" />。怎么改、两个后台还要点哪里，见 [让 AI 搜得到](/guide/2-indexed/)。
 
@@ -133,7 +133,7 @@ BookmarkMD 是一个免费的 Chrome 插件，把浏览器书签导出成 Markdo
 新的第一段回答了五件事：是什么、给谁用、在哪用、多少钱、和谁像。官网、商店页、README 三处的产品名和价格一字不差。
 </Callout>
 
-为什么做：Kevin Indig 分析了 18,012 次 ChatGPT 引用。44.2% 的引用来自页面前 30% 的文字 <Src ids="04-S11" />。第一句话也在告诉 AI 你属于哪一类。按品类问时小产品才 3.32% 被提到 <Src ids="01-S16" />，归错了类就更没机会。
+为什么做：Kevin Indig 分析了 18,012 次 ChatGPT 引用。44.2% 的引用来自页面前 30% 的文字 <Src ids="04-S11" />。第一句话也在告诉 AI 你属于哪一类。112 个 Product Hunt 新产品，按品类问 ChatGPT 时只有 3.32% 被提到 <Src ids="01-S16" />，归错了类就更没机会。
 
 标题怎么写、表格怎么放，见 [让 AI 读得懂](/guide/3-readable/)。
 

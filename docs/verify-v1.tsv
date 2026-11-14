@@ -1,0 +1,13 @@
+page	claim	ids	verdict	evidence	change
+src/pages/start/3-first-week.mdx	Anthropic 和 Perplexity 的说法一样（挡了搜索爬虫就不会出现在搜索回答里）	02-S25 02-S33	PARTIAL	research/02-platforms.md:183 Anthropic 只说 Claude-SearchBot 被挡 may reduce visibility；:160 Perplexity 只说建议放行以出现在结果里。两家都没说一样的话	Anthropic 说，挡了 Claude-SearchBot，你在搜索结果里会更难被看到 [02-S25]。Perplexity 建议放行 PerplexityBot，才能出现在它的结果里 [02-S33]。
+src/pages/start/3-first-week.mdx	Cloudflare 从 2025-07-01 起，给新接入的域名默认屏蔽 AI 爬虫	03-S14	PARTIAL	research/03-technical.md:95 是 2025-07 的默认；:100 和 :1178 写明 2026-09-15 起新域名改为只在有广告的页面挡 Training 和 Agent。原句把旧默认写成了现状	原句保留，后面加一句：2026-09-15 起又改了：新域名只在有广告的页面上默认挡训练类和 Agent 类 [03-S18]。
+src/pages/start/3-first-week.mdx	Bing 后台还有一个免费的 AI Performance 报告，能看到你被 AI 引用了几次	02-S21	PARTIAL	research/02-platforms.md:146 和出处表 :797 覆盖范围只有 Copilot、Bing AI 摘要和部分合作方，不是所有 AI	能看到你在 Copilot 和 Bing 的 AI 摘要里被引用了几次
+src/pages/start/3-first-week.mdx	按品类问时小产品才 3.32% 被提到	01-S16	PARTIAL	research/01-foundations.md:320 3.32% 是 ChatGPT（gpt-4o-mini）上 112 个 Product Hunt 产品的数，Perplexity 是 8.29%。原句漏了平台和样本范围	112 个 Product Hunt 新产品，按品类问 ChatGPT 时只有 3.32% 被提到
+src/pages/howto/llms-txt.mdx	Ahrefs 的数据里也是这样：读 llms.txt 的，主要是 Agent 和 Agent 用的基础设施	03-S30	PARTIAL	research/03-technical.md:179 AI 类合计只占 19.5%，Agent 和 Agent 基础设施占全部请求 10.5%，是 AI 类里最多的，不是全部读者里的主要部分	Ahrefs 的数据里也是这样。AI 类的请求里，Agent 和 Agent 用的基础设施最多，占全部请求的 10.5%。
+src/pages/howto/prompt-collection.mdx	AI 爬虫不执行 JavaScript	03-S1	PARTIAL	research/03-technical.md:32-33 是 GPTBot、ClaudeBot、PerplexityBot 等主流 AI 爬虫不执行；Gemini（Googlebot）和 AppleBot 会渲染。原句范围过宽	GPTBot、ClaudeBot 这些 AI 爬虫不执行 JavaScript
+src/pages/howto/prompt-collection.mdx	被 AI 引用的句子，多是肯定式的说法	04-S11	PARTIAL	research/04-content-offsite.md:15、:86 ChatGPT 被引文字里肯定式表述占 36.2%，未被引 20.2%。36.2% 不是「多是」，平台只有 ChatGPT	被 ChatGPT 引用的句子里，36.2% 是肯定式的说法，没被引的只有 20.2%
+src/pages/howto/prompt-collection.mdx	AI 引用的页面平均比搜索结果新 25.7%	03-S57	PARTIAL	research/03-technical.md:257 只指 ChatGPT、Perplexity、Copilot、Gemini 这类 AI 助手；AI Overviews 反而比自然结果旧	ChatGPT、Perplexity 这类 AI 助手引用的页面，平均比自然搜索结果新 25.7%
+src/pages/guide/6-china.mdx	QuestMobile 测过一个抗衰面霜问题	07-S55	PARTIAL	research/07-china.md:16、:80、:577 是「抗衰面霜推荐」这类问题，公开版没写问题数和采样次数，「一个问题」说不出来	QuestMobile 测过抗衰面霜推荐这类问题
+src/pages/guide/6-china.mdx	依据是《反不正当竞争法》第九条	07-S51	PARTIAL	research/07-china.md:18、:235 依据是《网络反不正当竞争暂行规定》和《反不正当竞争法》第九条，原句漏了一项	依据之一是《反不正当竞争法》第九条
+src/pages/guide/6-china.mdx	2026 年出了三套团体标准，自愿采用	07-S48 07-S49	PARTIAL	research/07-china.md:20、:249 三套里第三套 AIIA/T 0277-2026 的出处是 S50，原句只引了两套的出处	加上出处 07-S50，句子不变
+总数	142 句		SUPPORTED 131；PARTIAL 11；UNSUPPORTED 0；CANNOT_CHECK 0		
