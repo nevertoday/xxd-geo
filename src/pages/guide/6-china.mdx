@@ -1,8 +1,361 @@
 ---
 layout: ../../layouts/Guide.astro
 step: 6
-tldr: "豆包、DeepSeek、元宝、Kimi 各从哪里找答案"
-description: "国内 AI 平台怎么做：豆包、DeepSeek、元宝、Kimi 各从哪里找答案"
+tldr: "测出中文 AI 能不能找到你，知道该去哪几个站长平台"
+description: "国内 AI 平台怎么做：豆包、DeepSeek、元宝、千问、文心、Kimi、智谱各用哪家搜索，10 分钟实测脚本，站长平台注册，Bytespider 和 Cloudflare 的坑，监管红线"
 ---
+import Src from "../../components/Src.astro";
+import Callout from "../../components/Callout.astro";
+import Copy from "../../components/Copy.astro";
+import Q from "../../components/Q.astro";
+import Checkpoint from "../../components/Checkpoint.astro";
 
-正文编写中。
+export const askList = `Q1  <产品名> 是什么？谁做的？
+Q2  请阅读 https://<你的域名>/<某篇教程>/ 并用三句话总结
+Q3  请阅读 https://github.com/<你>/<仓库> 的 README，告诉我安装命令
+Q4  有什么好用的 <品类> Chrome 插件？
+
+记录表（每个 App 每题问 2 次，一行一次）：
+平台 | 题号 | 第几次 | 提到我(是/否) | 描述准确吗 | 引用的 URL | 有没有编造`;
+
+export const dsSearch = `#!/usr/bin/env bash
+# 用法：DEEPSEEK_API_KEY=sk-... bash cn-index-check.sh <你的域名> "<产品名>"
+# 每次跑完存一份带日期的 TSV，下个月再跑一次对比。需要 curl 和 jq。
+DOMAIN="$1"; NAME="$2"
+OUT="cn-index-$(date +%F).tsv"
+for q in "$NAME site:$DOMAIN" "$NAME site:github.com" "$NAME"; do
+  curl -s https://api.deepseek.com/v1/tools/search \\
+    -H "Authorization: Bearer $DEEPSEEK_API_KEY" \\
+    -H "Content-Type: application/json" \\
+    -d "$(jq -n --arg q "$q" '{query: $q, count: 20}')" \\
+  | jq -r --arg q "$q" '.results[]? | [$q, .authority, .rerank_score, .date, .url] | @tsv'
+done | tee "$OUT"
+echo "共 $(wc -l < "$OUT") 条结果，存在 $OUT"`;
+
+export const dsFetch = `curl -s -o /dev/null -w '%{http_code}\\n' https://api.deepseek.com/v1/tools/fetch \\
+  -H "Authorization: Bearer $DEEPSEEK_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{"url": "https://<你的域名>/<某篇教程>/"}'`;
+
+export const zhipu = `# 用智谱官方 Python SDK，安装方法见智谱文档
+from zai import ZhipuAiClient
+
+client = ZhipuAiClient(api_key="<智谱 API Key>")
+for engine in ["search_pro_sogou", "search_pro_quark", "search_pro"]:
+    r = client.web_search.web_search(
+        search_engine=engine,
+        search_query="<产品名>",
+        count=20,
+        search_domain_filter="<你的域名>",
+    )
+    print(engine, r)`;
+
+export const bailian = `# pip install openai
+import os
+from openai import OpenAI
+
+client = OpenAI(
+    api_key=os.getenv("DASHSCOPE_API_KEY"),
+    base_url="https://<WorkspaceId>.cn-beijing.maas.aliyuncs.com/compatible-mode/v1",
+)
+r = client.chat.completions.create(
+    model="qwen-plus",
+    messages=[{"role": "user", "content": "<产品名> 是什么？"}],
+    extra_body={"enable_search": True,
+                "search_options": {"search_strategy": "turbo",
+                                   "enable_source": True,
+                                   "assigned_site_list": ["<你的域名>"]}},
+)
+print(r.choices[0].message.content)`;
+
+export const cnRobots = `# 加在你自己的 robots.txt 里（截至 2026-11）
+User-agent: Baiduspider
+User-agent: Baiduspider-render
+Allow: /
+
+# 头条搜索的官方爬虫。它和豆包的关系官方没说。
+User-agent: Bytespider
+Allow: /
+
+# 搜狗官方说支持 robots，改动可能要几周才生效
+User-agent: Sogou web spider
+Allow: /
+
+# 神马和 360：官方 UA 文档没找到，按第三方目录写
+User-agent: YisouSpider
+User-agent: 360Spider
+Allow: /`;
+
+export const askPrompt = `我是独立开发者，产品如下：
+- 产品名：<名称>，英文名：<英文名>
+- 类型：<Chrome 插件 / 教程站 / 会员站 / 微信小程序>
+- 一句话说明：<……>
+- 官网：<你的域名>，GitHub：<仓库>
+
+请生成测试「豆包、DeepSeek、元宝、千问、Kimi、文心能否找到并正确介绍我」的问题集：
+1. 品牌名问题 5 个（中文名、英文名、常见错写都要有）。
+2. 读链接问题 3 个：让 AI 读我给的具体 URL，问只有读过页面才答得对的细节，附标准答案。
+3. 品类问题 10 个：用户不知道我时会怎么问，用口语，像在手机上打字。
+4. 对比问题 5 个：我和 <竞品> 的区别。
+输出表格：编号、问题、类型、标准答案或判定标准。不要编造产品没有的功能。`;
+
+export const tallyPrompt = `下面是我在 6 个中文 AI 助手里，同一批问题、每题问 2 次的原始记录。
+每行：平台、题号、第几次、回答全文、引用 URL 列表。
+另附 cn-index-check.sh 的 TSV 输出。
+
+请只根据记录统计，不要凭印象：
+1. 每个平台：提到我的次数 / 总次数，描述准确的次数。
+2. 被引用的域名按出现次数排行，标出哪些是我能控制的（官网、GitHub、我发的文章）。
+3. 读链接题里，和标准答案不符却没报错的回答（疑似编造），逐条列出。
+4. 每个平台一句结论：「没收录」「收录了排不上」还是「读到了但描述错」。
+   API 有结果、App 没引用，记为「收录了排不上」。
+样本很小，结论里写明样本量，不要推断百分比以外的东西。
+
+<粘贴记录>`;
+
+中文 AI 各有各的搜索。海外那套做法（Bing、Google、`OAI-SearchBot`）在这里只管一部分。这一步先测你现在在哪，再按各家的官方文档补该做的事。
+
+国内大厂几乎都把 App 背后的联网搜索做成了对外卖的搜索 API。API 文档比 App 帮助页写得清楚得多，所以本页大量引用 API 文档 <Src ids="07-S2 07-S5 07-S15 07-S12 07-S21" />。API 用的索引和 App 是不是同一个，多数厂商没说。下面凡是把两者等同的地方，都标了「推断」。
+
+## 先测 10 分钟：中文 AI 现在找不找得到你
+
+没有哪份官方文档能回答「中文 AI 能不能读到我的站」，只能测。这个测试可以每月重跑一次。
+
+### 手工问 6 个 App（5 分钟）
+
+打开 6 个 App：豆包、DeepSeek、元宝、千问、Kimi、文心。文心也可以换成百度 App 的 AI 搜索。打开联网，问下面 4 题。每题问 2 次，回答每次会不一样 <Src ids="07-S57" />。
+
+<Copy id="cn-ask" title="4 道题和记录表" code={askList} />
+
+- **Q1 测品牌名。** 别人直接问你的名字时，AI 能不能找到你。
+- **Q2 测读链接。** DeepSeek 有专门读链接的工具 `deepseek_read_url` <Src ids="07-S16" />。
+- **Q3 测 GitHub。** 你的仓库在不在它的视野里。
+- **Q4 测品类。** 用户不知道你时，会不会推荐你。
+
+Q2、Q3 没报错、却说出页面上没有的内容，记为「编造」。有开发者遇到过 DeepSeek 读 GitHub 失败后直接编代码 <Src ids="02-S63" />。
+
+### 用 API 查索引（5 分钟，几毛钱）
+
+DeepSeek 2026-11-13 公开了 Search 接口 <Src ids="07-S14" />。文档写明它「由 DeepSeek 自研搜索引擎提供支持」<Src ids="07-S15" />。它支持 `site:`、`-site:`、`lang:` 这些语法 <Src ids="07-S15" />。下面的脚本查三次：你的域名、GitHub、只搜产品名。
+
+<Copy id="cn-ds-search" title="cn-index-check.sh" code={dsSearch} />
+
+<Copy id="cn-ds-run" title="运行" code={`DEEPSEEK_API_KEY=sk-... bash cn-index-check.sh <你的域名> "<产品名>"`} />
+
+<Callout type="ok">
+每行一条结果：查询词、`authority`、`rerank_score`、日期、URL。`authority` 是 0 到 4，3 以上是「极权威」，-1 是未知 <Src ids="07-S15" />。`rerank_score` 是 0 到 3，1.5 以上算优质 <Src ids="07-S15" />。第一组一行都没有，说明它的索引里没有你的站。
+</Callout>
+
+Search 和 Fetch 各 5 元一千次成功请求 <Src ids="07-S15" />（截至 2026-11）。
+
+再用 Fetch 接口看它能不能读到你的正文 <Src ids="07-S15" />：
+
+<Copy id="cn-ds-fetch" title="看 DeepSeek 能不能读你的页面" code={dsFetch} />
+
+<Callout type="ok">
+输出 `200` 说明能读。`404` 的原因包括「被站点策略拦截」和页面没有能提取的正文 <Src ids="07-S15" />。拿到 404，先去查 [Cloudflare 有没有挡它](/howto/cloudflare-bots/)。
+</Callout>
+
+智谱的搜索 API 可以分别指定搜狗和夸克的索引 <Src ids="07-S21" />。一次跑完，等于查了两家：
+
+<Copy id="cn-zhipu" title="智谱：分别查搜狗、夸克和智谱自研索引" lang="python" code={zhipu} />
+
+阿里云百炼可以用 `assigned_site_list` 只搜你的域名 <Src ids="07-S12" />。这个参数只在 `turbo` 策略和 qwen-plus 等模型上能用 <Src ids="07-S12" />。
+
+<Copy id="cn-bailian" title="百炼 / 千问：只在你的站里搜" lang="python" code={bailian} />
+
+豆包搜索和元宝搜索也有按域名查的参数，分别是 `Sites` 和 `Site` <Src ids="07-S2 07-S8" />。它们要在火山引擎和腾讯云控制台开通，签名按各自文档来。
+
+### 怎么读结果
+
+- **API 有你，App 不引用你。** 进了索引但排不上，问题在内容或权威等级。
+- **API 也没有你。** 收录问题，先做下面「站长平台」那一节。
+- **Fetch 是 404。** 你的服务器或 CDN 挡了它。
+
+这个判断有个前提没人证实过：API 的索引和 App 的索引一样 <Src ids="07-S8" />。所以它只是近似。
+
+## 每家 AI 从哪里找答案
+
+下面每条都是厂商文档的原话或直接转述（截至 2026-11）。点平台名看完整资料。
+
+- **[豆包](/platforms/doubao/)：豆包搜索。** 火山引擎的豆包搜索融合全网信息和「字节跳动独家内容资源」<Src ids="07-S4" />。豆包 App 是否用它，官方没说。
+- **[DeepSeek](/platforms/deepseek/)：自研搜索引擎。** 2026-11-13 起有官方说法 <Src ids="07-S15" />。它没有站长平台，也没有爬虫文档。
+- **[元宝](/platforms/yuanbao/)：腾讯自建索引加微信内容。** 元宝搜索 2026-11-11 上线，覆盖网页、公众号、视频号和学术文献 <Src ids="07-S10" />。
+- **[千问](/platforms/qwen/)：多源，至少有夸克。** 百炼只说「可调用多源搜索引擎」<Src ids="07-S12" />。阿里云 AI 网关的联网搜索「目前仅支持夸克」<Src ids="07-S13" />。
+- **[文心](/platforms/wenxin/)：百度搜索。** 千帆 AppBuilder 里有「百度AI搜索」组件 <Src ids="07-S26" />。
+- **[智谱](/platforms/zhipu/)：自研加搜狗、夸克。** 文档原话是「自研引擎及第三方服务（搜狗/夸克）」<Src ids="07-S21" />。
+- **[Kimi](/platforms/kimi/)：没说哪家引擎。** 帮助中心写「智能调用搜索引擎与垂直数据库」，覆盖 100 多个可信来源 <Src ids="07-S19" />。
+
+元宝要多说一句。消费端能搜公众号 <Src ids="07-S10" />。对外卖的元宝搜索 API 却不含公众号，原话是「由于内容版权问题，元宝搜索暂不支持微信公众号内容」<Src ids="07-S7" />。公众号文章只在腾讯自家产品里用得上。
+
+你能影响的环节有三个：进不进索引，权威等级几级，正文读不读得到 <Src ids="07-S1 07-S15 07-S16" />。
+
+## 豆包搜索给网站分四级
+
+豆包搜索公开了站点权威度分级，文档更新于 2026-08-21 <Src ids="07-S1" />：
+
+| 等级 | 文档里的例子 |
+| --- | --- |
+| 1 非常权威 | 政府、央媒、985/211、500 强 |
+| 2 正常权威 | 行业站、B 站、中小企业官网 |
+| 3 一般权威 | 文库、普通论坛、非头部垂类站 |
+| 4 一般不权威 | 「普通小站」 |
+
+第 2 级原文是「中小型企业、机构官网」<Src ids="07-S1" />。第 4 级的原话是「普通小站，劣质、虚假信息较多，无法提供专业、可信内容」<Src ids="07-S1" />。判定规则没公开，也没找到申诉入口 <Src ids="07-S1" />。
+
+Kimi 也写了会剔除「低质聚合站点、未经证实的自媒体」<Src ids="07-S19" />。所以你的官网要看起来像一个机构官网（推断）：
+
+- **有「关于」页。** 写清运营主体（公司或个人）、联系方式、开源仓库地址。
+- **每篇文章有作者和日期。** DeepSeek 的结果带 `date` 字段 <Src ids="07-S15" />，百炼能按新鲜度过滤 <Src ids="07-S12" />。
+- **中文页用中文写。** 别只靠浏览器翻译。
+
+还有一个参数要知道。豆包搜索的 `IcpHostOnly` 打开后「仅在国内ICP备案的网站中搜索」，默认是关的 <Src ids="07-S2" />。接入豆包搜索的 Agent 如果打开它，没备案的站就不会出现 <Src ids="07-S2" />。豆包 App 本身开没开，没有资料。
+
+## 知乎、小红书、公众号：爬虫进不去，AI 却常引用
+
+本站在 2026-11-14 抓了各平台的 robots.txt <Src ids="07-S42" />：
+
+- **知乎：** 只放行 Googlebot、bingbot 和 Baiduspider 系列，其余 `Disallow: /`。
+- **小红书：** 只给几家搜索引擎开 `/explore` 等少数路径。
+- **公众号：** mp.weixin.qq.com 对所有爬虫 `Disallow: /`。
+- **今日头条：** 文章页 `/item/`、`/group/` 对所有爬虫关闭。
+- **掘金、CSDN：** 文章页对所有爬虫开放。
+
+可 AI 照样大量引用知乎。量子位智库测了 7 款助手的 630 条回答 <Src ids="07-S57" />。知乎被引 29.9%，B 站 7.6% <Src ids="07-S57" />。样本小，但方法公开。
+
+最可能的解释是：AI 通过搜索引擎的索引或数据合作拿到这些内容，没有自己去爬。这一条是推断，没有厂商确认过。智谱文档说搜狗「覆盖腾讯生态（新闻/企鹅号）和知乎内容」<Src ids="07-S21" />，算一条旁证。
+
+对你的意思是：
+
+- **知乎回答值得写。** 影响路径不明，但引用数据最硬 <Src ids="07-S57" />。开头说明你是作者。
+- **技术文章发掘金或 CSDN。** 对爬虫开放 <Src ids="07-S42" />，被引比例没有方法公开的数据。
+- **公众号只服务腾讯自家。** 元宝 App 和微信搜一搜能用，外部 AI 读不到 <Src ids="07-S7 07-S42" />。
+- **小红书只发真人实测。** 主页全部笔记由 AI 托管代发的账号会被封 <Src ids="04-S48" />。
+
+各平台引用自家内容的数字也有，但都是按品类测的。QuestMobile 测过一个抗衰面霜问题 <Src ids="07-S55" />。豆包的引用里抖音系占 66.2%，文心的引用里百度占 81.7%。样本量没公开。开发者产品类问题，还没有任何方法公开的数据 <Src ids="07-S54 07-S55" />。
+
+## 在这几个站长平台注册
+
+<mark>Cloudflare 的托管 robots.txt 会挡 Bytespider，头条搜索就爬不到你。</mark>头条搜索站长平台写明「头条搜索的爬虫UA为“Bytespider”」<Src ids="07-S27" />。Cloudflare 托管 robots.txt 会对它写 `Disallow: /` <Src ids="07-S40" />。先 `curl -s https://<你的域名>/robots.txt` 看一眼，再决定要不要放行。
+
+<Copy id="cn-robots" title="中文搜索引擎这几组，加进你自己的 robots.txt" code={cnRobots} />
+
+完整模板和检查脚本见 [robots.txt 那篇](/howto/robots-txt/)。怎么关托管功能，见 [Cloudflare 那篇](/howto/cloudflare-bots/)。
+
+然后各注册一次，提交 sitemap：
+
+1. **百度搜索资源平台。** 验证站点，提交 sitemap，开「普通收录」的 API 推送。官方原话是「可加快爬虫抓取速度，无法解决网站内容是否收录问题」<Src ids="07-S23" />。推送脚本见 [让 AI 搜得到](/guide/2-indexed/)。
+2. **头条搜索站长平台。** 字节系。有「抓取频次」设置，「1天内」生效 <Src ids="07-S27" />。
+3. **搜狗站长平台。** 联系邮箱是 `zzpt@tencent.com` <Src ids="07-S29" />，是离腾讯索引最近的官方入口（推断）。
+4. **神马站长平台。** 服务条款把夸克和神马都列为阿里业务平台 <Src ids="07-S30" />。夸克用不用神马的索引，官方没说。
+5. **360：** 没找到官方的爬虫或站长文档，zhanzhang.so.com 抓回来几乎是空页。可以先不做。
+
+这些平台和 AI 回答之间只有间接证据 <Src ids="07-S21 07-S13" />。所以这一节算「成本低、可能有用」。
+
+百度资源平台已经有「AI流量分析」和「权威提交」两个入口 <Src ids="07-S25" />。说明文档没找到，登录后有数据就记下来。
+
+<Callout type="warn">
+Bytespider 要不要放行，没有两全的开关。官方只说它是头条搜索的爬虫，没提 robots.txt，也没提豆包 <Src ids="07-S27" />。Fortune 2024 年报道称它不遵守 robots.txt <Src ids="07-S62" />。你更在乎头条搜索的收录，就放行；更在乎不给字节训练数据，就挡。
+</Callout>
+
+验真时看反向 DNS。官方写的是「非 *.bytedance.com即为冒充」<Src ids="07-S27" />。百度蜘蛛 IP 不公开，主机名应为 `*.baidu.com` 或 `*.baidu.jp` <Src ids="07-S22" />。日志怎么查见 [从访问日志看 AI 爬虫来没来](/howto/crawler-logs/)。
+
+## 海外站：中文 AI 能读到吗
+
+你的站放在 Cloudflare 上、面向全球，这一节最要紧。官方给过的答案只有这些：
+
+- **Kimi 能。** 帮助中心写「可主动检索非中文资料（如指定搜索英文新闻源、日文技术文档等）」<Src ids="07-S19" />。
+- **DeepSeek 能。** 支持 `lang:en`，文档示例就搜 `site:github.com` <Src ids="07-S15" />。
+- **百炼建议换策略。** 原话是「英文场景推荐使用 agent」<Src ids="07-S12" />。
+- **豆包搜索默认不过滤未备案站。** 但调用方能一键过滤 <Src ids="07-S2" />。
+- **元宝、智谱、百度：没写。**
+
+另外三件事：
+
+- **用自己的域名。** workers.dev 有过被 SNI 阻断的记录，pages.dev 现状不明 <Src ids="07-S65" />。
+- **Chrome Web Store 大陆打不开。** 国内 AI 很可能读不到你的商店页（推断）<Src ids="07-S64" />。在自己的站上做一个中文产品页。
+- **备案只在用大陆节点时才必须。** Cloudflare 的 China Network 要 ICP 备案 <Src ids="07-S39" />。
+
+## 还没人知道的事
+
+下面这些查过，没有官方答案（截至 2026-11）：
+
+- **API 索引和 App 索引是不是一个。** 元宝 API 只说「结合元宝 App 联网搜索应用实践」<Src ids="07-S8" />，豆包搜索没有类似说法。
+- **Bytespider 和豆包的关系。** 挡了它会不会影响豆包引用你，没人知道 <Src ids="07-S27" />。
+- **豆包怎么判定「普通小站」。** 只有例子，没有规则 <Src ids="07-S1" />。
+- **DeepSeek 的爬虫名。** `deepseekbot` 只出现在抖音的 robots.txt 里 <Src ids="07-S42" />，DeepSeek 自己没确认。
+- **开发者类问题引用谁。** 插件推荐、编程教程这类问题，没有方法公开的中文数据。
+
+你跑的 10 分钟测试，就是在补最后一条。
+
+## 合规：GEO 已经被监管点名
+
+**网信办。** 2026-04-30 部署的「清朗·整治AI应用乱象」专项行动，把这类行为列为 AI 数据投毒 <Src ids="07-S43" />：
+
+> 通过篡改训练语料、伪造权威数据、使用GEO（生成式搜索引擎优化）技术恶意营销等方式实施AI数据投毒。
+
+同一条还要求平台对引用信源做交叉验证、标注引用链接 <Src ids="07-S43" />。7 月 6 日的阶段通报说，已处置 AI 产品 1.4 万余款 <Src ids="07-S44" />。
+
+**3·15 晚会（2026-03-15）。** 节目演示了一次完整的投毒 <Src ids="07-S45 07-S46" />：
+
+1. 业内人士买了「力擎GEO优化系统」，虚构一款 Apollo9 智能手环。
+2. 系统自动生成十余篇软文，先发了 2 篇。
+3. 两小时后问某款 AI「Apollo-9智能手环怎么样」。它照搬了「量子纠缠传感」「黑洞级续航」这些虚构卖点。
+4. 三天内共发 11 篇：8 篇专家测评、2 篇行业排名、1 篇用户测评。
+5. 再问「智能健康手环推荐」，两个 AI 大模型把它排在前面。
+
+节目没有点名是哪几个模型 <Src ids="07-S46" />。两小时生效的是直接问产品名，这个名字网上只有那篇文章。品类问题用了 11 篇、三天。
+
+**执法。** 2026 年 6 月，北京朝阳区市场监管局罚了一家 GEO 服务商 5 万元 <Src ids="07-S51" />。它按 AI 引用的网站反向投放软文，对内容真假「不做审核判断」<Src ids="07-S51" />。依据是《反不正当竞争法》第九条 <Src ids="07-S51" />。
+
+对你的启示有两条：
+
+- **先把自己的名字占住。** 一个名字网上只有一篇文章时，AI 就照那篇说 <Src ids="07-S46" />。官网、GitHub、一个中文社区，各放一份事实准确的介绍。
+- **不编测评、不编排名、不编数字。** 这正是网信办点名的「伪造权威数据」<Src ids="07-S43" />。
+
+## 交给 AI 做
+
+问题集和统计都可以交给 AI。替你去知乎、小红书发帖不行，编测评更不行 <Src ids="04-S48 07-S43" />。
+
+<Copy id="cn-ask-prompt" title="生成中文 AI 实测问题集" code={askPrompt} />
+
+检查：品牌名题里有没有你的中文名和英文名。读链接题的标准答案要能在页面上找到原句。
+
+<Copy id="cn-tally-prompt" title="统计采样结果" code={tallyPrompt} />
+
+检查：随手挑 3 行，对回原始记录。它说「提到了」的那条，回答里真有你的名字。
+
+## 卡住了？
+
+<Q q="cn-index-check.sh 什么都没输出">
+先单独跑一次 curl，去掉 `| jq` 看原始返回。如果是鉴权错误，检查 `DEEPSEEK_API_KEY`。如果 `results` 是空数组，说明 DeepSeek 的索引里确实没搜到。换成只搜产品名再试，看是不是 `site:` 写错了域名。
+</Q>
+
+<Q q="DeepSeek App 引用了我，API 却搜不到">
+可能 App 和 API 不是同一个索引，官方没说过两者一样 <Src ids="07-S15" />。以 App 的结果为准，API 只当近似。
+</Q>
+
+<Q q="Fetch 返回 404，可浏览器能打开">
+404 包括「被站点策略拦截」<Src ids="07-S15" />。多半是 Cloudflare 的 Bot Fight Mode 或 AI 爬虫策略拦了。按 [Cloudflare 那篇](/howto/cloudflare-bots/) 一处处查。
+</Q>
+
+<Q q="我想挡 Bytespider，会不会影响豆包">
+没人知道。官方只说它是头条搜索的爬虫 <Src ids="07-S27" />。挡了它，头条搜索一定爬不到你。豆包受不受影响，没有资料。
+</Q>
+
+<Q q="不备案能不能被中文 AI 引用">
+能。没有哪家说必须备案。豆包搜索默认不过滤未备案站 <Src ids="07-S2" />，DeepSeek 能搜 GitHub <Src ids="07-S15" />。备案只是豆包搜索的一个可选过滤条件，有一定好处，不是门槛。
+</Q>
+
+<Q q="有没有 GEO 的国家标准">
+没有。2026 年出了三套团体标准，自愿采用 <Src ids="07-S48 07-S49" />。其中一套的编委主任来自营销数据公司 <Src ids="07-S49" />。服务商说「通过了某某评测」，不等于效果承诺。
+</Q>
+
+<Checkpoint id="china" items={[
+  "6 个 App 各问过 4 题、每题 2 次，记录存了下来",
+  "跑过 cn-index-check.sh，TSV 文件留着下个月对比",
+  "确认过线上 robots.txt 里 Bytespider 是放行还是挡住，这是自己选的",
+  "百度搜索资源平台已验证，sitemap 已提交",
+  "头条搜索、搜狗、神马站长平台各注册过一次",
+  "官网有「关于」页，写清运营主体和联系方式",
+]} />

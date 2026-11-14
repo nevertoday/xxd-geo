@@ -35,7 +35,7 @@ robots.txt 写了允许，Cloudflare 照样可能把 AI 爬虫挡在门外。这
 
 它的 robots.txt 只有 Cloudflare 加的 content signals 注释，没有任何规则 <Src ids="21-S1" />。所以 403 不是 robots.txt 造成的。
 
-GPTBot、ClaudeBot、Bytespider 是训练爬虫 <Src ids="02-S1 02-S25" />。如果站长本来就不想被训练，这三个挡了没关系。
+GPTBot、ClaudeBot 是训练爬虫 <Src ids="02-S1 02-S25" />。如果站长本来就不想被训练，这两个挡了没关系。Bytespider 不一样，头条搜索站长平台写明它是头条搜索的爬虫 <Src ids="07-S27" />。挡了它，头条搜索就收录不到这个站。
 
 PerplexityBot 不一样。它是 Perplexity 的搜索爬虫，官方说不用于训练 <Src ids="02-S33" />。挡了它，Perplexity 的结果里就没有这个站。
 
@@ -105,7 +105,7 @@ pstack 站要做的确认：
 
 路径同第一处：Training 选 Disallow 并打开 **Enable Bot Preference Sync**，Cloudflare 就会托管你的 robots.txt <Src ids="03-S17" />。
 
-它会在前面插一段 `# BEGIN Cloudflare Managed content`。里面写 `Content-signal: search=yes, ai-train=no, use=reference`，并对 GPTBot、ClaudeBot、Google-Extended、Applebot-Extended、meta-externalagent、CCBot、Bytespider、Amazonbot 写 `Disallow: /` <Src ids="03-S17" />。
+它会在前面插一段 `# BEGIN Cloudflare Managed content`。里面写 `Content-signal: search=yes, ai-train=no, use=reference`，并对 GPTBot、ClaudeBot、Google-Extended、Applebot-Extended、meta-externalagent、CCBot、Bytespider、Amazonbot 写 `Disallow: /` <Src ids="03-S17" />。其中 Bytespider 是头条搜索的爬虫 <Src ids="07-S27 07-S40" />，用了托管 robots.txt，头条搜索就爬不到你。
 
 <Callout type="warn">
 托管内容里挡了 Google-Extended。它同时管 Gemini 应用的实时引用，挡了你就不在 Gemini 的引用里 <Src ids="02-S15" />。想出现在 Gemini 里，就别用托管 robots.txt，自己写一份。

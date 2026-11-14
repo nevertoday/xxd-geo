@@ -32,10 +32,12 @@ Allow: /
 # Bingbot：Bing 和 Copilot。
 # Applebot：Spotlight、Siri、Safari 搜索。
 # Baiduspider：百度搜索。
+# Bytespider：头条搜索的官方爬虫。它和豆包的关系官方没说，要挡就删掉这一行。
 User-agent: Googlebot
 User-agent: Bingbot
 User-agent: Applebot
 User-agent: Baiduspider
+User-agent: Bytespider
 Allow: /
 
 # ---- 2. AI 搜索索引：决定你能不能出现在 AI 搜索回答里 ----
@@ -181,7 +183,7 @@ for ua in ["Googlebot", "Bingbot", "Applebot", "Baiduspider",
 输出和你写的一样。如果前面多出一段 `# BEGIN Cloudflare Managed content`，那是 Cloudflare 的托管 robots.txt 插进来的。
 </Callout>
 
-托管 robots.txt 会对 GPTBot、ClaudeBot、Google-Extended、Applebot-Extended、meta-externalagent、CCBot、Bytespider、Amazonbot 写 `Disallow: /` <Src ids="03-S17" />。你的站原本没有 robots.txt 时，它会替你生成一份 <Src ids="03-S17" />。两份规则叠在一起时谁说了算，各家解析器可能不同。最稳的是关掉托管功能，只留你自己的，位置见 [Cloudflare 的 How-to](/howto/cloudflare-bots/)。
+托管 robots.txt 会对 GPTBot、ClaudeBot、Google-Extended、Applebot-Extended、meta-externalagent、CCBot、Bytespider、Amazonbot 写 `Disallow: /` <Src ids="03-S17" />。其中 Bytespider 是头条搜索的官方爬虫 <Src ids="07-S27" />，托管功能开着，头条搜索就爬不到你 <Src ids="07-S40" />。你的站原本没有 robots.txt 时，它会替你生成一份 <Src ids="03-S17" />。两份规则叠在一起时谁说了算，各家解析器可能不同。最稳的是关掉托管功能，只留你自己的，位置见 [Cloudflare 的 How-to](/howto/cloudflare-bots/)。
 
 ## 第四步：用脚本检查每个爬虫的结果
 
@@ -243,7 +245,7 @@ Python 的 robotparser 会让 `__usage_ai-training` 落到 `*` 组。这和 IETF
 - 会员站 app.<你的域名>（/dashboard/ 和 /api/ 不允许任何爬虫访问）
 
 请按下面的分类写 robots.txt，每个子域名一份，每行加中文注释：
-1. 传统搜索：Googlebot、Bingbot、Applebot、Baiduspider 允许。
+1. 传统搜索：Googlebot、Bingbot、Applebot、Baiduspider、Bytespider（头条搜索）允许。
 2. AI 搜索索引：OAI-SearchBot、Claude-SearchBot、PerplexityBot、MistralAI-Index、meta-webindexer、DuckAssistBot 允许。
 3. 用户触发：ChatGPT-User、Claude-User、Perplexity-User、MistralAI-User 允许。
 4. 训练：我选择【禁止 / 允许】。禁止时同时写 __usage_ai-training 和 GPTBot、ClaudeBot、Applebot-Extended、MistralAI-Training、meta-externalagent、CCBot。
@@ -267,7 +269,7 @@ Python 的 robotparser 会让 `__usage_ai-training` 落到 `*` 组。这和 IETF
 </Q>
 
 <Q q="我想挡 Bytespider，会不会影响豆包">
-没查清。ByteDance 没有官方爬虫文档，Bytespider 和豆包回答的关系不明 <Src ids="02-S65" />。GitHub 的 robots.txt 整站禁止了它 <Src ids="03-S65" />。要挡就在模板末尾加一组 `User-agent: Bytespider` 和 `Disallow: /`。
+没查清。头条搜索站长平台写明 Bytespider 是头条搜索的爬虫，文档没提豆包 <Src ids="07-S27" />。挡了它，头条搜索一定爬不到你；豆包受不受影响，没有资料。GitHub 的 robots.txt 整站禁止了它 <Src ids="03-S65" />。要挡就把模板第 1 段里的 `User-agent: Bytespider` 删掉，在末尾加一组 `User-agent: Bytespider` 和 `Disallow: /`。
 </Q>
 
 <Q q="robots.txt 全对，curl 还是 403">
