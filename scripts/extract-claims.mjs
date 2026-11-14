@@ -15,10 +15,14 @@ const pages = ["start", "guide", "howto"].flatMap((d) => readdirSync(join("src/p
 const claims = [];
 for (const f of pages) {
   const body = readFileSync(f, "utf8").replace(/^---[\s\S]*?\n---\n/, "").replace(/^```[\s\S]*?^```$/gm, "");
-  for (const m of body.matchAll(/([^。！？\n]*?)\s*<Src ids="([^"]+)"\s*\/>/g)) {
-    const text = m[1].replace(/<[^>]+>|\*\*|`/g, "").replace(/\[([^\]]*)\]\([^)]*\)/g, "$1").trim();
+  for (const m of body.matchAll(/<Src ids="([^"]+)"\s*\/>/g)) {
+    // 出处标在句号前或句号后都算：往回找到上一句的结尾为止
+    const before = body.slice(0, m.index).replace(/\s+$/, "").replace(/(<Src ids="[^"]*"\s*\/>\s*)+$/, "");
+    const end = before.replace(/[。！？]$/, "");
+    const start = Math.max(...["。", "！", "？", "\n"].map((c) => end.lastIndexOf(c))) + 1;
+    const text = end.slice(start).replace(/<[^>]+>|\*\*|`/g, "").replace(/\[([^\]]*)\]\([^)]*\)/g, "$1").trim();
     if (!text) continue;
-    const ids = m[2].trim().split(/\s+/);
+    const ids = m[1].trim().split(/\s+/);
     claims.push({ page: f, text, ids });
   }
 }
