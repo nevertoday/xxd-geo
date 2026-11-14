@@ -4,7 +4,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { LESSONS, STEPS, HOWTO_FLAT } from "../src/data/nav.js";
-import { SOURCES, GRADES, KINDS, bestGrade } from "../src/data/sources.js";
+import { SOURCES, GRADES, KINDS, bestGrade, canon } from "../src/data/sources.js";
 import { TACTICS, LAYERS, VERDICTS, EFFORTS } from "../src/data/tactics.js";
 import { PLATFORMS, REGIONS, PURPOSES } from "../src/data/platforms.js";
 import { TOOLS, TOOL_KINDS } from "../src/data/tools.js";
@@ -22,14 +22,15 @@ for (const [id, s] of Object.entries(SOURCES)) {
   if (!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(id)) bad(where, "id 只用小写字母、数字和连字符");
   if (!allowed(GRADES, s.grade)) bad(where, `grade「${s.grade}」不是 ${names(GRADES).join(" / ")}`);
   if (!allowed(KINDS, s.kind)) bad(where, `kind「${s.kind}」不是 ${KINDS.join(" / ")}`);
-  if (!/^\d{4}-(0[1-9]|1[0-2])(-(0[1-9]|[12]\d|3[01]))?$/.test(s.date ?? "")) bad(where, `date「${s.date}」要写成 YYYY-MM 或 YYYY-MM-DD`);
-  if (!/^https:\/\/\S+$/.test(s.url ?? "")) bad(where, `url「${s.url}」要以 https:// 开头`);
+  if (s.date && !/^\d{4}(-(0[1-9]|1[0-2])(-(0[1-9]|[12]\d|3[01]))?)?$/.test(s.date)) bad(where, `date「${s.date}」要写成 YYYY、YYYY-MM 或 YYYY-MM-DD`);
+  if (s.url ? !/^https?:\/\/\S+$/.test(s.url) : !s.where) bad(where, `url「${s.url}」要以 http(s):// 开头；没有链接就写 where`);
   if (!s.title || !s.publisher || !s.note) bad(where, "title、publisher、note 都要写");
 }
 
 const cited = new Set();
 const cite = (where, ids = []) => {
-  for (const id of ids) {
+  for (const raw of ids) {
+    const id = canon(raw);
     cited.add(id);
     if (!SOURCES[id]) bad(where, `出处「${id}」不在 sources.js 里`);
   }

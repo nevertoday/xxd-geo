@@ -1,7 +1,7 @@
 ---
 // 出处：全站引用的资料，按证据等级分组，每条锚点 #<id>。下面列出站内哪里用到了它（证据表、平台、工具）。
 import Site from "../layouts/Site.astro";
-import { SOURCES, GRADES } from "../data/sources.js";
+import { SOURCES, GRADES, canon } from "../data/sources.js";
 import { TACTICS } from "../data/tactics.js";
 import { PLATFORMS } from "../data/platforms.js";
 import { TOOLS, toolId } from "../data/tools.js";
@@ -9,9 +9,9 @@ import { link, langOf } from "../data/nav.js";
 const lang = langOf(Astro.url.pathname);
 const list = Object.entries(SOURCES).map(([id, s]) => ({ id, ...s })).sort((a, b) => b.date.localeCompare(a.date));
 const citedBy = (id) => [
-  ...TACTICS.filter((x) => x.sources.includes(id)).map((x) => ({ href: link(`/evidence/#${x.id}`, lang), label: x.title })),
-  ...PLATFORMS.filter((x) => x.sources.includes(id)).map((x) => ({ href: link(`/platforms/${x.slug}/`, lang), label: x.name })),
-  ...TOOLS.filter((x) => x.sources.includes(id)).map((x) => ({ href: link(`/tools/#${toolId(x.name)}`, lang), label: x.name })),
+  ...TACTICS.filter((x) => x.sources.map(canon).includes(id)).map((x) => ({ href: link(`/evidence/#${x.id}`, lang), label: x.title })),
+  ...PLATFORMS.filter((x) => x.sources.map(canon).includes(id)).map((x) => ({ href: link(`/platforms/${x.slug}/`, lang), label: x.name })),
+  ...TOOLS.filter((x) => x.sources.map(canon).includes(id)).map((x) => ({ href: link(`/tools/#${toolId(x.name)}`, lang), label: x.name })),
 ];
 const headings = [{ slug: "grades", text: "证据等级怎么分", depth: 2 }, ...Object.entries(GRADES).map(([g, x]) => ({ slug: `grade-${g}`, text: `${g} · ${x.label}`, depth: 2 }))];
 ---
@@ -35,8 +35,8 @@ const headings = [{ slug: "grades", text: "证据等级怎么分", depth: 2 }, .
                 const by = citedBy(s.id);
                 return (
                   <li class="entry" id={s.id}>
-                    <div class="entry__head"><span class="grade" data-grade={s.grade}>{s.grade}</span><h3 class="entry__title"><a href={s.url} rel="noopener">{s.title}</a></h3>{s.sample && <span class="sample-tag entry__meta">示例</span>}</div>
-                    <p class="entry__meta">{s.publisher} · {s.date} · {s.kind}</p>
+                    <div class="entry__head"><span class="grade" data-grade={s.grade}>{s.grade}</span><h3 class="entry__title">{s.url ? <a href={s.url} rel="noopener">{s.title}</a> : s.title}</h3>{s.sample && <span class="sample-tag entry__meta">示例</span>}</div>
+                    <p class="entry__meta">{[s.publisher, s.date || "无日期", s.kind, s.where, s.seen === "摘要" && "调研时只看到搜索摘要", s.conflict && "发布方有利益关系"].filter(Boolean).join(" · ")}</p>
                     <p>{s.note}</p>
                     {by.length > 0 && <p class="entry__links">用在：{by.map((b, i) => <>{i > 0 && "、"}<a href={b.href}>{b.label}</a></>)}</p>}
                   </li>
