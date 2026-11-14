@@ -28,3 +28,6 @@ ts	phase	decision	why	evidence	result
 2026-11-14T15:28:52Z	verify	数据文件（tactics、wiki、faq、platforms）里的文字没有逐句核	时间和额度留给正文；数据文件只由构建查了出处 id 是否存在	MAINTAINING.md 核查一节	open
 2026-11-14T15:28:52Z	cleanup	删掉 17 个工作副本和分支，先确认每个分支都已并入 main	工作副本只是隔离用的，合并后没有用处	git worktree list	done
 2026-11-14T15:28:52Z	publish	没有推送 GitHub、没有部署 Cloudflare、没有改 pstack 仓库	这些是对外动作，要用户点头	'-	waiting on user
+2026-11-14T15:29:01Z	start	审计决策记录时补两条漏记的决定	对照对话记录发现漏记	this run	'-
+2026-11-14T15:29:01Z	write	第 2 课时长从 10 分钟改成 20 分钟（导航、链接、README 一起改）	写手算过：问 48 次，10 分钟做不完	366d9c4	done
+2026-11-14T15:29:01Z	write	没有在站上另放一份 probe.mjs 和 geo-track.mjs，下载只走 GitHub raw	两份副本会走样；GitHub 上能看到源码	public/tools 已删除	open：国内访问 raw.githubusercontent.com 可能不稳
