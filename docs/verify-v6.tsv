@@ -1,0 +1,8 @@
+page	claim	ids	verdict	evidence	change
+src/pages/guide/0-how-ai-answers.mdx	有相关性的是两样：引用你的域名数，和 Reddit 上的讨论	01-S16	PARTIAL	research/01-foundations.md:327 只说 Perplexity 的可见度和引用域名数、Reddit 讨论相关；https://arxiv.org/abs/2601.00912 摘要写的是 For Perplexity	在 Perplexity 上，有相关性的是两样：引用你的域名数，和 Reddit 上的讨论
+src/pages/guide/3-readable.mdx	可访问性专家 Adrian Roselli 主张先用原生元素。ARIA 只给没有文字的图标按钮。这是他的观点	03-S60	PARTIAL	research/03-technical.md:289 中「只给图标按钮加 aria-label」是调研稿自己的建议；https://adrianroselli.com/2025/10/openai-aria-and-seo-making-the-web-worse.html 只说 ARIA 应是后备，没谈图标按钮	可访问性专家 Adrian Roselli 主张先用原生元素，ARIA 只是后备。这是他的观点
+src/pages/howto/crawler-logs.mdx	本站用一份假日志跑过，输出就是这个样子	21-S7	UNSUPPORTED	research/21-extra.md 出处表：S7 记的是 verify_bot_ip.py 和 IP 列表格式；用假数据试跑 ai_bot_stats.py 记在 S8	出处 id 改为 21-S8，句子不变
+src/pages/howto/crawler-logs.mdx	分组名单来自各家官方文档	02-S1 02-S25 02-S33 02-S37 02-S39 02-S40 02-S16	PARTIAL	research/02-platforms.md:270 Bytespider 没有官方文档；GeminiiOS 来自 02-platforms.md:111 的观察（S17 S18）；CCBot 在所引文档里没有；Applebot、Baiduspider 的文档是 02-S38、02-S46，原句没引	分组名单大多来自各家官方文档（加 02-S38 02-S46）。Bytespider、CCBot、GeminiiOS 不在这些文档里。
+src/pages/howto/content-site.mdx	ChatGPT 引用的来源里，榜单和对比类占 43.8%	04-S6	PARTIAL	research/04-content-offsite.md:76 占 43.8% 的只是「best X」博客榜单，样本是 750 条漏斗顶端提示词；没有「对比类」	Ahrefs 看了 750 条找产品的提问。ChatGPT 引用的来源里，「best X」榜单文章占 43.8%
+src/pages/howto/content-site.mdx	加了引语、统计数字和出处，页面在回答里的篇幅多了 30% 到 40%。堆关键词反而下降	01-S1	PARTIAL	research/01-foundations.md:12、85、102 实验以被改写页面已在上下文里为前提，原句漏了这个范围	一篇论文做了实验，前提是页面已经被 AI 读到。（后面两句不变）
+总计（5 页 142 句）	SUPPORTED 136；PARTIAL 5；UNSUPPORTED 1；CANNOT_CHECK 0				
