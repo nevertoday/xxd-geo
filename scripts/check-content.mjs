@@ -4,7 +4,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { LESSONS, STEPS, HOWTO_FLAT } from "../src/data/nav.js";
-import { SOURCES, GRADES, KINDS } from "../src/data/sources.js";
+import { SOURCES, GRADES, KINDS, bestGrade } from "../src/data/sources.js";
 import { TACTICS, LAYERS, VERDICTS, EFFORTS } from "../src/data/tactics.js";
 import { PLATFORMS, REGIONS, PURPOSES } from "../src/data/platforms.js";
 import { TOOLS, TOOL_KINDS } from "../src/data/tools.js";
@@ -59,6 +59,7 @@ for (const [file, list, key, enums] of DATA) {
     if (x.step !== undefined && !steps.has(x.step)) bad(where, `step ${x.step} 不在 STEPS 里`);
     if (x.howto !== undefined && !howtos.has(x.howto)) bad(where, `howto「${x.howto}」不在 HOWTO 里`);
     cite(where, x.sources);
+    if (x.verdict === "must" && !["A", "B"].includes(bestGrade(x.sources))) bad(where, "「必做」至少要有一条 A 或 B 级出处");
     if (x.sample) samples++;
   }
 }
