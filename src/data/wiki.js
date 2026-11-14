@@ -4,7 +4,7 @@
 // step: 对应的完整教程步骤；howto: 对应的 How-to（要 ready 才会出链接）。
 // sources: 这一条里事实说法的出处 id（sources.js），页面暂不显示，留给核对和以后显示用。
 
-export const WIKI_GROUPS = ["基本概念", "AI 怎么找答案", "爬虫和索引", "内容和引用", "测量", "风险和误区"];
+export const WIKI_GROUPS = ["基本概念", "AI 怎么找答案", "爬虫和索引", "内容和引用", "测量", "国内平台", "风险和误区"];
 
 export const WIKI = [
   // ---- 基本概念 ----
@@ -267,16 +267,16 @@ export const WIKI = [
     like: "像一家报社的记者证：知道他是哪家报社的，但不知道稿子会不会登在姐妹刊物上。",
     here: [
       "官方公布了 10 个 IP 段，验证方法是反向 DNS，主机名应是 `*.bytedance.com`。文档没写它是否遵守 robots.txt，也没提豆包。它和豆包回答、豆包训练的关系，都没有官方说明（截至 2026-11）。",
-      "两个地方会默认挡它：GitHub 的 robots.txt 整站禁止 Bytespider，Cloudflare 的托管 robots.txt 也对它写 `Disallow: /`。面向中文用户的站，先看自己是不是被顺手挡了。",
+      "两个地方会默认挡它：GitHub 的 robots.txt 整站禁止 Bytespider，Cloudflare 的托管 robots.txt 也对它写 `Disallow: /`。面向中文用户的站，先看自己是不是被顺手挡了。豆包那边已知的情况见 [豆包](/platforms/doubao/)。",
     ],
     myths: [
       "「Bytespider 是豆包的爬虫，挡了它豆包就不引用你」：官方没这么说，反过来也没说。",
       "「字节没有官方爬虫文档」：有，在头条搜索站长平台。",
     ],
-    see: ["ai-crawler", "robots-txt"],
+    see: ["ai-crawler", "robots-txt", "webmaster-platforms"],
     step: 6,
     howto: "cloudflare-bots",
-    sources: ["07-S27", "14-S4", "03-S17", "07-S61"],
+    sources: ["07-S27", "14-S4", "03-S17", "07-S40", "07-S61"],
   },
   {
     slug: "indexnow", title: "IndexNow", group: "爬虫和索引",
@@ -420,9 +420,24 @@ export const WIKI = [
     myths: [
       "「品牌提及比外链重要 3 倍」：这是二手文章把两个相关系数相除得出的。原研究没这么说。",
     ],
-    see: ["discovery-gap", "share-of-voice"],
+    see: ["discovery-gap", "share-of-voice", "notability"],
     step: 5,
     sources: ["01-S50", "04-S4", "01-S12"],
+  },
+  {
+    slug: "notability", title: "维基百科的收录门槛（notability）", group: "内容和引用",
+    one: "Notability 是维基百科决定一个产品、公司能不能有自己条目的门槛：要有多个独立、可靠的来源深入报道过它。",
+    like: "像评奖要看别人的推荐信，自己写的自荐信不算数。",
+    here: [
+      "这些都不算数：新闻稿、例行的发布报道、列表里顺带一提，自己写的和赞助的内容。多数小产品还够不上这个门槛。",
+      "够得上也别自己写。维基百科劝利益相关的人别直接写自己的条目，要走 **Articles for Creation**（AfC）：提交草稿，等别的编辑审。拿钱编辑必须披露雇主和客户。已有条目写错了，在讨论页带上来源提请求。见 [让别人提到你](/guide/5-mentions/)。",
+    ],
+    myths: [
+      "「先自己建个条目，AI 就会引用」：够不上门槛的条目会被删，自己写还违反利益冲突规则。",
+    ],
+    see: ["mention-vs-link", "entity"],
+    step: 5,
+    sources: ["04-S33", "04-S32"],
   },
 
   // ---- 测量 ----
@@ -438,7 +453,7 @@ export const WIKI = [
       "「我们在 ChatGPT 里排第一」：同一顺序出现两次的概率约 1/1,000，排名基本是噪声。",
       "「问一次没提我，说明 AI 里没有我」：再问一遍可能就有了。",
     ],
-    see: ["share-of-voice", "discovery-gap"],
+    see: ["citation-rate", "share-of-voice", "discovery-gap"],
     step: 7,
     howto: "prompt-set",
     sources: ["05-S1", "05-S5", "05-S6", "05-S68"],
@@ -455,7 +470,7 @@ export const WIKI = [
       "「改完第二天就上了推荐，说明有效」：可能只是自然波动。",
       "「排名从第 5 升到第 2」：同一顺序出现两次的概率约 1/1,000，排名基本是噪声。",
     ],
-    see: ["mention-rate", "share-of-voice"],
+    see: ["mention-rate", "noise-floor", "diff-in-diff"],
     step: 7,
     howto: "experiment",
     sources: ["05-S3", "05-S7", "05-S9", "06-S38", "05-S1"],
@@ -476,11 +491,59 @@ export const WIKI = [
     sources: ["05-S50", "05-S1"],
   },
   {
+    slug: "citation-rate", title: "引用率", group: "测量",
+    one: "引用率是回答里链接到你网站的比例。它和提及率分开算：AI 可能提到你却不给链接，也可能引用你的页面却不推荐你。",
+    like: "像别人写文章时提到你，和在文末参考文献里列了你的网址，是两件事。",
+    here: [
+      "算法是：至少引用了一个你域名网址的回答数，除以有效回答数。Gemini 和 Copilot 分别有 64% 和 53% 的回答根本不带引用，算之前先把这些回答排除。",
+      "引用比提及更不稳。Ahrefs 看到 ChatGPT 的引用 59% 第二天就不见了，约 75% 会在 20 天内回来，所以建议按「最近 7 天里有几天引用了你」来看。[追踪脚本](/howto/diy-tracker/) 报表里的 `cited-you` 一列就是引用率。",
+    ],
+    myths: [
+      "「AI 引用了我的榜单，说明它推荐我」：Lily Ray 查了 100 个 B2B 查询，69% 的情况下 AI 引用了品牌自己的榜单，却没推荐这个品牌。",
+    ],
+    see: ["mention-rate", "mention-vs-link"],
+    step: 7,
+    howto: "diy-tracker",
+    sources: ["05-S9", "06-S53"],
+  },
+  {
+    slug: "noise-floor", title: "噪声地板和 A/A 测试", group: "测量",
+    one: "噪声地板是什么都不改时，提及率自己会波动多大。测它的办法叫 A/A 测试。",
+    like: "像称体重前先空着秤称两次。两次读数差 0.3 公斤，以后小于 0.3 公斤的变化就别当真。",
+    here: [
+      "做法：什么都不改，连续两周用同一组问题跑。两周的提及率差多少个百分点，就是你的噪声地板。之后任何小于它的变化，都不算数。",
+      "为什么要测：圣加仑大学的研究发现，同一天里重复跑，被引来源的重合度也只有 0.32 到 0.43。一篇预印本用置信区间一算，很多「A 比 B 可见度高」的差异都落在噪声里。",
+    ],
+    myths: [
+      "「提及率从 20% 涨到 24%，改动有效」：先要知道它不改时会不会自己涨 4 个点。",
+    ],
+    see: ["baseline", "diff-in-diff", "mention-rate"],
+    step: 7,
+    howto: "experiment",
+    sources: ["05-S3", "05-S4"],
+  },
+  {
+    slug: "diff-in-diff", title: "双重差分", group: "测量",
+    one: "双重差分是拿处理组的变化，减去对照组的变化，算出改动本身的效果。",
+    like: "像两块地，一块施了新肥料，一块没施。两块都长高了，多长出来的那一截才算肥料的功劳。",
+    here: [
+      "公式：效果 =（处理组改后 − 处理组改前）−（对照组改后 − 对照组改前）。处理组是这次改动该影响的问题或页面，对照组是无关的那些。==差值还要大过噪声地板==，才算有效。",
+      "为什么要减对照组：AI 的引用来源每周都在大换，2026-10 ChatGPT 换代时来源标记还丢过一周。只看自己涨了多少，分不清是改动的功劳还是大盘在变。你有好几个产品，就有现成的对照组：这次只动一个，其他产品的问题当对照。这套做法是调研稿从几份研究推出来的，还没人专门验证过。",
+    ],
+    myths: [
+      "「改完提及率涨了 12 个点」：对照组同期涨了 3 个点，改动的效果只有 9 个点。",
+    ],
+    see: ["noise-floor", "baseline"],
+    step: 7,
+    howto: "experiment",
+    sources: ["05-S7", "05-S9", "05-S19", "05-S3"],
+  },
+  {
     slug: "ai-referral", title: "AI 引荐流量", group: "测量",
     one: "AI 引荐流量是用户在 ChatGPT、Perplexity 这类 AI 里点链接进你网站的访问。",
     like: "像店里的「朋友介绍来的」客人。有的报了介绍人名字，有的进门什么都没说。",
     here: [
-      "它现在还很小：SE Ranking 统计 101,574 个网站，AI 平台带来的流量只占 0.32%。GA4 自带「AI Assistant」渠道，但会漏 Perplexity、Claude，没有 referrer 的点击会落进 Direct，AI Overviews 和 AI Mode 算 Organic Search。",
+      "它现在还很小：SE Ranking 统计 101,574 个网站，AI 平台带来的流量只占 0.32%。GA4 自带「AI Assistant」渠道，但会漏 Perplexity、Claude，没有 referrer 的点击会落进 Direct，AI Overviews 和 AI Mode 算 Organic Search。自己建一个自定义渠道组，用正则补上漏掉的来源，排在 Referral 前面。",
       "ChatGPT 的 `utm_source=chatgpt.com` 在 2026 年 10 月丢过一周，之后恢复了多少，两家厂商说法相反。把统计到的数当作下限，再在注册问卷里问一句「从哪听说的」。",
     ],
     myths: [
@@ -489,7 +552,97 @@ export const WIKI = [
     see: ["mention-rate"],
     step: 7,
     howto: "ai-traffic-analytics",
-    sources: ["01-S51", "05-S14", "05-S17", "05-S19", "02-S4", "01-S55"],
+    sources: ["01-S51", "05-S14", "05-S15", "05-S17", "05-S19", "02-S4", "01-S55"],
+  },
+
+  // ---- 国内平台 ----
+  {
+    slug: "cn-site-authority", title: "中文 AI 的站点权威等级", group: "国内平台",
+    one: "国内几家 AI 搜索会给网站打权威分。分低的站，可能直接被过滤掉。",
+    like: "像图书馆分馆藏：政府公报摆在显眼处，来路不明的小册子可能不上架。",
+    here: [
+      "[豆包](/platforms/doubao/)背后的豆包搜索公开了四级。「中小型企业、机构官网」是第 2 级，「普通小站」是第 4 级，调用方可以只要第 1 级。[DeepSeek](/platforms/deepseek/) 的搜索接口每条结果带 0 到 4 的 `authority`，3 以上算「极权威」。[Kimi](/platforms/kimi/) 写明会剔除「未经证实的自媒体」。",
+      "判定规则厂商都没公开。官网写清运营主体、联系方式和作者，更像「机构官网」，这一条是推断。想看自己现在几分，用 DeepSeek 的 Search 接口查 `site:<你的域名>`，做法见 [国内 AI 平台怎么做](/guide/6-china/)。",
+    ],
+    list: [
+      ["豆包搜索", "AuthInfoLevel 1 到 4，1 最权威"],
+      ["DeepSeek Search", "authority 0 到 4，-1 是未知"],
+      ["Kimi", "只写了剔除哪几类来源"],
+    ],
+    myths: [
+      "「备案了就是权威站」：豆包按站点类型分级，备案是另一个过滤条件。",
+    ],
+    see: ["icp-host-only", "webmaster-platforms"],
+    step: 6,
+    sources: ["07-S1", "07-S2", "07-S15", "07-S19"],
+  },
+  {
+    slug: "icp-host-only", title: "ICP 备案和 IcpHostOnly", group: "国内平台",
+    one: "IcpHostOnly 是豆包搜索 API 的一个开关。打开后，只搜国内 ICP 备案过的网站。",
+    like: "像招聘网站上勾选「只看本地企业」。默认不勾，勾上以后外地的公司就看不到了。",
+    here: [
+      "它默认是关的，说明豆包搜索的索引里有没备案的站。接入豆包搜索的 Agent 打开它，没备案的站就不会出现。豆包 App 本身开没开，没有资料（截至 2026-11）。",
+      "没有哪家厂商说被 AI 引用必须备案。Cloudflare 的说法是，只有放在大陆服务器或 CDN 上才必须备案，要 1 到 2 个月。想知道它对你有没有影响，用豆包搜索 Custom 版把 `IcpHostOnly` 分别设成 false 和 true 各查一次，见 [豆包](/platforms/doubao/)。",
+    ],
+    myths: [
+      "「没备案，中文 AI 就搜不到你」：Kimi、DeepSeek 官方写明能检索英文资料，豆包搜索默认也不过滤。",
+    ],
+    see: ["cn-site-authority"],
+    step: 6,
+    sources: ["07-S2", "07-S39", "07-S15", "07-S19"],
+  },
+  {
+    slug: "webmaster-platforms", title: "国内站长平台", group: "国内平台",
+    one: "站长平台是搜索引擎给网站主的后台：验证站点、提交网址、看收录。中文 AI 回答多从这几家的索引里取材。",
+    like: "像给几家书店各寄一份新书目录。上不上架它们说了算，不寄就更难被发现。",
+    here: [
+      "百度搜索资源平台对应[文心](/platforms/wenxin/)。头条搜索站长平台是字节系，离[豆包](/platforms/doubao/)最近。搜狗站长平台是腾讯系，离[元宝](/platforms/yuanbao/)最近。神马站长平台是阿里系，离[千问](/platforms/qwen/)最近。后三条是推断，官方没说这些后台和 AI 回答的关系。",
+      "间接证据有两条：[智谱](/platforms/zhipu/)的搜索 API 用搜狗和夸克，阿里的 AI 网关只支持夸克。百度官方说推送只能加快抓取，不解决收录。每家注册一次、提交 sitemap，成本很低。",
+    ],
+    list: [
+      ["百度搜索资源平台", "百度系，文心用百度搜索"],
+      ["头条搜索站长平台", "字节系，Bytespider 归它"],
+      ["搜狗站长平台", "腾讯系，联系邮箱在 tencent.com"],
+      ["神马站长平台", "阿里系，条款把夸克列为阿里业务"],
+    ],
+    myths: [
+      "「提交了就一定收录」：百度官方说推送只加快抓取，不保证收录。",
+    ],
+    see: ["bytespider", "cn-site-authority"],
+    step: 6,
+    sources: ["07-S23", "07-S26", "07-S27", "07-S29", "07-S30", "07-S21", "07-S13"],
+  },
+  {
+    slug: "mpcrawler-web-view", title: "mpcrawler 和 web-view", group: "国内平台",
+    one: "mpcrawler 是微信搜索抓小程序页面的爬虫。web-view 是小程序里嵌网页的组件，mpcrawler 不收录它里面的内容。",
+    like: "像商场巡查员只记橱窗里的商品。你把商品放在店里一台电视上轮播，他记不下来。",
+    here: [
+      "爬虫来访时 UA 带 `mpcrawler`，场景值是 1129，还带三个 `X-WXApp-Crawler-*` 请求头，可以验签。官方原话是：「我们不收录 web-view 中的任何内容。我们暂时做不到这一点，长期来看，我们可能也做不到。」",
+      "所以想被搜到的内容页要做成原生页面，URL 自带全部参数，能直接打开，爬虫来时别弹登录。新内容上线后用 `submitpages` 推送，`sitemap.json` 已经下线。见 [微信小程序](/howto/mini-program/) 和 [微信](/platforms/weixin/)。",
+    ],
+    myths: [
+      "「配好 sitemap.json 就能被收录」：官方文档写着它已下线。",
+    ],
+    see: ["mini-program-skill", "ai-crawler"],
+    step: 6,
+    howto: "mini-program",
+    sources: ["07-S31", "07-S32", "07-S33"],
+  },
+  {
+    slug: "mini-program-skill", title: "小程序 SKILL（AI 开发模式）", group: "国内平台",
+    one: "小程序 SKILL 是把小程序的功能写成 AI 能调用的说明和接口。微信的 AI 入口「小微」按它决定调不调用你。",
+    like: "像给前台一份服务清单。客人说要什么，前台照清单决定把客人领到哪家店。",
+    here: [
+      "2026 年上线的「小程序 AI 开发模式」里，每个 SKILL 包含 `SKILL.md`、`mcp.json` 和原子接口。官方说模型最看重原子接口返回的 `content`，其次是 `mcp.json` 里的 `description`，`SKILL.md` 排第三。",
+      "调用量还受「问题发生率」影响，超过 20% 算超标，也看线上版本评分。申请入口在「微信公众平台 - 基础功能 - AI 能力」。规则刚上线（截至 2026-11），见 [微信小程序](/howto/mini-program/) 和 [微信](/platforms/weixin/)。",
+    ],
+    myths: [
+      "「SKILL.md 写得越长越好」：它排在第三，最大 16000 字节。先把接口返回的 content 写准。",
+    ],
+    see: ["mpcrawler-web-view"],
+    step: 6,
+    howto: "mini-program",
+    sources: ["07-S34", "07-S35", "07-S36", "27-S1"],
   },
 
   // ---- 风险和误区 ----
@@ -541,7 +694,7 @@ export const WIKI = [
   },
   {
     slug: "geo-poisoning", title: "GEO 投毒", group: "风险和误区",
-    one: "GEO 投毒是批量发布虚假或夸大的内容，让 AI 在回答里复述它们。",
+    one: "GEO 投毒是批量发布虚假或夸大的内容，让 AI 在回答里复述它们。网信办的叫法是「AI 数据投毒」。",
     like: "像往一口井里倒颜料，想让打水的人都说水是这个颜色。",
     here: [
       "2026 年 3·15 晚会演示过：给一款不存在的手环批量生成软文。三天发了 11 篇，它就进了两个大模型的推荐前列。有商家报价一年 6600 元保 AI 回答前三。",
