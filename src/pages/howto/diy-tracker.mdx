@@ -2,8 +2,236 @@
 layout: ../../layouts/HowTo.astro
 slug: diy-tracker
 step: 7
-tldr: "自己搭一个提及追踪"
-description: "自己搭一个提及追踪"
+tldr: "一个 Node 脚本每周问 AI，按引擎按周算出提及率，月花几美元"
+description: "自己搭一个 AI 提及追踪：Node 脚本把固定问题发给 OpenAI、Anthropic、Gemini、Perplexity 的联网搜索 API，答案和引用存进 SQLite，按周按引擎算提及率；附国内搜索 API 查收录的办法和费用估算。"
+time: "搭好 1 小时，之后每周 5 分钟"
+for: "管着好几个产品、想自己留原始数据的开发者"
 ---
+import Src from "../../components/Src.astro";
+import Callout from "../../components/Callout.astro";
+import Copy from "../../components/Copy.astro";
+import Q from "../../components/Q.astro";
+import trackerCode from "../../../research/tracker/geo-track.mjs?raw";
 
-正文编写中。
+export const runCmd = `export ANTHROPIC_API_KEY=sk-ant-...
+export PERPLEXITY_API_KEY=pplx-...
+node geo-track.mjs run prompts.csv --engines anthropic,perplexity --reps 3 --country US`;
+export const reportCmd = `node geo-track.mjs report --brand "<你的产品名>" --alias "<中文名>" --alias "<常见拼错>" --domain <你的域名> --prompts prompts.csv --weeks 8`;
+export const withCsv = `node geo-track.mjs report --brand "<你的产品名>" --domain <你的域名> --prompts prompts.csv --csv geo-baseline-2026-11-14.csv --csv geo-baseline-2026-12-12.csv`;
+export const exportCmd = `node geo-track.mjs export --brand "<你的产品名>" --alias "<中文名>" --domain <你的域名> --out geo-api.csv`;
+export const cronLine = `0 9 * * 1 cd ~/geo && ANTHROPIC_API_KEY=... PERPLEXITY_API_KEY=... node geo-track.mjs run prompts.csv --engines anthropic,perplexity --reps 3 >> run.log 2>&1`;
+export const deepseekSearch = String.raw`export DEEPSEEK_API_KEY=sk-...
+for q in "<产品名> site:<你的域名>" "<产品名> site:github.com" "<只在你英文页上出现的一句话> lang:en"; do
+  echo "### $q"
+  curl -s https://api.deepseek.com/v1/tools/search \
+    -H "Authorization: Bearer $DEEPSEEK_API_KEY" \
+    -H "Content-Type: application/json" \
+    -d "{\"query\": \"$q\", \"count\": 20}" \
+  | jq -r '.results[] | [.authority, .rerank_score, .date, .url] | @tsv'
+done`;
+export const deepseekFetch = String.raw`curl -s -o /dev/null -w '%{http_code}\n' https://api.deepseek.com/v1/tools/fetch \
+  -H "Authorization: Bearer $DEEPSEEK_API_KEY" -H "Content-Type: application/json" \
+  -d '{"url": "https://<你的域名>/<某篇教程>"}'`;
+export const zhipu = `from zai import ZhipuAiClient
+client = ZhipuAiClient(api_key="YOUR_API_KEY")
+for engine in ["search_pro_sogou", "search_pro_quark", "search_pro"]:
+    r = client.web_search.web_search(
+        search_engine=engine,
+        search_query="<产品名>",
+        count=20,
+        search_domain_filter="<你的域名>",
+    )
+    print(engine, r)`;
+export const bailian = `import os
+from openai import OpenAI
+client = OpenAI(
+    api_key=os.getenv("DASHSCOPE_API_KEY"),
+    base_url="https://<WorkspaceId>.cn-beijing.maas.aliyuncs.com/compatible-mode/v1",
+)
+r = client.chat.completions.create(
+    model="qwen-plus",
+    messages=[{"role": "user", "content": "<产品名> 是什么？"}],
+    extra_body={"enable_search": True,
+                "search_options": {"search_strategy": "turbo",
+                                   "enable_source": True,
+                                   "assigned_site_list": ["<你的域名>"]}},
+)
+print(r.choices[0].message.content)`;
+export const actionsPrompt = `在当前仓库新建 geo/ 目录，放入 geo-track.mjs 和 prompts.csv。
+1. 写一个 GitHub Actions 工作流：每周一 UTC 01:00 运行
+   node geo/geo-track.mjs run geo/prompts.csv --engines anthropic,perplexity --reps 3 --db geo/geo.sqlite
+   用 Node 22 或更新版本。API Key 从仓库 secrets 读，不要写进任何文件。
+2. 再运行 report（--brand "<产品名>" --domain <你的域名> --db geo/geo.sqlite），把输出写进 geo/REPORT.md。
+3. 把 geo/geo.sqlite 和 geo/REPORT.md 提交回仓库。
+4. 加上 workflow_dispatch。先用 --reps 1、只留 2 个问题的 prompts.csv 手动触发一次，把运行日志贴给我。
+不要改 geo-track.mjs 本身。`;
+
+<Callout type="warn">
+这个脚本只用假数据测过。请求格式按四家 2026-11-14 的官方文档写，本手册没有用真实 API Key 调用过。<Src ids="05-S68 17-S2" />第一次跑先用 `--reps 1` 和两三个问题，看到正常的输出再放开。
+</Callout>
+
+## 先跑起来
+
+要 Node 22.13 或更新版本，用自带的 `node:sqlite` 和 `fetch`，不用装依赖。本手册在 Node 26 上测过。
+
+1. 把下面的脚本存成 `geo-track.mjs`。
+2. 把 [定一组固定问题](/howto/prompt-set/) 里做好的 `prompts.csv` 放在同一个目录。
+3. 设好 API Key，跑一轮，再出报表。
+
+<Copy id="tracker" title="geo-track.mjs" lang="js" code={trackerCode} />
+
+<Copy id="run" title="跑一轮：每个问题在每个引擎上问 3 次" code={runCmd} />
+
+<Copy id="report" title="出报表" code={reportCmd} />
+
+<Callout type="ok">
+跑的时候每条请求打一行，比如 `anthropic Z2 0 1834 chars, 4 urls`。报表长这样（数字是示意）：
+</Callout>
+
+```text
+week       engine           answers  mention   ±95%  cited-you
+2026-W47   Claude API           78    23.1%    9.4%    7.7%
+2026-W47   Perplexity API       78    30.8%   10.2%   15.4%
+
+your URLs cited most:
+   12  https://<你的域名>/guide/
+    5  https://<你的域名>/
+```
+
+每列的意思：
+
+- **`answers`** 是这周这个引擎的有效回答数，不含 `name` 类问题和失败的请求。
+- **`mention`** 是提到你（含别名）的回答占比。
+- **`±95%`** 是误差。差值小于它，就当没变。
+- **`cited-you`** 是引用了你域名的回答占比，子域名也算。
+
+`name` 类问题想一起看，加 `--include-name`。
+
+## 和第 2 课的手记表合在一起
+
+[第 2 课](/start/2-check/) 手记的 `geo-baseline.csv`，表头是 `日期,AI,问题,第几遍,提到我了吗,引用的网址,说错了什么`。脚本能读它，也能导出同样格式的表。
+
+**读进来一起算。** 用 `--csv` 指定一份或几份手记表：
+
+<Copy id="with-csv" title="API 的数据和 App 里手记的数据放进同一张报表" code={withCsv} />
+
+对应关系是这样的：
+
+- **「日期」** 按周归组，和 API 数据的周对齐。
+- **「AI」** 原样当引擎名，比如 `ChatGPT`、`豆包`。API 跑的那几行写成 `Claude API`、`OpenAI API`，两种来源不会混在一行。
+- **「问题」** 对应 `prompts.csv` 的 `id`。脚本靠它查出 Z1、Z4 这类 `name` 问题，默认不算。不给 `--prompts`，每行都算。
+- **「提到我了吗」** 以「是」开头就算提到。
+- **「引用的网址」** 里有你域名的网址，就算引用了你。
+
+**导出成手记表的格式。** 想在表格软件里和手记的放在一起看，就导出：
+
+<Copy id="export" title="把 API 跑出的结果导出成第 2 课的表格式" code={exportCmd} />
+
+导出的「引用的网址」按第 2 课的规矩填。引用了你，就写你的网址。没引用你，就写它引用的前两个网址。「说错了什么」留空，这一栏要你自己读回答原文来填。
+
+## 它存了什么
+
+`geo.sqlite` 里两张表：
+
+- **`answers`：** 每条回答一行。记着时间、引擎、模型名、问题、回答原文、完整的原始 JSON 和错误信息。
+- **`citations`：** 每条回答引用的网址和域名，一条回答可以有多行。
+
+提及是出报表时才算的。改了别名、换了品牌名，旧数据直接重算，不用重跑。模型名也存着，模型换代那周能对上。<Src ids="05-S19" />
+
+想加一个引擎，就在脚本的 `ENGINES` 里加一项：请求怎么发、回答怎么拆。主流程不用动。
+
+## 每周自动跑
+
+放在一台常开的机器上，用 cron 每周一早上跑：
+
+<Copy id="cron" title="crontab -e 里加一行" code={cronLine} />
+
+没有常开的机器，就用 GitHub Actions，见下面「交给 AI 做」。GEO 医生也提供了每周一自动采样、开 PR 的工作流。<Src ids="05-S59" />
+
+## 花多少钱
+
+计费都是「搜索次数 + token」。<Src ids="05-S35 05-S36 05-S38 05-S40" />按 Anthropic 文档里一次搜索的真实用量估算，输入约 6,000 token、输出约 900。<Src ids="05-S36" />
+
+- **Claude Haiku 5.5，搜 1 次：** 每条回答约 $0.011。<Src ids="05-S36 05-S37" />搜满 3 次约 $0.03 到 $0.04。
+- **OpenAI `gpt-6-astra`：** 每条约 $0.12，大头是 token 费。<Src ids="05-S35" />
+- **Perplexity Agent API，fast 搜索：** 每条约 $0.0025 到 $0.004。<Src ids="05-S40 05-S41" />
+- **Gemini：** 每月前 5,000 次搜索免费，之后每千次 $14。<Src ids="05-S38" />
+
+这些都是估算，实际用量随问题和模型变化很大。
+
+一个产品的典型用量：30 个问题 × 3 次 × 4 个引擎 × 每周一轮，每月约 1,560 条回答。全用便宜的配置，每月约 $15 到 $50。<Src ids="05-S68" />作为对比，Peec AI 的入门档 $95/月，只有 50 个问题。<Src ids="05-S45" />
+
+管十个产品就乘以十。这时把重复次数降到 1，问题加到 50 个，更划算。<Src ids="05-S6" />
+
+## 别再用 Sonar 的老写法
+
+Perplexity 的 Sonar Chat Completions 接口在 2026-09-27 停止支持，新项目一律用 Agent API。<Src ids="05-S39" />很多 2025 年的教程还在教 `model="sonar"` 的写法，已经过时。
+
+脚本用的是 Agent API 的 `effort` 预设，默认 `fast`。<Src ids="05-S40" />注意 Perplexity 返回的是它查到的全部来源，所以它那一行的 `cited-you` 意思是「查到了你」。
+
+## 已知的不足
+
+- **Gemini 的网址可能是跳转链接。** Surfer 的研究说 Gemini 的 API 返回跳转 token。<Src ids="05-S10" />新 Interactions API 的文档示例却是真实网址。<Src ids="05-S38" />本手册没查清，第一次跑先看一眼 `citations` 表。
+- **`gpt-6-astra` 贵。** 换便宜的模型前，先确认它支持 `web_search` 工具，用 `OPENAI_MODEL` 环境变量覆盖。<Src ids="05-S34" />
+- **没有重试。** 失败的请求存成错误，报表不算它。Gemini 付费层默认每项目每天 1,500 次。<Src ids="05-S38" />
+- **API 和 App 不一样。** 只用它看趋势，结论要在 App 里抽查。见 [量出效果](/guide/7-measure/)。<Src ids="05-S10" />
+
+## 国内：先用搜索 API 查收录
+
+脚本里没有国内引擎。可以先查国内 AI 的搜索索引里有没有你。DeepSeek 在 2026-11-13 开放了搜索接口。<Src ids="07-S14" />下面几段命令来自调研稿 07，本手册没有实际跑过。
+
+**DeepSeek Search。** 由 DeepSeek 自研搜索引擎提供，支持 `site:`、`lang:` 语法。<Src ids="07-S15" />
+
+<Copy id="ds-search" title="查 DeepSeek 索引里有没有你的站（要装 jq）" code={deepseekSearch} />
+
+<Callout type="ok">
+每行是权威分、相关分、日期、网址。`results` 为空，说明索引里没有你。`authority` 大于等于 3 是「极权威」，-1 是未知。<Src ids="07-S15" />
+</Callout>
+
+再用 Fetch 看它能不能读到你的正文。返回 200 是能读，404 可能是被站点策略挡了。<Src ids="07-S15" />
+
+<Copy id="ds-fetch" title="DeepSeek Fetch" code={deepseekFetch} />
+
+价格两份文档写法不同：中文文档 5 元/千次，英文文档 $0.75/千次。<Src ids="07-S15 05-S42" />
+
+**智谱 Web Search。** 可以分别查搜狗、夸克和智谱自研的索引，每次 0.01 到 0.05 元。<Src ids="07-S21" />
+
+<Copy id="zhipu" title="Python，用智谱的官方 SDK（zai）" lang="python" code={zhipu} />
+
+**阿里云百炼联网搜索。** `assigned_site_list` 把搜索限定在指定网站，只在 `turbo` 策略和 qwen-plus 等模型上可用。<Src ids="07-S12" />
+
+<Copy id="bailian" title="Python，用 OpenAI 兼容接口" lang="python" code={bailian} />
+
+怎么读：API 里有你、App 却不引用你，说明收录了但排不上。API 里也没有，是收录问题，先看 [国内 AI 平台怎么做](/guide/6-china/)。API 的索引和 App 是不是同一个，官方没说，这只能当近似。
+
+想直接问国内模型，可以用 GEO 医生的 `geo-probe` 或 GeoLook，它们支持豆包、DeepSeek、Kimi 等。<Src ids="05-S59 05-S60" />
+
+## 交给 AI 做
+
+让 Claude Code 帮你把每周的运行搬到 GitHub Actions 上：
+
+<Copy id="actions" title="发给 Claude Code" code={actionsPrompt} />
+
+拿到结果后检查：
+
+- **仓库里搜一下 `sk-`。** 不应该有任何 Key。
+- **手动触发那次的日志里，每条请求都有字数和网址数。** 出现 `ERROR`，先看是 401（Key 不对）还是 400（格式变了）。
+- **`geo-track.mjs` 没被改过。** 用 `git diff` 看一眼。
+
+## 卡住了？
+
+<Q q="每条都报 HTTP 400">
+多半是接口格式变了。打开 `answers` 表的 `error` 列看原文，再对照那家的官方文档改脚本里的 `request`。这个脚本没用真实 Key 测过，第一次出错很正常。
+</Q>
+
+<Q q="mention 一直是 0%">
+先查别名。中文名、英文名、带空格和不带空格的写法都加上 `--alias`。再打开 `answers` 表读几条回答原文，看 AI 是怎么称呼你的。
+</Q>
+
+<Q q="cited-you 一直是 0%">
+看 `--domain` 有没有带 `https://`，只写域名，比如 `example.com`。Gemini 那一行一直是 0，可能是跳转链接的问题，见上面「已知的不足」。
+</Q>
+
+<Q q="node:sqlite 报错">
+Node 版本太旧。`node --version` 要是 22.13 或更新。
+</Q>
