@@ -106,7 +106,7 @@ Browser|Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTM
 Googlebot|Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)
 bingbot|Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)
 Applebot|Mozilla/5.0 (compatible; Applebot/0.1; +http://www.apple.com/go/applebot)
-OAI-SearchBot|Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; OAI-SearchBot/1.4; +https://openai.com/searchbot
+OAI-SearchBot|Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36; compatible; OAI-SearchBot/1.4; +https://openai.com/searchbot
 ChatGPT-User|Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; ChatGPT-User/1.0; +https://openai.com/bot
 GPTBot|Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; GPTBot/1.4; +https://openai.com/gptbot
 Claude-SearchBot|Mozilla/5.0 (compatible; Claude-SearchBot/1.0)
@@ -146,7 +146,7 @@ for ua in ["Googlebot", "Bingbot", "Applebot", "Baiduspider",
 每组的依据：
 
 - **传统搜索全部放行。** AI Overviews 和 AI Mode 用 Google 的索引 <Src ids="02-S9" />，Copilot 用 Bing 的 <Src ids="02-S20" />。Brave 只抓 Googlebot 能抓的页面 <Src ids="02-S32" />，Claude 又用 Brave 搜索 <Src ids="02-S30" />。
-- **AI 搜索索引全部放行。** 挡了 OAI-SearchBot 就不会出现在 ChatGPT 搜索回答里 <Src ids="02-S1" />。Anthropic、Perplexity、Mistral、Meta、DuckDuckGo 的文档结构相同 <Src ids="02-S25 02-S33 02-S39 02-S37 02-S40" />。
+- **AI 搜索索引全部放行。** 挡了 OAI-SearchBot 就不会出现在 ChatGPT 搜索回答里 <Src ids="02-S1" />。Anthropic、Perplexity、Mistral、Meta、DuckDuckGo 也各有单独的搜索爬虫 <Src ids="02-S25 02-S33 02-S39 02-S37 02-S40" />。
 - **用户触发放行。** 多数写明 robots.txt 可能不适用 <Src ids="02-S1 02-S33" />。Anthropic 说挡了 Claude-User 会降低用户主动查询时的可见度 <Src ids="02-S25" />。
 - **训练类自己选。** 各家都写明，关掉训练不影响搜索展示 <Src ids="02-S1 02-S25" />。放行训练能不能让模型记住你，还没有可靠数据。
 
