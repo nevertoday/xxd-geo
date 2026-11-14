@@ -2,8 +2,181 @@
 layout: ../../layouts/HowTo.astro
 slug: ai-audit
 step: 8
-tldr: "让 AI 给网站做 GEO 体检"
-description: "让 AI 给网站做 GEO 体检"
+tldr: "装一个技能，15 分钟拿到带修复清单的体检报告"
+description: "安装 geo-audit 技能，让 Claude Code、Codex 或 Cursor 给你的网站做 GEO 体检：哪些 AI 爬虫被挡、收录缺什么、首页有没有说清你是谁。"
+time: "15 分钟"
+for: "有网站的产品：插件落地页、教程站、会员站、开源项目主页"
 ---
+import Src from "../../components/Src.astro";
+import Callout from "../../components/Callout.astro";
+import Copy from "../../components/Copy.astro";
+import Cmd from "../../components/Cmd.astro";
+import Tabs from "../../components/Tabs.astro";
+import Q from "../../components/Q.astro";
+import { PROMPT } from "../../data/prompts.js";
 
-正文编写中。
+geo-audit 是这本手册配的一个 Agent Skill。它先跑一个脚本收集事实，再让 AI 读页面、写一份中文报告。报告最后是按优先级排的修复清单，每条带证据等级和本站对应的页面。
+
+脚本只出数据，AI 只做解释，报告里的每个判断都能追到一个原值。这个分工借鉴了开源项目 seo-skills/geo-audit-skill。<Src ids="06-S70" />
+
+## 装上 geo-audit
+
+先把仓库拿到本地：
+
+<Copy id="clone" lang="bash" code="git clone --depth 1 https://github.com/nevertoday/xxd-geo /tmp/xxd-geo" />
+
+再按你用的工具，把技能文件夹复制过去：
+
+<div data-sk-keep>
+<Tabs id="install" label="选择你的工具" items={[["cc", "Claude Code"], ["codex", "Codex"], ["cursor", "Cursor"]]}>
+<div slot="cc">
+
+<Copy id="cc" lang="bash" code="mkdir -p ~/.claude/skills && cp -r /tmp/xxd-geo/skills/geo-audit ~/.claude/skills/" />
+
+只给一个项目用，就在项目根目录复制到 `.claude/skills/`。调用方式是 `/geo-audit`。<Src ids="08-S1" />
+
+</div>
+<div slot="codex">
+
+<Copy id="codex" lang="bash" code="mkdir -p ~/.agents/skills && cp -r /tmp/xxd-geo/skills/geo-audit ~/.agents/skills/" />
+
+项目级放在仓库的 `.agents/skills/`。调用方式是 `$geo-audit`。<Src ids="08-S2" />
+
+</div>
+<div slot="cursor">
+
+<Copy id="cursor" lang="bash" code="mkdir -p ~/.cursor/skills && cp -r /tmp/xxd-geo/skills/geo-audit ~/.cursor/skills/" />
+
+项目级放在 `.cursor/skills/`。Cursor 也读 `~/.claude/skills/`，装过 Claude Code 版就不用再装。<Src ids="08-S3" />
+
+</div>
+</Tabs>
+</div>
+
+三家的技能目录以各自文档为准（截至 2026-11）。脚本要 Node 18 以上，不用装依赖。用 <Cmd c="node --version" /> 看一下版本。
+
+## 让它体检你的网站
+
+在 Claude Code 里发：
+
+<Copy id="run" code="/geo-audit https://<你的域名>/" />
+
+Codex 里把 `/` 换成 `$`。Cursor 里直接说「用 geo-audit 体检 `https://<你的域名>/`」。
+
+它会先问三件事：一个最重要的内页、本地仓库路径（可以不给）、训练类爬虫想不想放行。然后它跑脚本，读首页 HTML，写报告。
+
+<Callout type="ok">
+当前目录多出一个 `geo-audit-<你的域名>-<日期>.md`。对话里有三行摘要。报告分七节，最后两节是修复清单和「要你自己看的」。
+</Callout>
+
+## 先看报告的这三处
+
+**第一，爬虫表。** 重点看三类（爬虫名截至 2026-11）：AI 搜索（OAI-SearchBot、Claude-SearchBot、PerplexityBot）、用户触发（ChatGPT-User、Claude-User、Perplexity-User）、传统搜索（Googlebot、bingbot）。挡了 OAI-SearchBot，就不会出现在 ChatGPT 搜索回答里。<Src ids="06-S16" /> PerplexityBot 是搜索爬虫，不拿去训练。<Src ids="06-S21" />
+
+GPTBot、ClaudeBot 被挡不算毛病。它们只管训练，和搜索引用是分开的开关。<Src ids="06-S16 06-S20" /> 例外是 Google-Extended：挡了它，也会退出 Gemini App 的引用。<Src ids="02-S14 02-S15" />
+
+<Callout type="warn">
+脚本是从你电脑伪造 User-Agent 发请求的。403 说明网站有按 UA 拦截的规则。200 不保证真爬虫能进，因为 Cloudflare 还会核对 IP。<Src ids="03-S8" /> 真实记录去 Cloudflare 的 AI Crawl Control 看。<Src ids="03-S20" />
+</Callout>
+
+**第二，修复清单的顺序。** 排在前面的是「被挡」和「不能被收录」。Google 的 AI 功能只引用已经进了索引、能显示摘要的页面。<Src ids="06-S1" /> 这两项不过关，后面的内容写得再好也用不上。
+
+**第三，报告里没有总分。** 这是故意的。一项研究测了 112 个 Product Hunt 产品。作者自定义的 GEO 评分，和真实出现率没有相关。<Src ids="06-S47" /> 一篇综述看了 45 项研究，没有一项技巧显示出稳定、跨平台的效果。<Src ids="06-S49" />
+
+## 一份真实输出：pstack 教程站
+
+下面是 2026-11-14 对 pstack 教程站跑脚本的输出，只留了关键字段：
+
+```json
+{
+  "url": "https://pstack.xiaoxiaodong.ai/",
+  "probedAt": "2026-11-14T14:25:55.064Z",
+  "robots": { "status": 200, "directives": 0, "sitemaps": [] },
+  "sitemap": { "found": null },
+  "llmsTxt": { "status": 404 },
+  "page": {
+    "title": "pstack 新手教程",
+    "canonical": null,
+    "h1": ["AI 说「做好了」之前，先让它自己试一遍"],
+    "h2Count": 10,
+    "jsonLd": [],
+    "textLength": 2469
+  },
+  "summary": {
+    "browserStatus": 200,
+    "blockedByRobots": [],
+    "blockedByHttp": ["GPTBot 403", "ClaudeBot 403", "PerplexityBot 403", "Bytespider 403"],
+    "robotsHasRules": false,
+    "sitemapFound": null
+  }
+}
+```
+
+这份输出怎么读：
+
+- **robots.txt 一条规则都没有**（`directives: 0`），等于全部允许。挡人的是 CDN 层：浏览器拿到 200，四个爬虫拿到 403。
+- **PerplexityBot 被挡是头号问题。** 它是搜索爬虫，挡了就进不了 Perplexity 的回答。修法见 [Cloudflare 别把 AI 爬虫挡在门外](/howto/cloudflare-bots/)。
+- **没有 sitemap**，三个常见地址都是 404。修法见 [让 AI 搜得到](/guide/2-indexed/)。
+- **正文在原始 HTML 里**，可见文字 2469 个字符，不靠 JavaScript。这一项没问题。
+- **没有 JSON-LD，没有 canonical**，排在清单后面。
+
+完整过程见 [案例：pstack 教程站做 GEO](/howto/case-pstack/)。
+
+## 没有 Claude Code：交给 ChatGPT 做
+
+**有 Node：只跑脚本。** 下载脚本，跑一次，把输出的 JSON 贴给 ChatGPT，再附上技能说明 `SKILL.md` 的全文。
+
+```bash
+curl -sO https://raw.githubusercontent.com/nevertoday/xxd-geo/main/skills/geo-audit/scripts/probe.mjs
+node probe.mjs https://<你的域名>/ > probe.json
+```
+
+**连 Node 都没有：用 curl 抓四份材料。**
+
+```bash
+SITE=https://<你的域名>
+curl -s $SITE/robots.txt
+for UA in GPTBot OAI-SearchBot ChatGPT-User ClaudeBot Claude-SearchBot Claude-User PerplexityBot Perplexity-User Googlebot bingbot; do
+  printf '%-18s %s\n' $UA $(curl -s -o /dev/null -w '%{http_code}' -A "Mozilla/5.0 (compatible; $UA/1.0)" $SITE/)
+done
+curl -s $SITE/sitemap-index.xml | head -30
+curl -s $SITE/ > home.html
+```
+
+把四份结果贴进这段提示词，发给 ChatGPT 或豆包：
+
+<Copy id="p-audit" title="手动体检提示词" code={PROMPT.audit.prompt} />
+
+拿到结果，先查两件事：每个问题都引用了材料原文；没有给总分。
+
+## 改完怎么确认
+
+再跑一次脚本，看 `summary.blockedByHttp` 和 `summary.blockedByRobots` 是不是空数组，`sitemapFound` 有没有值。
+
+改 robots.txt 后要等。OpenAI 说约 24 小时生效，Perplexity 说最多 24 小时。<Src ids="06-S16 06-S21" />
+
+<Callout type="ok">
+第二次跑的 `blockedByHttp` 是 `[]`，或者只剩你有意挡掉的训练爬虫。Cloudflare 的 AI Crawl Control 里，OAI-SearchBot、PerplexityBot 的状态是放行。
+</Callout>
+
+## 卡住了？
+
+<Q q="报告说 PerplexityBot 403，可我没在 Cloudflare 里开过拦截">
+2025-07-01 起，新接入 Cloudflare 的域名默认屏蔽 AI 爬虫。<Src ids="03-S14" /> Bot Fight Mode 开着时，自定义规则也绕不过去。<Src ids="03-S8" /> 去 Cloudflare 后台看 AI Crawl Control 和 Bot Fight Mode，步骤见 [Cloudflare 别把 AI 爬虫挡在门外](/howto/cloudflare-bots/)。
+</Q>
+
+<Q q="所有爬虫都是 403，浏览器也是 403">
+网站对所有脚本请求都返回质询页，不只是 AI 爬虫。先确认浏览器能正常打开；能打开的话，是 CDN 按请求特征拦了脚本。这时脚本测不出爬虫的真实情况，只能看 CDN 后台的记录。
+</Q>
+
+<Q q="全都是 200，可 AI 还是不提我">
+爬得到只是第一步。按名字问时，AI 几乎都认得产品。换成「有什么好用的工具」这类问题，出现率只有 3.32%。<Src ids="06-S47" /> 下一步是固定一组问题定期问，见 [定一组固定问题](/howto/prompt-set/) 和 [量出效果](/guide/7-measure/)。
+</Q>
+
+<Q q="报告建议我加 llms.txt">
+可以加，但别指望它带来引用。SE Ranking 查了约 30 万个域名，llms.txt 和 AI 引用没有相关。这是卖 SEO 工具的公司自己的数据。<Src ids="06-S33" /> 它对文档站和开发者工具有用，见 [llms.txt：要不要加](/howto/llms-txt/)。
+</Q>
+
+<Q q="脚本报 fetch failed 或 TimeoutError">
+网站 15 秒内没响应，或者你的网络连不上它。换个网络再试；国内网站在海外网络上测，结果可能不同。
+</Q>

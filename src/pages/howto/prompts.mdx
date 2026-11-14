@@ -2,8 +2,161 @@
 layout: ../../layouts/HowTo.astro
 slug: prompts
 step: 8
-tldr: "照抄就能用的提示词"
-description: "照抄就能用的提示词"
+tldr: "复制就能用的 GEO 提示词，每条附拿到结果先查什么"
+description: "照抄就能用的 GEO 提示词：体检、写内容、找问题、监测四组，每条写明贴到哪里、拿到结果先检查什么。"
+time: "每条 5 到 20 分钟"
+for: "所有产品；Claude Code、Codex、Cursor、ChatGPT、豆包都能用"
 ---
+import Src from "../../components/Src.astro";
+import Callout from "../../components/Callout.astro";
+import Copy from "../../components/Copy.astro";
+import Q from "../../components/Q.astro";
+import { PROMPT } from "../../data/prompts.js";
 
-正文编写中。
+这一页收了最常用的 13 段提示词，按任务分四组。尖括号里的换成你自己的情况，再发给 AI。全部 19 段在 [提示词库](/prompts/)。
+
+## 用之前定三条规矩
+
+- **贴上实体卡。** 第一段提示词先做出 `entity.md`，后面每段都贴上它。
+- **让 AI 标出不确定的地方。** 写成 `[需核实]`，你来补。
+- **禁止 AI 编数字和引用。** 一项实验让 AI 用「加统计数据」的方法改写 80 篇产品描述。80 篇都没通过数值核对。<Src ids="06-S48" />
+
+## 写内容
+
+### 实体卡
+
+<p>{PROMPT.entity.use}</p>
+
+<Copy id="p-entity" title={PROMPT.entity.title} code={PROMPT.entity.prompt} />
+
+### 改成先给答案
+
+<p>{PROMPT["answer-first"].use}</p>
+
+<Copy id="p-answer-first" title={PROMPT["answer-first"].title} code={PROMPT["answer-first"].prompt} />
+
+Bing 建议写成能单独摘出来的段落。<Src ids="06-S24" /> Google 说不必为 AI 把内容切碎。<Src ids="06-S11" /> 两边都接受的写法是：每节第一段直接回答，其余照常为人写。
+
+### JSON-LD
+
+<p>{PROMPT.jsonld.use}</p>
+
+<Copy id="p-jsonld" title={PROMPT.jsonld.title} code={PROMPT.jsonld.prompt} />
+
+写进页面前，用 Rich Results Test 和 validator.schema.org 再查一遍语法。别指望它带来 AI 引用：Ahrefs 追踪了 1,885 个新加 JSON-LD 的页面，ChatGPT 引用没有可测的提升。<Src ids="06-S31" />
+
+### 核对每个数字
+
+<p>{PROMPT["fact-check"].use}</p>
+
+<Copy id="p-fact-check" title={PROMPT["fact-check"].title} code={PROMPT["fact-check"].prompt} />
+
+Google 要求发布前人工核查所有 AI 生成的内容，包括 title 和结构化数据。<Src ids="06-S3" />
+
+### 商店简介和 README
+
+<p>{PROMPT.listing.use}</p>
+
+<Copy id="p-listing" title={PROMPT.listing.title} code={PROMPT.listing.prompt} />
+
+Chrome Web Store 的摘要上限 132 个字符，它也会成为搜索结果里的描述。<Src ids="03-S52 03-S65" />
+
+### 诚实的对比页
+
+<p>{PROMPT.compare.use}</p>
+
+<Copy id="p-compare" title={PROMPT.compare.title} code={PROMPT.compare.prompt} />
+
+<Callout type="warn">
+竞品的价格和功能，你自己打开竞品官网核实。复制原文，记下日期，再交给 AI。有律师认为，虚构测评喂给 AI 可能构成虚假宣传。<Src ids="06-S59" />
+</Callout>
+
+## 体检
+
+### 审一页原始 HTML
+
+<p>{PROMPT["raw-html"].use}</p>
+
+<Copy id="p-raw-html" title={PROMPT["raw-html"].title} code={PROMPT["raw-html"].prompt} />
+
+先用 `curl -s https://<你的域名>/<页面>/ > page.html` 拿到 HTML。ChatGPT、Claude、Perplexity 的爬虫不执行 JavaScript，看到的就是这份。<Src ids="03-S1 03-S2" />
+
+### robots.txt
+
+<p>{PROMPT.robots.use}</p>
+
+<Copy id="p-robots" title={PROMPT.robots.title} code={PROMPT.robots.prompt} />
+
+AI 给的那张 allow / block 表别直接信。用 [让 AI 给网站做 GEO 体检](/howto/ai-audit/) 里的脚本跑一遍线上的真实结果。
+
+整站体检用 geo-audit 技能，没有 Claude Code 就用 [#audit](/prompts/#audit)。
+
+## 找问题
+
+### 用户会问 AI 的问题
+
+<p>{PROMPT["prompt-set"].use}</p>
+
+<Copy id="p-prompt-set" title={PROMPT["prompt-set"].title} code={PROMPT["prompt-set"].prompt} />
+
+发现型问题要占一半以上。112 个 Product Hunt 产品里，按名字问的识别率 99.4%，发现型问题的出现率只有 3.32%。<Src ids="06-S47" />
+
+### 模拟子查询
+
+<p>{PROMPT.fanout.use}</p>
+
+<Copy id="p-fanout" title={PROMPT.fanout.title} code={PROMPT.fanout.prompt} />
+
+Google 没公开 AI Mode 拆出哪些子查询，AI 模拟的只是可能的样子。<Src ids="06-S9" /> 真实数据在 Bing Webmaster Tools 的 AI Performance 报告里。<Src ids="06-S25" />
+
+### 竞品赢在哪
+
+<p>{PROMPT.gap.use}</p>
+
+<Copy id="p-gap" title={PROMPT.gap.title} code={PROMPT.gap.prompt} />
+
+## 监测
+
+### 整理追踪结果
+
+<p>{PROMPT.tally.use}</p>
+
+<Copy id="p-tally" title={PROMPT.tally.title} code={PROMPT.tally.prompt} />
+
+只记「提没提到」，不记「排第几」。SparkToro 跑了 2,961 次，同一问题重复问，ChatGPT 给出同样顺序的概率不到 0.1%。<Src ids="06-S38" />
+
+### 监测脚本
+
+<p>{PROMPT.tracker.use}</p>
+
+<Copy id="p-tracker" title={PROMPT.tracker.title} code={PROMPT.tracker.prompt} />
+
+<Callout type="ok">
+`results.jsonl` 每条问题有 5 行记录，每行都有原始回答和引用网址。analyze 脚本输出的是「提到次数 / 总次数」，没有名次。
+</Callout>
+
+还有五段在提示词库：
+
+- [#js-diff](/prompts/#js-diff)：找要 JavaScript 才看得到的内容。
+- [#page-review](/prompts/#page-review)：给一页挑毛病。
+- [#cn-post](/prompts/#cn-post)：改写成中文平台初稿。
+- [#logs](/prompts/#logs)：数日志里的 AI 爬虫。
+- [#watch](/prompts/#watch)：每月查爬虫文档的变化。
+
+## 卡住了？
+
+<Q q="AI 说它打不开我给的网址">
+有的 AI 不联网，有的被网站挡了。直接把 `curl` 拿到的 HTML 或页面文字贴进去，别让它自己去抓。
+</Q>
+
+<Q q="AI 没按格式输出，表格或 CSV 乱了">
+回一句「只输出 CSV，第一行是表头，不要任何解释」。内容太长时分几批贴，每批 20 条回答左右。
+</Q>
+
+<Q q="AI 的回答里出现了「据统计」「研究表明」">
+这类句子没有链接就删掉，或者跑一遍「核对每个数字」那段提示词。
+</Q>
+
+<Q q="同一段提示词，两次结果差很多">
+正常。生成问题集、模拟子查询这类任务，多跑两三次取交集，比只跑一次可靠。
+</Q>
