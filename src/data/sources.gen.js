@@ -2620,6 +2620,33 @@ export const GENERATED = {
   "grade": "D",
   "note": "工具功能描述可信；README 里的市场和效果数字多数无出处或误引"
  },
+ "08-s1": {
+  "title": "Extend Claude with skills",
+  "publisher": "Anthropic（Claude Code Docs）",
+  "date": "2026-11",
+  "url": "https://code.claude.com/docs/en/skills",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "个人技能放 ~/.claude/skills/<name>/SKILL.md，项目技能放 .claude/skills/；用 /技能名 调用"
+ },
+ "08-s2": {
+  "title": "Build skills",
+  "publisher": "OpenAI（Codex Docs）",
+  "date": "2026-11",
+  "url": "https://learn.chatgpt.com/docs/build-skills",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "Codex 读 $HOME/.agents/skills 和仓库里的 .agents/skills；SKILL.md 必须有 name 和 description；用 $技能名 调用"
+ },
+ "08-s3": {
+  "title": "Agent Skills",
+  "publisher": "Cursor Docs",
+  "date": "2026-11",
+  "url": "https://cursor.com/docs/context/skills",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "Cursor 读 .cursor/skills、~/.cursor/skills，兼容 .claude/skills 和 .agents/skills；name 要和文件夹名一致"
+ },
  "14-s1": {
   "title": "pstack.xiaoxiaodong.ai 第一次实测（curl 换 User-Agent）",
   "publisher": "本手册",
