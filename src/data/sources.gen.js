@@ -2620,6 +2620,43 @@ export const GENERATED = {
   "grade": "D",
   "note": "工具功能描述可信；README 里的市场和效果数字多数无出处或误引"
  },
+ "14-s1": {
+  "title": "pstack.xiaoxiaodong.ai 第一次实测（curl 换 User-Agent）",
+  "publisher": "本手册",
+  "date": "2026-11-14",
+  "url": "",
+  "kind": "案例",
+  "grade": "C",
+  "note": "robots.txt 没有指令，sitemap 404，GPTBot、ClaudeBot、PerplexityBot 被 403，没有 JSON-LD 和 canonical",
+  "where": "无（research/case-pstack/findings.md）"
+ },
+ "14-s2": {
+  "title": "pstack.xiaoxiaodong.ai 复测（curl 换 User-Agent）",
+  "publisher": "本手册",
+  "date": "2026-11-14",
+  "url": "https://pstack.xiaoxiaodong.ai/",
+  "kind": "案例",
+  "grade": "C",
+  "note": "复测结果和第一次一致；403 正文是「Your request was blocked.」；文章页没有日期标签；hreflang 不含自己"
+ },
+ "14-s3": {
+  "title": "Chrome Web Store robots.txt",
+  "publisher": "Google（本手册 curl 读取）",
+  "date": "2026-11-14",
+  "url": "https://chromewebstore.google.com/robots.txt",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "详情页的评论、隐私、支持、相关推荐子页和搜索页禁止所有爬虫抓取"
+ },
+ "14-s4": {
+  "title": "GitHub robots.txt",
+  "publisher": "GitHub（本手册 curl 读取）",
+  "date": "2026-11-14",
+  "url": "https://github.com/robots.txt",
+  "kind": "官方文档",
+  "grade": "A",
+  "note": "主流 AI 爬虫可抓、Crawl-delay 1；禁 /tree/、/blame/、/raw/、/commits/；整站禁 Bytespider"
+ },
  "21-s1": {
   "title": "pstack.xiaoxiaodong.ai 实测记录：用 curl 换 User-Agent 请求 robots.txt、sitemap 和 /guide/0-what/",
   "publisher": "本站",

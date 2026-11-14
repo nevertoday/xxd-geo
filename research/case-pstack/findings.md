@@ -8,4 +8,4 @@
   - PerplexityBot 是 Perplexity 的搜索索引爬虫，不是训练爬虫，它也被挡了。推测是 Cloudflare 的 AI 爬虫拦截规则（Block AI bots / AI Crawl Control），要在后台核实。
 - 首页 HTML 58 KB，是服务端直接给出的静态内容（Astro 构建），不靠 JS 渲染。
 - 首页没有 JSON-LD（0 个 application/ld+json），没有 canonical 标签。有 title、description、og:title、og:description、og:url、og:image。
-- 首页只有 1 个 h2。
+- 首页有 10 个 h2（4 个是侧栏标题，6 个是正文小节）。第一次记录写成 1 个，是 `grep -c` 按行计数、整页只有一行造成的，2026-11-14 复测时更正。
