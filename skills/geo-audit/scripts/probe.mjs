@@ -82,7 +82,13 @@ function parseRobots(text) {
 const toRegex = (pattern) =>
   new RegExp("^" + pattern.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*").replace(/\\\$$/, "$"));
 
-function robotsVerdict(robots, agent, path) {
+// RFC 9309: robots.txt that is 4xx means no restrictions; 5xx or unreachable means assume full disallow,
+// but this probe cannot tell a real outage from a CDN rejecting its user agent, so it reports unknown.
+function robotsVerdict(robots, agent, path, status) {
+  if (status !== 200) {
+    const unavailable = status !== null && status >= 400 && status < 500;
+    return { group: null, allowed: unavailable ? true : null, rule: null, robotsStatus: status };
+  }
   const find = (token) => robots.groups.filter((g) => g.agents.includes(token.toLowerCase()));
   let matched = find(agent.name);
   let group = matched.length ? agent.name : null;
@@ -221,7 +227,7 @@ async function main() {
       name: agent.name,
       owner: agent.owner,
       role: agent.role,
-      robots: agent.role === "browser" ? null : robotsVerdict(robots, agent, path),
+      robots: agent.role === "browser" ? null : robotsVerdict(robots, agent, path, robotsRes.status),
       http: http && { status: http.status, bytes: http.bytes ?? null, cfMitigated: http.cfMitigated ?? null, error: http.error ?? null },
     });
   }
@@ -251,8 +257,9 @@ async function main() {
     page: page && { status: browserStatus, xRobotsTag: browserPage.xRobotsTag ?? null, server: browserPage.server ?? null, ...page },
     summary: {
       browserStatus,
-      blockedByRobots: agents.filter((a) => a.robots && !a.robots.allowed).map((a) => a.name),
+      blockedByRobots: agents.filter((a) => a.robots && a.robots.allowed === false).map((a) => a.name),
       blockedByHttp: agents.filter((a) => a.http && a.role !== "browser" && (a.http.cfMitigated || (a.http.status !== browserStatus && (a.http.status === null || a.http.status >= 400)))).map((a) => `${a.name} ${a.http.status ?? a.http.error}`),
+      robotsStatus: robotsRes.status,
       robotsHasRules: robots.groups.length > 0,
       sitemapFound: sitemap.found,
       llmsTxt: llms.status === 200,

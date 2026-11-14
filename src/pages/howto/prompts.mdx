@@ -79,7 +79,7 @@ Chrome Web Store 的摘要上限 132 个字符，它也会成为搜索结果里�
 
 <Copy id="p-raw-html" title={PROMPT["raw-html"].title} code={PROMPT["raw-html"].prompt} />
 
-先用 `curl -s https://<你的域名>/<页面>/ > page.html` 拿到 HTML。ChatGPT、Claude、Perplexity 的爬虫不执行 JavaScript，看到的就是这份。<Src ids="03-S1 03-S2" />
+先用 `curl -s -A "Mozilla/5.0" https://<你的域名>/<页面>/ > page.html` 拿到 HTML。ChatGPT、Claude、Perplexity 的爬虫不执行 JavaScript，看到的就是这份。<Src ids="03-S1 03-S2" />
 
 ### robots.txt
 

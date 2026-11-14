@@ -131,16 +131,19 @@ curl -sO https://raw.githubusercontent.com/nevertoday/xxd-geo/main/skills/geo-au
 node probe.mjs https://<你的域名>/ > probe.json
 ```
 
-**连 Node 都没有：用 curl 抓四份材料。**
+**连 Node 都没有：用 curl 抓四份材料。** 下面的命令在 macOS 自带的 bash 里能直接跑。robots.txt、sitemap 和首页都带浏览器 UA 去取，有的 CDN 会给陌生 UA 返回 403。
 
 ```bash
 SITE=https://<你的域名>
-curl -s $SITE/robots.txt
+BROWSER='Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36'
+curl -s -A "$BROWSER" -w '\n[robots.txt: HTTP %{http_code}]\n' $SITE/robots.txt
 for UA in GPTBot OAI-SearchBot ChatGPT-User ClaudeBot Claude-SearchBot Claude-User PerplexityBot Perplexity-User Googlebot bingbot; do
   printf '%-18s %s\n' $UA $(curl -s -o /dev/null -w '%{http_code}' -A "Mozilla/5.0 (compatible; $UA/1.0)" $SITE/)
 done
-curl -s $SITE/sitemap-index.xml | head -30
-curl -s $SITE/ > home.html
+printf '%-18s %s\n' browser $(curl -s -o /dev/null -w '%{http_code}' -A "$BROWSER" $SITE/)
+curl -s -A "$BROWSER" -o sitemap.xml -w 'sitemap-index.xml: HTTP %{http_code}\n' $SITE/sitemap-index.xml
+head -c 2000 sitemap.xml
+curl -s -A "$BROWSER" $SITE/ > home.html
 ```
 
 把四份结果贴进这段提示词，发给 ChatGPT 或豆包：
