@@ -34,3 +34,6 @@ ts	phase	decision	why	evidence	result
 2026-11-14T15:29:07Z	audit	上一行误用了 start 阶段名：这仍是同一次运行，那行应记为 audit	start 只留给新的一次运行接手同一份记录	docs/decisions.tsv 上一行	corrected
 2026-11-14T15:31:44Z	review	另一个模型（Fable）审了决策记录，提了 11 条；当场处理两条：维护说明写清核查是对照调研稿，补抽查第 2–6 组各一处改动	审查指出 5 组合并只看了构建；维护说明的说法比实际强	MAINTAINING.md；抽查 5 处都在 main 上且和调研稿一致	2 addressed, rest reported to user
 2026-11-14T15:31:44Z	review	审查说「没在浏览器里看过」，不对：14:5x 用无头 Chrome 截了首页、证据表、暗色、手机宽度	截图在 scratchpad/shots	/tmp/claude-501/-Volumes-T7-usb-js-GEO/399cf2b0-52ec-4e86-bbfe-bae4553ec41d/scratchpad/shots/	flag rejected
+2026-11-15T00:30:57Z	publish	用户说「发布 推送」：建公开仓库 nevertoday/xxd-geo 并推送，wrangler 部署到 geo.xiaoxiaodong.ai	用户明确授权	https://github.com/nevertoday/xxd-geo, version 62d6ebb4	done
+2026-11-15T00:30:57Z	publish	发布前发现本站自己没有 robots.txt、sitemap、JSON-LD，照 /howto/astro/ 的写法补上，lastmod 用 git 提交日期	一本教 GEO 的书，自己的站要先做到	9c2c235	线上 robots、sitemap 200
+2026-11-15T00:30:57Z	publish	线上实测本站同样挡 GPTBot、ClaudeBot、PerplexityBot、Bytespider：两个站同域名同结果，判断是域名级设置；没有替用户改 Cloudflare	这个设置影响域名下所有子站，包括会员站，要用户决定	research/14-products-extra.md S5, case-pstack.mdx	waiting on user
