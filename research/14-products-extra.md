@@ -15,3 +15,4 @@
 | S2 | pstack.xiaoxiaodong.ai 复测（curl 换 User-Agent） | 本手册 | 2026-11-14 | https://pstack.xiaoxiaodong.ai/ | 小规模实测 | C | 复测结果和第一次一致；403 正文是「Your request was blocked.」；文章页没有日期标签；hreflang 不含自己 |
 | S3 | Chrome Web Store robots.txt | Google（本手册 curl 读取） | 2026-11-14 | https://chromewebstore.google.com/robots.txt | 平台官方文件 | A | 详情页的评论、隐私、支持、相关推荐子页和搜索页禁止所有爬虫抓取 |
 | S4 | GitHub robots.txt | GitHub（本手册 curl 读取） | 2026-11-14 | https://github.com/robots.txt | 平台官方文件 | A | 主流 AI 爬虫可抓、Crawl-delay 1；禁 /tree/、/blame/、/raw/、/commits/；整站禁 Bytespider |
+| S5 | geo.xiaoxiaodong.ai 实测（本站上线当天，curl 换 User-Agent） | 本手册 | 2026-11-14 | https://geo.xiaoxiaodong.ai/ | 小规模实测 | C | 本站 robots.txt 放行所有爬虫、纯静态部署，GPTBot、ClaudeBot、PerplexityBot、Bytespider 仍是 403，其他 200；和 pstack 同在 xiaoxiaodong.ai 域名下，结果相同（2026-11-15T00:30:03Z） |

@@ -3728,6 +3728,15 @@ export const GENERATED = {
   "grade": "A",
   "note": "主流 AI 爬虫可抓、Crawl-delay 1；禁 /tree/、/blame/、/raw/、/commits/；整站禁 Bytespider"
  },
+ "14-s5": {
+  "title": "geo.xiaoxiaodong.ai 实测（本站上线当天，curl 换 User-Agent）",
+  "publisher": "本手册",
+  "date": "2026-11-14",
+  "url": "https://geo.xiaoxiaodong.ai/",
+  "kind": "案例",
+  "grade": "C",
+  "note": "本站 robots.txt 放行所有爬虫、纯静态部署，GPTBot、ClaudeBot、PerplexityBot、Bytespider 仍是 403，其他 200；和 pstack 同在 xiaoxiaodong.ai 域名下，结果相同（2026-11-15T00:30:03Z）"
+ },
  "15-s1": {
   "title": "5. How to promote your launch (and what to avoid)",
   "publisher": "Product Hunt Help Center",
