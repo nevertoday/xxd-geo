@@ -1,9 +1,11 @@
 ---
 // How-to 一篇：面包屑、标题、适用于谁、正文、同类文章
 import Site from "./Site.astro";
+import { updatedOf, articleLd } from "../lib/seo.js";
 import Feedback from "../components/Feedback.astro";
 import { HOWTO_FLAT, howtoHref, stepHref, STEPS, link, langOf, t } from "../data/nav.js";
-const { frontmatter, headings = [] } = Astro.props;
+const { frontmatter, headings = [], file } = Astro.props;
+const updated = updatedOf(file);
 const lang = langOf(Astro.url.pathname);
 const en = lang === "en";
 const me = HOWTO_FLAT.find((h) => h.slug === frontmatter.slug);
@@ -13,12 +15,13 @@ const step = frontmatter.step !== undefined ? STEPS.find((s) => s.n === frontmat
 const title = t(me, "title", lang);
 const group = t(me.g, "group", lang);
 ---
-<Site title={title} description={frontmatter.description} headings={headings}>
+<Site title={title} jsonLd={articleLd({ title, tldr: frontmatter.tldr, url: new URL(Astro.url.pathname, Astro.site).href, updated })} description={frontmatter.description} headings={headings}>
   <header class="step-head">
     <ol class="xxd-breadcrumbs" data-size="sm"><li><a href={link("/howto/", lang)}>How-to</a></li><li>{group}</li><li aria-current="page">{title}</li></ol>
     <h1>{title}</h1>
     {frontmatter.tldr && <p class="page-tldr"><span class="page-tldr__label">{en ? "In one line" : "一句话"}</span>{frontmatter.tldr}</p>}
     <div class="step-head__meta">
+      <span class="xxd-badge">更新于 <time datetime={updated}>{updated}</time></span>
       {frontmatter.time && <span class="xxd-badge">{frontmatter.time}</span>}
       {frontmatter.for && <span class="xxd-badge">{en ? "For: " : "适用："}{frontmatter.for}</span>}
       {step && <a class="xxd-badge" href={stepHref(step, lang)}>{en ? `Full guide step ${step.n}: ` : `完整教程第 ${step.n} 步：`}{t(step, "title", lang)}</a>}

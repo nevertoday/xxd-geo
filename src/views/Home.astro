@@ -1,6 +1,7 @@
 ---
 // 首页：名字和一句话 → 三扇门（新手入门 / 完整教程 / 按产品类型）→ 遇到过的事 → 每条建议都有出处 → 三课 → 完整教程 → 查资料 → 提问和讨论。
 import Site from "../layouts/Site.astro";
+import { websiteLd } from "../lib/seo.js";
 import Contact from "../components/Contact.astro";
 import Src from "../components/Src.astro";
 import { NAME, TAGLINE, LESSONS, lessonHref, STEPS, stepHref, HOWTO, link, SECTIONS, sectionHref, langOf, t } from "../data/nav.js";
@@ -34,7 +35,7 @@ const C = {
 };
 const headings = [["h-pain", C.painH], ["h-evidence", C.evH], ["h-lessons", C.lessonsH], ["h-steps", C.stepsH], ["h-ref", C.refH]].map(([slug, text]) => ({ slug, text, depth: 2 }));
 ---
-<Site title={NAME} headings={headings}>
+<Site title={NAME} headings={headings} jsonLd={websiteLd()}>
   <div class="home">
     <h1>{NAME}</h1>
     <p class="home__lead"><strong>{TAGLINE}。</strong>{C.lead[0]}<mark>{C.lead[1]}</mark>{C.lead[2]}</p>

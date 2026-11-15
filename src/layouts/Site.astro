@@ -14,6 +14,7 @@ interface Props {
   title: string;
   description?: string;
   headings?: { slug: string; text: string; depth: number }[];
+  jsonLd?: Record<string, unknown>;
 }
 const UI = {
   zh: { brand: NAME, desc: `${TAGLINE}：写给独立开发者的 GEO 教程，说人话，每条建议都有出处。`, skip: "跳到正文", menu: "打开目录", search: "搜索",
@@ -29,7 +30,8 @@ const L = UI[lang] ?? UI.zh;
 const langLinks = LANGS.map((l) => ({ ...l, href: langHref(Astro.url.pathname, l.code) }));
 const alternates = langLinks.filter((l) => l.code !== lang);
 const lookOpts = JSON.stringify({ locale: lang === "zh" ? "zh-CN" : "en", labels: { cornersDesc: lang === "zh" ? "关掉就是直角" : "Off keeps every corner square" } });
-const { title, description = L.desc, headings = [] } = Astro.props;
+const { title, description = L.desc, headings = [], jsonLd } = Astro.props;
+const ld = jsonLd && JSON.stringify(jsonLd).replace(/</g, "\\u003c");
 const fullTitle = title === L.brand ? title : `${title} · ${L.brand}`;
 const path = Astro.url.pathname.replace(/\/$/, "") || "/";
 const cur = (href) => (href.replace(/\/$/, "") || "/") === path;
@@ -67,6 +69,7 @@ const GITHUB_MARK = '<svg width="16" height="16" viewBox="0 0 16 16" fill="curre
     <meta property="og:url" content={new URL(Astro.url.pathname, Astro.site)} />
     <link rel="canonical" href={new URL(Astro.url.pathname, Astro.site)} />
     {alternates.map((l) => <link rel="alternate" hreflang={l.html} href={new URL(l.href, Astro.site)} />)}
+    {ld && <script type="application/ld+json" set:html={ld} />}
     <style is:inline>@layer theme, base, xxd, components, utilities, site;</style>
     <script is:inline src={asset("xxd/boot.js")} data-key="xxd-geo-site" data-default-theme="system"></script>
     <link rel="stylesheet" href={asset("xxd/xxd.css")} />

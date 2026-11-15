@@ -1,5 +1,7 @@
 import { defineConfig } from "astro/config";
 import mdx from "@astrojs/mdx";
+import sitemap from "@astrojs/sitemap";
+import { lastmodMap } from "./scripts/lastmod.mjs";
 import { SITE } from "./src/data/nav.js";
 
 // GEO 实战手册：静态构建，界面全部用 xxd-ui-kit（public/xxd/ 里的一份，用 xxd-ui sync 更新）。
@@ -7,10 +9,21 @@ import { SITE } from "./src/data/nav.js";
 // （组件里的链接走 data/nav.js 的 link()，正文里手写的 /xxx 链接由 scripts/base-links.mjs 在构建后补前缀）。
 const site = process.env.SITE_URL || SITE;
 const base = process.env.BASE_PATH || "/";
+const lastmod = lastmodMap(site, base);
 export default defineConfig({
   site,
   base,
   trailingSlash: "always",
-  integrations: [mdx()],
+  integrations: [
+    mdx(),
+    sitemap({
+      filter: (page) => !/\/404\/?$/.test(page),
+      serialize(item) {
+        const date = lastmod.get(item.url);
+        if (date) item.lastmod = date;
+        return item;
+      },
+    }),
+  ],
   build: { format: "directory" },
 });
