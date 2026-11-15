@@ -179,7 +179,9 @@ MDX 正文里不能出现裸的 `<`、`{`、`}`：占位符写在代码里，比
 
 ## 部署
 
-计划地址 <https://geo.xiaoxiaodong.ai>，仓库 <https://github.com/nevertoday/xxd-geo>（都还没建）。
+线上 <https://geo.xiaoxiaodong.ai>，仓库 <https://github.com/nevertoday/xxd-geo>（Cloudflare Workers 静态资源，2026-11-14 首次部署）。
+
+部署后用不同的 User-Agent 测一遍线上页面（见 `/howto/ai-audit/`）。2026-11-14 实测，xiaoxiaodong.ai 域名级别的 Cloudflare 设置会挡 GPTBot、ClaudeBot、PerplexityBot、Bytespider，本站也受影响，要在 Cloudflare 后台的 AI Crawl Control 里改。
 更新：`npm run release`（构建后 `wrangler deploy`，要先 `npx wrangler login`），配置在 `wrangler.jsonc`。域名同时写在 `nav.js` 的 `SITE` 和 `wrangler.jsonc`，改的时候两处一起改。
 
 还没有分享大图（`og:image`）。做好后放 `public/og.png`，在 `Site.astro` 的 `<head>` 里加回 `og:image` 和 `twitter:image`。

@@ -20,9 +20,6 @@
   <a href="https://geo.xiaoxiaodong.ai">在线阅读</a>
 </p>
 
-> [!NOTE]
-> 网站 <https://geo.xiaoxiaodong.ai> 和仓库 <https://github.com/nevertoday/xxd-geo> 都在发布后才能打开。下面的链接和安装命令，到那时就能用。
-
 ## 为什么需要它
 
 做独立产品的人，多半遇到过这些：
